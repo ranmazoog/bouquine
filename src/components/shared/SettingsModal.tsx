@@ -1,4 +1,4 @@
-import { X, Key, Shield, Check } from 'lucide-react';
+import { X, Key, Shield, Check, Moon, Sun } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { AIProvider } from '../../types/electron';
 
@@ -17,6 +17,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [openrouterModel, setOpenrouterModel] = useState(DEFAULT_OPENROUTER_MODEL);
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -35,6 +36,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         if (selectedProvider === 'openrouter') {
             const savedModel = await window.electronAPI.getSetting('openrouterModel');
             setOpenrouterModel(savedModel || DEFAULT_OPENROUTER_MODEL);
+        }
+
+        // Load dark mode setting
+        const darkMode = await window.electronAPI.getSetting('darkMode');
+        setIsDarkMode(darkMode === true);
+        if (darkMode === true) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
         }
     };
 
@@ -62,6 +72,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleToggleDarkMode = async () => {
+        const newValue = !isDarkMode;
+        setIsDarkMode(newValue);
+        document.documentElement.classList.toggle('dark', newValue);
+        await window.electronAPI.setSetting('darkMode', newValue);
     };
 
     const handleSaveModel = async () => {
@@ -113,6 +130,35 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                 <>⚠️ System keychain unavailable. Keys are stored with base64 encoding. Consider using environment variables for production.</>
                             )}
                         </p>
+                    </div>
+                </div>
+
+                {/* Theme Toggle */}
+                <div className="mb-6 p-4 bg-accent/30 border border-border/50 rounded-lg">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                            {isDarkMode ? (
+                                <Moon size={20} className="text-primary flex-shrink-0" />
+                            ) : (
+                                <Sun size={20} className="text-amber-500 flex-shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                                <p className="font-medium text-foreground truncate">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                    {isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleToggleDarkMode}
+                            className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 overflow-hidden ${isDarkMode ? 'bg-primary' : 'bg-muted'
+                                }`}
+                        >
+                            <span
+                                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${isDarkMode ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                            />
+                        </button>
                     </div>
                 </div>
 

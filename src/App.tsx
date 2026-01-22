@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircle2, RotateCw, AlertCircle, FileText } from 'lucide-react';
 
 function App() {
-  const { setProjects, setCurrentProject, setChapters, addProject, currentProject } = useProjectStore();
+  const { setProjects, setCurrentProject, setChapters, addProject, updateProjectInStore, currentProject } = useProjectStore();
   const { currentChapter, saveStatus, isFocusMode, activeSidebarTab, chaptersViewMode } = useEditorStore();
   const { createProject } = useProject();
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
@@ -26,6 +26,17 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Initialize dark mode from settings
+    const initTheme = async () => {
+      const darkMode = await window.electronAPI.getSetting('darkMode');
+      if (darkMode === true) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+    initTheme();
+
     // Initial data load
     const loadProjects = async () => {
       try {
@@ -67,12 +78,14 @@ function App() {
   useEffect(() => {
     if (currentProject && currentChapter) {
       if (currentProject.last_visited_chapter_id !== currentChapter.id) {
-        window.electronAPI.updateProject(currentProject.id, { last_visited_chapter_id: currentChapter.id });
-        // Note: We don't update the store here to avoid unnecessary re-renders of the project overview,
-        // but the database is updated for the next session.
+        window.electronAPI.updateProject(currentProject.id, { last_visited_chapter_id: currentChapter.id })
+          .then((updated) => {
+            updateProjectInStore(updated);
+          })
+          .catch(err => console.error('Failed to update last visited chapter:', err));
       }
     }
-  }, [currentChapter, currentProject]);
+  }, [currentChapter?.id, currentProject?.id, updateProjectInStore]);
 
   const handleCreateProject = async (data: {
     title: string;
@@ -192,7 +205,7 @@ function App() {
                     </div>
                   </div>
 
-                  {!isFocusMode && <AIAssistant />}
+                  {!isFocusMode && <AIAssistant onSettingsClick={() => setIsSettingsModalOpen(true)} />}
                 </>
               )}
             </>

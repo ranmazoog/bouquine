@@ -1,6 +1,7 @@
-import { Book, Users, Globe, Palette, Settings, ChevronRight, Plus, Trash2, LayoutDashboard, FileText, Link } from 'lucide-react';
+import { Book, Users, Globe, Palette, Settings, ChevronRight, Plus, Trash2, LayoutDashboard, FileText, Link, Moon, Sun } from 'lucide-react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import type { SidebarTab } from '../../stores/projectStore';
+import { useEffect, useState } from 'react';
 
 interface SidebarProps {
     onSettingsClick: () => void;
@@ -9,6 +10,11 @@ interface SidebarProps {
 export function Sidebar({ onSettingsClick }: SidebarProps) {
     const { chapters, currentProject, addChapter, removeChapter } = useProjectStore();
     const { currentChapter, setCurrentChapter, activeSidebarTab, setActiveSidebarTab } = useEditorStore();
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    useEffect(() => {
+        setIsDarkMode(document.documentElement.classList.contains('dark'));
+    }, []);
 
     const handleDeleteChapter = async (chapterId: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -166,7 +172,7 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                                     >
                                         <ChevronRight size={14} className={`flex-shrink-0 group-hover:text-foreground ${currentChapter?.id === chapter.id ? 'text-primary' : 'text-muted-foreground'
                                             }`} />
-                                        <span className="truncate flex-1">{chapter.title || 'Untitled Chapter'}</span>
+                                        <span title={chapter.title || 'Untitled Chapter'} className="truncate flex-1">{chapter.title || 'Untitled Chapter'}</span>
                                         <button
                                             onClick={(e) => handleDeleteChapter(chapter.id, e)}
                                             className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all flex-shrink-0"
@@ -186,7 +192,19 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                 )}
             </div>
 
-            <div className="p-4 border-t no-drag">
+            <div className="p-4 border-t no-drag space-y-2">
+                <button
+                    onClick={async () => {
+                        const newValue = !isDarkMode;
+                        setIsDarkMode(newValue);
+                        document.documentElement.classList.toggle('dark', newValue);
+                        await window.electronAPI.setSetting('darkMode', newValue);
+                    }}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
+                >
+                    {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+                    <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                </button>
                 <button
                     onClick={onSettingsClick}
                     className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"

@@ -68,11 +68,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // References (Research)
     getReferences: (projectId: string) => ipcRenderer.invoke('get-references', projectId),
     createReference: (data: any) => ipcRenderer.invoke('create-reference', data),
+    updateReference: (id: string, data: any) => ipcRenderer.invoke('update-reference', { id, data }),
     deleteReference: (id: string) => ipcRenderer.invoke('delete-reference', id),
+    suggestResearchGaps: (projectId: string) => ipcRenderer.invoke('suggest-research-gaps', projectId),
+    getResearchByChapter: (chapterId: string) => ipcRenderer.invoke('get-research-by-chapter', chapterId),
     openLink: (url: string) => ipcRenderer.invoke('open-link', url),
 
     // Context Engine
     refreshContextIndex: (projectId: string) => ipcRenderer.invoke('refresh-context-index', projectId),
+    searchResearch: (projectId: string, query: string, limit?: number, excludeIds?: string[]) => ipcRenderer.invoke('search-research', { projectId, query, limit, excludeIds }),
 
     // Style Guide
     getStyleGuide: (projectId: string) => ipcRenderer.invoke('get-style-guide', projectId),

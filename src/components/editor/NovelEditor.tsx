@@ -3,7 +3,7 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useEditorStore, useProjectStore } from '../../stores/projectStore';
-import { Bold, Italic, Strikethrough, FileText, Loader2, X } from 'lucide-react';
+import { Bold, Italic, Strikethrough, FileText, Loader2, X, ChevronDown, ChevronRight, Heading2, Heading3 } from 'lucide-react';
 
 export function NovelEditor() {
     const { currentChapter, setSaveStatus, setCurrentChapter, pendingInsertion, clearInsert, lastSelection, setSelection } = useEditorStore();
@@ -13,7 +13,7 @@ export function NovelEditor() {
     const isLoadedRef = useRef(false);
     const [chapterTitle, setChapterTitle] = useState(currentChapter?.title || '');
     const [isSummarizing, setIsSummarizing] = useState(false);
-    const [showSummary, setShowSummary] = useState(true);
+    const [showSummary, setShowSummary] = useState(false);
 
     // Initialize title when component mounts (with key prop, this runs once per chapter)
     useEffect(() => {
@@ -83,7 +83,7 @@ export function NovelEditor() {
         ],
         editorProps: {
             attributes: {
-                class: 'prose prose-lg dark:prose-invert focus:outline-none max-w-none min-h-[500px] pb-32 text-foreground font-serif leading-relaxed',
+                class: 'prose prose-lg dark:prose-invert focus:outline-none max-w-none min-h-[500px] pb-32 text-foreground font-serif leading-relaxed prose-h2:text-xl prose-h2:font-bold prose-h2:mt-6 prose-h2:mb-3 prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-4 prose-h3:mb-2',
             },
         },
         onSelectionUpdate: ({ editor }) => {
@@ -148,23 +148,28 @@ export function NovelEditor() {
     // Watch for content insertion from AI Assistant
     useEffect(() => {
         if (pendingInsertion && editor) {
-            if (lastSelection) {
-                // Replace the remembered selection with new content
+            const { empty } = editor.state.selection;
+
+            if (!empty) {
+                // Text is selected - replace the selection with new content
+                editor.chain()
+                    .deleteSelection()
+                    .insertContent(pendingInsertion)
+                    .run();
+            } else if (lastSelection) {
+                // Use remembered selection from when user asked the question
                 editor.chain()
                     .setTextSelection({ from: lastSelection.from, to: lastSelection.to })
                     .insertContent(pendingInsertion)
                     .run();
-                // Clear selection after replacement
                 setSelection(null);
             } else {
-                // Standard insert at cursor if nothing was selected
+                // No selection - insert at cursor
                 editor.chain().focus().insertContent(pendingInsertion).run();
             }
-            // Clear the queue so it doesn't insert again
             clearInsert();
         }
     }, [pendingInsertion, editor, clearInsert, lastSelection, setSelection]);
-
     if (!currentChapter) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
@@ -199,10 +204,20 @@ export function NovelEditor() {
                         <span>{isSummarizing ? 'Summarizing...' : 'Summarize'}</span>
                     </button>
                 </div>
-                {currentChapter?.summary && showSummary && (
+                {currentChapter?.summary && (
                     <div className="mt-4 p-3 bg-accent/30 rounded-lg border border-border/50 relative group">
                         <div className="flex items-center justify-between mb-1">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Summary</p>
+                            <button
+                                onClick={() => setShowSummary(!showSummary)}
+                                className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                            >
+                                {showSummary ? (
+                                    <ChevronDown size={12} className="text-muted-foreground" />
+                                ) : (
+                                    <ChevronRight size={12} className="text-muted-foreground" />
+                                )}
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Summary</p>
+                            </button>
                             <button
                                 onClick={() => setShowSummary(false)}
                                 className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors opacity-0 group-hover:opacity-100"
@@ -211,7 +226,9 @@ export function NovelEditor() {
                                 <X size={12} />
                             </button>
                         </div>
-                        <p className="text-sm text-muted-foreground">{currentChapter.summary}</p>
+                        {showSummary && (
+                            <p className="text-sm text-muted-foreground">{currentChapter.summary}</p>
+                        )}
                     </div>
                 )}
             </div>
@@ -222,25 +239,46 @@ export function NovelEditor() {
                     className="flex items-center gap-1 bg-card border border-border rounded-lg shadow-lg p-1"
                 >
                     <button
-                        onClick={() => editor.chain().focus().toggleBold().run()}
+                        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run(); }}
                         className={`p-2 rounded hover:bg-accent transition-colors ${editor.isActive('bold') ? 'bg-accent text-primary' : 'text-muted-foreground'}`}
                         title="Bold"
                     >
                         <Bold size={16} />
                     </button>
                     <button
-                        onClick={() => editor.chain().focus().toggleItalic().run()}
+                        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleItalic().run(); }}
                         className={`p-2 rounded hover:bg-accent transition-colors ${editor.isActive('italic') ? 'bg-accent text-primary' : 'text-muted-foreground'}`}
                         title="Italic"
                     >
                         <Italic size={16} />
                     </button>
                     <button
-                        onClick={() => editor.chain().focus().toggleStrike().run()}
+                        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleStrike().run(); }}
                         className={`p-2 rounded hover:bg-accent transition-colors ${editor.isActive('strike') ? 'bg-accent text-primary' : 'text-muted-foreground'}`}
                         title="Strikethrough"
                     >
                         <Strikethrough size={16} />
+                    </button>
+
+                    {/* Vertical divider */}
+                    <div className="w-px h-4 bg-border mx-1" />
+
+                    {/* H2 - Section Header */}
+                    <button
+                        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHeading({ level: 2 }).run(); }}
+                        className={`p-2 rounded hover:bg-accent transition-colors ${editor.isActive('heading', { level: 2 }) ? 'bg-accent text-primary' : 'text-muted-foreground'}`}
+                        title="Section (H2)"
+                    >
+                        <Heading2 size={16} />
+                    </button>
+
+                    {/* H3 - Sub-section Header */}
+                    <button
+                        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHeading({ level: 3 }).run(); }}
+                        className={`p-2 rounded hover:bg-accent transition-colors ${editor.isActive('heading', { level: 3 }) ? 'bg-accent text-primary' : 'text-muted-foreground'}`}
+                        title="Sub-section (H3)"
+                    >
+                        <Heading3 size={16} />
                     </button>
                 </BubbleMenu>
             )}

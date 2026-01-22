@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS chapters (
   summary TEXT,
   word_count INTEGER DEFAULT 0,
   status TEXT DEFAULT 'outline',
+  chat_history TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

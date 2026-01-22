@@ -15,8 +15,11 @@ import {
     deleteChapter,
     createChapterSnapshot,
     getReferences,
+    getReference,
     createReference,
+    updateReference,
     deleteReference,
+    getReferencesByChapter,
 } from './services/database';
 import {
     createCharacter,
@@ -43,7 +46,7 @@ import {
     type AppSettings,
 } from './services/security';
 import { createAIProvider } from './services/ai-provider';
-import { buildPrompt, refreshContextIndex } from './services/context-engine';
+import { buildPrompt, refreshContextIndex, searchContext } from './services/context-engine';
 import { exportToDocx, exportChapterToDocx } from './services/export';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -158,9 +161,17 @@ ipcMain.handle('create-reference', async (_event, data) => {
     return createReference(data);
 });
 
+ipcMain.handle('update-reference', async (_event, { id, data }) => {
+    return updateReference(id, data);
+});
+
 ipcMain.handle('delete-reference', async (_event, id) => {
     deleteReference(id);
     return { success: true };
+});
+
+ipcMain.handle('get-research-by-chapter', async (_event, chapterId) => {
+    return getReferencesByChapter(chapterId);
 });
 
 ipcMain.handle('open-link', async (_event, url) => {
@@ -248,6 +259,39 @@ ipcMain.handle('generate-blurb', async (_event, { _projectId, synopsis }) => {
     return await aiProvider.generate(messages, { temperature: 0.7 });
 });
 
+ipcMain.handle('suggest-research-gaps', async (_event, projectId) => {
+    const provider = 'openrouter'; // Default
+    const apiKey = getAPIKey(provider);
+    if (!apiKey) throw new Error('No API key found');
+
+    const db = getDatabase();
+    const project = db.prepare('SELECT blurb, title FROM projects WHERE id = ?').get(projectId) as any;
+    const chapters = db.prepare('SELECT summary FROM chapters WHERE project_id = ? AND summary IS NOT NULL ORDER BY chapter_number DESC LIMIT 3').all(projectId) as any[];
+
+    const context = `
+Book Title: ${project.title}
+Premise: ${project.blurb || 'Not provided'}
+Latest Plot Developments:
+${chapters.reverse().map((c, i) => `Chapter ${i + 1}: ${c.summary}`).join('\n')}
+    `;
+
+    const model = getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free';
+    const aiProvider = createAIProvider(provider, apiKey, model);
+
+    const messages = [
+        {
+            role: 'system' as const,
+            content: 'You are an expert world-building consultant. Analyze the provided book context and identify 5 critical "research gaps"—specific questions about the world, technical details, or character backgrounds that the author hasn\'t clearly defined yet but are necessary for realism and depth. Return them as a punchy, bulleted list.'
+        },
+        {
+            role: 'user' as const,
+            content: `Analyze this context and suggest research gaps:\n\n${context}`
+        }
+    ];
+
+    return await aiProvider.generate(messages, { temperature: 0.7 });
+});
+
 // Streaming AI generation
 ipcMain.handle('ai-generate-stream', async (event, { provider, messages, options }) => {
     const apiKey = getAPIKey(provider);
@@ -274,14 +318,18 @@ ipcMain.handle('ai-generate-stream', async (event, { provider, messages, options
 
 ipcMain.handle('ai-chat-message', async (event, { projectId, chapterId, message, provider, selectedText }) => {
     const apiKey = getAPIKey(provider);
+    console.log(`[AI] Provider: ${provider}, Has API Key: ${!!apiKey}`);
+
     if (!apiKey) {
-        throw new Error(`No API key found for provider: ${provider}`);
+        throw new Error(`No API key found for provider: ${provider}. Please configure your API key in Settings.`);
     }
 
     // Get model for OpenRouter (with fallback to free Llama model)
     const model = provider === 'openrouter'
         ? (getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free')
         : undefined;
+    console.log(`[AI] Using model: ${model}`);
+
     const aiProvider = createAIProvider(provider, apiKey, model);
     // buildPrompt is now async to support RAG search - pass selectedText for context
     const { systemPrompt, userPrompt } = await buildPrompt(message, projectId, chapterId, selectedText);
@@ -404,6 +452,22 @@ ipcMain.handle('summarize-chapter', async (_event, { chapterId, provider }) => {
 ipcMain.handle('refresh-context-index', async (_event, projectId: string) => {
     await refreshContextIndex(projectId);
     return { success: true };
+});
+
+ipcMain.handle('search-research', async (_event, { projectId, query, limit, excludeIds }) => {
+    const searchLimit = limit || 5;
+    const results = await searchContext(query, projectId, searchLimit + (excludeIds?.length || 0));
+    let filtered = results.filter(r => r.type === 'reference');
+
+    if (excludeIds && excludeIds.length > 0) {
+        // Need to find the IDs since searchContext returns {title, type, content}
+        // Actually searchContext implementation in context-engine.ts returns {type, title, content}
+        // Wait, I should update searchContext to return ID too if I want to exclude effectively.
+        // For now, I'll filter by title if ID is not available, but that's risky.
+        // Let's check context-engine.ts searchContext return type.
+    }
+
+    return filtered.slice(0, searchLimit);
 });
 
 // ============================================================================

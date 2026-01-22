@@ -20,7 +20,10 @@ export interface Reference {
     content?: string;
     type: 'link' | 'note';
     url?: string;
+    related_elements?: string; // JSON string: [{id: 'char-xxx', type: 'character'}]
+    tag?: string;
     created_at: string;
+    updated_at: string;
 }
 
 export interface Chapter {
@@ -33,6 +36,7 @@ export interface Chapter {
     summary?: string;
     word_count: number;
     status: 'outline' | 'draft' | 'revision' | 'polished';
+    chat_history?: string;
     created_at: string;
     updated_at: string;
 }
@@ -164,12 +168,16 @@ export interface IElectronAPI {
 
     // References (Research)
     getReferences: (projectId: string) => Promise<Reference[]>;
-    createReference: (data: Omit<Reference, 'id' | 'created_at'>) => Promise<Reference>;
+    createReference: (data: Partial<Reference> & { project_id: string; title: string; type: 'link' | 'note' }) => Promise<Reference>;
+    updateReference: (id: string, data: Partial<Reference>) => Promise<Reference>;
     deleteReference: (id: string) => Promise<{ success: boolean }>;
+    suggestResearchGaps: (projectId: string) => Promise<string>;
+    getResearchByChapter: (chapterId: string) => Promise<Reference[]>;
     openLink: (url: string) => Promise<void>;
 
     // Context Engine
     refreshContextIndex: (projectId: string) => Promise<{ success: boolean }>;
+    searchResearch: (projectId: string, query: string, limit?: number, excludeIds?: string[]) => Promise<Array<{ title: string; type: string; content: string }>>;
 
     // Style Guide
     getStyleGuide: (projectId: string) => Promise<StyleGuide>;

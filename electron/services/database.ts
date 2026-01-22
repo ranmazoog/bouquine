@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import { app } from 'electron';
 import { randomUUID } from 'crypto';
+import fs from 'fs';
 
 const SCHEMA = `
 -- Projects
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS chapters (
   summary TEXT,
   word_count INTEGER DEFAULT 0,
   status TEXT DEFAULT 'outline',
+  chat_history TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -118,6 +120,8 @@ CREATE TABLE IF NOT EXISTS project_references (
   content TEXT,
   type TEXT DEFAULT 'link',
   url TEXT,
+  related_elements TEXT, -- JSON array of {id, type}
+  tag TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -145,11 +149,64 @@ CREATE INDEX IF NOT EXISTS idx_project_references_project ON project_references(
 
 let db: Database.Database;
 
+function migrateLegacyDatabase(): void {
+  const userDataPath = app.getPath('userData');
+  const newDbPath = path.join(userDataPath, 'novelforge.db');
+
+  // Get the parent directory (should be ~/Library/Application Support/bouquine)
+  const parentDir = path.dirname(userDataPath);
+
+  // Check for legacy sonic-belt database
+  const legacyDbPath = path.join(parentDir, 'sonic-belt', 'novelforge.db');
+
+  // Check if legacy database exists
+  const legacyExists = fs.existsSync(legacyDbPath);
+
+  if (!legacyExists) {
+    console.log('[DB] No legacy database found, starting fresh');
+    return;
+  }
+
+  // Check if new database already has data
+  const newDbExists = fs.existsSync(newDbPath);
+  let newDbHasData = false;
+
+  if (newDbExists) {
+    try {
+      const testDb = new Database(newDbPath);
+      const result = testDb.prepare('SELECT COUNT(*) as count FROM projects').get() as { count: number };
+      newDbHasData = result.count > 0;
+      testDb.close();
+    } catch (e) {
+      console.log('[DB] New database appears corrupted, will migrate from legacy');
+      newDbHasData = false;
+    }
+  }
+
+  // Only migrate if new database has no data
+  if (newDbHasData) {
+    console.log('[DB] New database already has data, keeping current database');
+    return;
+  }
+
+  // Perform migration: copy legacy database to new location
+  console.log('[DB] Migrating data from legacy sonic-belt database...');
+  try {
+    fs.copyFileSync(legacyDbPath, newDbPath);
+    console.log('[DB] Legacy database migrated successfully');
+  } catch (error) {
+    console.error('[DB] Failed to migrate legacy database:', error);
+  }
+}
+
 export function getDatabase() {
   if (db) return db;
 
+  // Check for legacy database migration
+  migrateLegacyDatabase();
+
   const dbPath = path.join(app.getPath('userData'), 'novelforge.db');
-  console.log('[DB] Opening database at:', dbPath); // Added debug log
+  console.log('[DB] Opening database at:', dbPath);
   db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
@@ -186,6 +243,29 @@ function runMigrations() {
   if (!columnNames.includes('last_visited_chapter_id')) {
     console.log('[DB] Adding last_visited_chapter_id column to projects table');
     db.exec('ALTER TABLE projects ADD COLUMN last_visited_chapter_id TEXT');
+  }
+
+  // Check if chat_history column exists in chapters table
+  const chapterColumns = db.prepare("PRAGMA table_info(chapters)").all() as Array<{ name: string }>;
+  const chapterColumnNames = chapterColumns.map(c => c.name);
+
+  if (!chapterColumnNames.includes('chat_history')) {
+    console.log('[DB] Adding chat_history column to chapters table');
+    db.exec('ALTER TABLE chapters ADD COLUMN chat_history TEXT');
+  }
+
+  // Check project_references
+  const refColumns = db.prepare("PRAGMA table_info(project_references)").all() as Array<{ name: string }>;
+  const refColumnNames = refColumns.map(c => c.name);
+
+  if (!refColumnNames.includes('related_elements')) {
+    console.log('[DB] Adding related_elements column to project_references table');
+    db.exec('ALTER TABLE project_references ADD COLUMN related_elements TEXT');
+  }
+
+  if (!refColumnNames.includes('tag')) {
+    console.log('[DB] Adding tag column to project_references table');
+    db.exec('ALTER TABLE project_references ADD COLUMN tag TEXT');
   }
 }
 
@@ -282,6 +362,10 @@ export function updateProject(id: string, data: Partial<Project>): Project {
     updates.push('blurb = ?');
     values.push(data.blurb);
   }
+  if (data.synopsis !== undefined) {
+    updates.push('synopsis = ?');
+    values.push(data.synopsis);
+  }
   if (data.target_word_count !== undefined) {
     updates.push('target_word_count = ?');
     values.push(data.target_word_count);
@@ -327,6 +411,7 @@ export interface Chapter {
   summary?: string;
   word_count: number;
   status: 'outline' | 'draft' | 'revision' | 'polished';
+  chat_history?: string;
   created_at: string;
   updated_at: string;
 }
@@ -411,6 +496,10 @@ export function updateChapter(id: string, data: Partial<Chapter>): Chapter {
     updates.push('status = ?');
     values.push(data.status);
   }
+  if (data.chat_history !== undefined) {
+    updates.push('chat_history = ?');
+    values.push(data.chat_history);
+  }
 
   updates.push('updated_at = ?');
   values.push(now);
@@ -460,31 +549,95 @@ export interface Reference {
   content?: string;
   type: 'link' | 'note';
   url?: string;
+  related_elements?: string;
+  tag?: string;
   created_at: string;
+  updated_at: string;
 }
 
 export function getReferences(projectId: string): Reference[] {
   const db = getDatabase();
-  const stmt = db.prepare('SELECT * FROM project_references WHERE project_id = ? ORDER BY created_at DESC');
+  const stmt = db.prepare('SELECT * FROM project_references WHERE project_id = ? ORDER BY updated_at DESC');
   return stmt.all(projectId) as Reference[];
 }
 
-export function createReference(data: Omit<Reference, 'id' | 'created_at'>): Reference {
+export function getReference(id: string): Reference | null {
+  const db = getDatabase();
+  const stmt = db.prepare('SELECT * FROM project_references WHERE id = ?');
+  return stmt.get(id) as Reference | null;
+}
+
+export function createReference(data: {
+  project_id: string;
+  title: string;
+  content?: string;
+  type: 'link' | 'note';
+  url?: string;
+  related_elements?: string;
+  tag?: string;
+}): Reference {
   const db = getDatabase();
   const id = randomUUID();
   const now = new Date().toISOString();
 
   const stmt = db.prepare(`
-        INSERT INTO project_references (id, project_id, title, content, type, url, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO project_references (id, project_id, title, content, type, url, related_elements, tag, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-  stmt.run(id, data.project_id, data.title, data.content || '', data.type, data.url || '', now);
-  return { ...data, id, created_at: now };
+  stmt.run(
+    id,
+    data.project_id,
+    data.title,
+    data.content || '',
+    data.type,
+    data.url || '',
+    data.related_elements || null,
+    data.tag || null,
+    now,
+    now
+  );
+  return getReference(id)!;
+}
+
+export function updateReference(id: string, data: Partial<Reference>): Reference {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+
+  const updates: string[] = [];
+  const values: any[] = [];
+
+  const allowedFields = ['title', 'content', 'type', 'url', 'related_elements', 'tag'];
+  for (const field of allowedFields) {
+    if ((data as any)[field] !== undefined) {
+      updates.push(`${field} = ?`);
+      values.push((data as any)[field]);
+    }
+  }
+
+  updates.push('updated_at = ?');
+  values.push(now);
+  values.push(id);
+
+  const stmt = db.prepare(`
+    UPDATE project_references SET ${updates.join(', ')} WHERE id = ?
+  `);
+
+  stmt.run(...values);
+  return getReference(id)!;
 }
 
 export function deleteReference(id: string): void {
   const db = getDatabase();
   const stmt = db.prepare('DELETE FROM project_references WHERE id = ?');
   stmt.run(id);
+}
+
+export function getReferencesByChapter(chapterId: string): Reference[] {
+  const db = getDatabase();
+  const stmt = db.prepare(`
+    SELECT * FROM project_references 
+    WHERE related_elements LIKE ?
+  `);
+  return stmt.all('%' + chapterId + '%') as Reference[];
 }

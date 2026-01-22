@@ -167,14 +167,19 @@ export class OpenRouterProvider implements AIProvider {
     }
 
     async generate(messages: Message[], options?: GenerateOptions): Promise<string> {
-        const response = await this.client.chat.completions.create({
-            model: this.model,
-            messages: messages.map(m => ({ role: m.role, content: m.content })),
-            temperature: options?.temperature ?? 0.7,
-            max_tokens: options?.maxOutputTokens ?? 4000,
-        });
+        try {
+            const response = await this.client.chat.completions.create({
+                model: this.model,
+                messages: messages.map(m => ({ role: m.role, content: m.content })),
+                temperature: options?.temperature ?? 0.7,
+                max_tokens: options?.maxOutputTokens ?? 4000,
+            });
 
-        return response.choices[0]?.message?.content || '';
+            return response.choices[0]?.message?.content || '';
+        } catch (error: any) {
+            console.error('[OpenRouter] API Error:', error.response?.data || error.message);
+            throw error;
+        }
     }
 
     async generateStream(

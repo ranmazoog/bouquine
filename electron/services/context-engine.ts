@@ -13,7 +13,7 @@ const MAX_CONTEXT_CHARS = 20000;
 const oramaSchema = {
     id: 'string',
     projectId: 'string',
-    type: 'string', // 'character' | 'world' | 'summary'
+    type: 'string', // 'character' | 'world' | 'summary' | 'reference'
     title: 'string',
     content: 'string',
 } as const;
@@ -88,7 +88,28 @@ export async function initializeContextIndex(projectId: string): Promise<void> {
         });
     }
 
-    console.log(`[ContextEngine] Indexed ${characters.length} characters, ${worldElements.length} world elements, ${chapters.length} summaries for project ${projectId}`);
+    // 4. Load Research References
+    const references = db.prepare(
+        "SELECT id, title, content, type, tag FROM project_references WHERE project_id = ?"
+    ).all(projectId) as Array<{ id: string; title: string; content: string; type: string; tag: string }>;
+
+    for (const ref of references) {
+        const content = [
+            ref.title,
+            ref.tag ? `Tag: ${ref.tag}` : '',
+            ref.content || '',
+        ].filter(Boolean).join('\n');
+
+        await insert(oramaDb, {
+            id: `reference-${ref.id}`,
+            projectId,
+            type: 'reference',
+            title: ref.title,
+            content,
+        });
+    }
+
+    console.log(`[ContextEngine] Indexed ${characters.length} characters, ${worldElements.length} world elements, ${chapters.length} summaries, ${references.length} research notes for project ${projectId}`);
 }
 
 /**
@@ -113,14 +134,44 @@ export async function searchContext(query: string, projectId: string, limit = 3)
         });
 
         return results.hits.map((hit) => ({
-            type: hit.document.type,
-            title: hit.document.title,
-            content: hit.document.content,
+            type: hit.document.type as string,
+            title: hit.document.title as string,
+            content: hit.document.content as string,
         }));
     } catch (err) {
         console.error('[ContextEngine] Search error:', err);
         return [];
     }
+}
+
+/**
+ * Simple keyword extractor for search augmentation
+ */
+function extractKeywords(text: string, count = 5): string[] {
+    if (!text) return [];
+
+    // Remove punctuation and lowercase
+    const words = text.toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length > 4); // Only words longer than 4 chars
+
+    // Common English stop words
+    const stopWords = new Set(['about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'could', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having', 'here', 'how', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours', 'ourselves', 'out', 'over', 'own', 'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'with', 'would', 'you', 'your', 'yours', 'yourself', 'yourselves']);
+
+    const filtered = words.filter(w => !stopWords.has(w));
+
+    // Frequency map
+    const freq: Record<string, number> = {};
+    filtered.forEach(w => {
+        freq[w] = (freq[w] || 0) + 1;
+    });
+
+    // Sort by frequency
+    return Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, count)
+        .map(entry => entry[0]);
 }
 
 /**
@@ -151,12 +202,34 @@ export async function buildPrompt(
     // 4. Search for relevant context from Vault and Summaries
     const relevantContext = await searchContext(userMessage, projectId, 3);
 
+    // 4b. Secondary Keyword Search for Proactive Research Discovery
+    const keywords = extractKeywords(chapter.content || '', 5);
+    let proactiveResearch: any[] = [];
+    if (keywords.length > 0) {
+        proactiveResearch = await searchContext(keywords.join(' '), projectId, 5);
+        // Filter specifically for research notes and remove duplicates from relevantContext
+        const existingTitles = new Set(relevantContext.map(c => c.title));
+        proactiveResearch = proactiveResearch.filter(item =>
+            item.type === 'reference' && !existingTitles.has(item.title)
+        ).slice(0, 3);
+    }
+
     // 5. Format the relevant context
     let ragSection = '';
-    if (relevantContext.length > 0) {
-        ragSection = '\n\nRELEVANT CONTEXT (Vault & Summaries):\n';
-        for (const item of relevantContext) {
-            ragSection += `\n[${item.type.toUpperCase()}] ${item.title}:\n${item.content}\n`;
+    if (relevantContext.length > 0 || proactiveResearch.length > 0) {
+        ragSection = '\n\nRELEVANT CONTEXT (Vault, Summaries & Research):\n';
+
+        if (relevantContext.length > 0) {
+            for (const item of relevantContext) {
+                ragSection += `\n[${item.type.toUpperCase()}] ${item.title}:\n${item.content}\n`;
+            }
+        }
+
+        if (proactiveResearch.length > 0) {
+            ragSection += '\n--- Proactive Research Found ---\n';
+            for (const item of proactiveResearch) {
+                ragSection += `[RESEARCH] ${item.title}:\n${item.content}\n`;
+            }
         }
     }
 
@@ -225,7 +298,13 @@ INSTRUCTIONS: The user has highlighted the text above. Focus your response speci
 - Book Blurb (Premise): ${project.blurb || 'Not specified'}`;
 
     // 9. Construct System Prompt
-    const systemPrompt = `You are an expert fiction editor and writing assistant.
+    const systemPrompt = `You are an expert fiction editor and writing assistant. Your core role is to act as a contextual suggestion engine for the user.
+
+When the user provides or asks about research cards (Notes/Links), you must:
+1. Synthesize BOTH the 'Card Title' and the 'Card Content/Notes' to understand the full intention.
+2. Generate ideas, insights, or plot developments that are directly derived from AND expand upon this integrated information.
+3. Avoid generic or unrelated suggestions; every idea must be specifically rooted in the provided context.
+4. If a Style Guide is present, ensure all suggestions maintain the specified POV, Tone, and Prose quality.
 
 ${metadataSection}
 ${styleSection}

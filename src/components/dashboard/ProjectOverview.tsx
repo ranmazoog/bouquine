@@ -1,4 +1,4 @@
-import { BookOpen, User, Target, Calendar, Edit3, FileText, Users, Globe, TrendingUp, Sparkles } from 'lucide-react';
+import { BookOpen, User, Target, Calendar, Edit3, FileText, Users, Globe, TrendingUp, Sparkles, Loader2, Check, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useProjectStore, useEditorStore, useVaultStore } from '../../stores/projectStore';
 
@@ -12,6 +12,7 @@ export function ProjectOverview() {
     const [authorValue, setAuthorValue] = useState(currentProject?.author || '');
     const [blurbValue, setBlurbValue] = useState(currentProject?.blurb || '');
     const [isGeneratingBlurb, setIsGeneratingBlurb] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     // Load vault data when project changes
     useEffect(() => {
@@ -74,18 +75,32 @@ export function ProjectOverview() {
 
     const handleGenerateBlurb = async () => {
         if (!currentProject) return;
+
+        if (!currentProject.synopsis || currentProject.synopsis.trim().length === 0) {
+            showToast('Please write a synopsis first to generate a blurb.', 'error');
+            return;
+        }
+
         setIsGeneratingBlurb(true);
         try {
-            const synopsis = currentProject.blurb || "No synopsis provided.";
-            const generatedBlurb = await window.electronAPI.generateBlurb(currentProject.id, synopsis);
+            const generatedBlurb = await window.electronAPI.generateBlurb(currentProject.id, currentProject.synopsis);
             setBlurbValue(generatedBlurb);
-            // Optionally save it immediately or let the user edit it first
-            // setIsEditingBlurb(true); // Open the editor to let them review
+            // Auto-save the generated blurb to the database
+            const updated = await window.electronAPI.updateProject(currentProject.id, { blurb: generatedBlurb });
+            updateProjectInStore(updated);
+            setCurrentProject(updated);
+            showToast('Blurb generated and saved!', 'success');
         } catch (err) {
             console.error('Failed to generate blurb:', err);
+            showToast('Failed to generate blurb. Check your API key.', 'error');
         } finally {
             setIsGeneratingBlurb(false);
         }
+    };
+
+    const showToast = (message: string, type: 'success' | 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
     };
 
     const handleNavigateToChapters = () => {
@@ -177,11 +192,28 @@ export function ProjectOverview() {
                 </div>
 
                 {/* Blurb Section */}
-                <div className="mb-10 p-6 bg-accent/30 rounded-xl border border-border/50">
+                <div className="mb-10 p-6 bg-accent/30 rounded-xl border border-border/50 relative">
+                    {/* Toast Notification */}
+                    {toast && (
+                        <div className={`absolute -top-10 right-4 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm animate-in slide-in-from-top-2 ${
+                            toast.type === 'success' 
+                                ? 'bg-green-500/10 text-green-600 border border-green-500/20' 
+                                : 'bg-destructive/10 text-destructive border border-destructive/20'
+                        }`}>
+                            {toast.type === 'success' ? <Check size={14} /> : <X size={14} />}
+                            {toast.message}
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Book Blurb / Premise</h2>
                         <div className="flex items-center gap-2">
-                            {!isEditingBlurb && !isGeneratingBlurb && (
+                            {isGeneratingBlurb ? (
+                                <div className="flex items-center gap-2 text-primary">
+                                    <Loader2 size={14} className="animate-spin" />
+                                    <span className="text-xs">Generating...</span>
+                                </div>
+                            ) : (
                                 <button
                                     onClick={handleGenerateBlurb}
                                     className="text-muted-foreground hover:text-primary transition-colors"
@@ -294,7 +326,7 @@ export function ProjectOverview() {
                         onClick={handleNavigateToChapters}
                         className="px-5 py-2.5 bg-primary text-primary-foreground rounded-full font-medium hover:scale-105 transition-all shadow-lg shadow-primary/20"
                     >
-                        Start Writing
+                        {totalWords > 0 ? 'Continue Writing' : 'Start Writing'}
                     </button>
                     <button
                         onClick={handleNavigateToCharacters}
