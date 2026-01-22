@@ -7,6 +7,9 @@
     "dev": "vite",
     "test": "vitest",
     "build": "tsc -b && vite build",
+    "build:mac": "npm run build && npx electron-builder --mac",
+    "build:win": "npm run build && npx electron-builder --win",
+    "build:linux": "npm run build && npx electron-builder --linux",
     "lint": "eslint .",
     "preview": "vite preview",
     "rebuild": "npx @electron/rebuild",
@@ -59,5 +62,42 @@
     "vite-plugin-electron": "^0.29.0",
     "vite-plugin-electron-renderer": "^0.14.6",
     "vitest": "^4.0.17"
+  },
+  "build": {
+    "appId": "com.bouquine.app",
+    "productName": "Bouquine",
+    "copyright": "Copyright © 2025 Bouquine",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "src/assets/icon.icns",
+      "target": "dmg",
+      "binaries": []
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "src/assets/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Office"
+    },
+    "files": [
+      {
+        "from": "dist",
+        "to": "."
+      },
+      {
+        "from": "dist-electron",
+        "to": "."
+      },
+      {
+        "from": "node_modules",
+        "to": "node_modules"
+      },
+      "!node_modules/.cache"
+    ],
+    "directories": {
+      "output": "release"
+    }
   }
 }
