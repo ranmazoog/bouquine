@@ -1,0 +1,28 @@
+declare module 'html-to-docx' {
+    interface HtmlToDocxOptions {
+        table?: {
+            row?: {
+                cantSplit?: boolean;
+            };
+        };
+        footer?: boolean;
+        pageNumber?: boolean;
+        font?: string;
+        fontSize?: number;
+        margins?: {
+            top?: number;
+            right?: number;
+            bottom?: number;
+            left?: number;
+        };
+    }
+
+    function HTMLtoDOCX(
+        htmlString: string,
+        headerHTMLString: string | null,
+        options?: HtmlToDocxOptions,
+        additionalOptions?: object
+    ): Promise<Buffer>;
+
+    export default HTMLtoDOCX;
+}
