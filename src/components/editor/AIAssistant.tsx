@@ -1,4 +1,4 @@
-import { Send, Feather, Sparkles, User, Bot, Trash2, FileText, Loader2, ChevronDown, ChevronRight, ArrowLeft, Copy, Check, X, RotateCcw, Wand2, StretchVertical, Scissors, MessageSquare, Settings, Link as LinkIcon, Plus, ExternalLink } from 'lucide-react';
+import { Send, Feather, Sparkles, User, Trash2, FileText, Loader2, ChevronDown, ChevronRight, ArrowLeft, Copy, Check, X, RotateCcw, Wand2, StretchVertical, Scissors, MessageSquare, Settings, Link as LinkIcon, Plus, ExternalLink, Crown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import type { AIProvider } from '../../types/electron';
@@ -281,12 +281,14 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
             const errorMessage = err?.message || err?.toString() || 'Unknown error';
             let userMessage = 'Error: Could not connect to AI. Please check your API settings.';
 
-            if (errorMessage.includes('401') || errorMessage.includes('No cookie auth')) {
+            if (errorMessage.includes('401') || errorMessage.includes('No cookie auth') || errorMessage.includes('API key')) {
                 userMessage = 'Authentication Error: Your API key is missing or invalid. Please open Settings (⚙️) and configure your API key.';
-            } else if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
-                userMessage = 'Rate Limit: Too many requests. Please wait a moment and try again.';
-            } else if (errorMessage.includes('insufficient_quota')) {
+            } else if (errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('free-models-per-day')) {
+                userMessage = 'Rate Limit: Free daily limit reached. Add credits to OpenRouter or wait until tomorrow.';
+            } else if (errorMessage.includes('insufficient_quota') || errorMessage.includes('quota')) {
                 userMessage = 'Quota Exceeded: Your API key has exceeded its quota. Please check your account.';
+            } else if (errorMessage.includes('Provider returned error') || errorMessage.includes('provider')) {
+                userMessage = 'Provider Error: The AI provider returned an error. Check your API key and quota.';
             }
 
             setMessages(prev => [
@@ -543,8 +545,11 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
             {/* Rebranded Header */}
             <div className="p-4 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Feather size={18} className="text-primary" />
-                    <h3 className="font-semibold text-sm">The Muse</h3>
+                     <div className="relative">
+                         <Crown size={18} className="text-primary" />
+                         <Feather size={10} className="absolute -top-1 -right-1 text-yellow-500 rotate-45" />
+                     </div>
+                     <h3 className="font-serif font-semibold text-sm tracking-wide">The Muse</h3>
                 </div>
                 <div className="flex items-center gap-1">
                     <button
@@ -579,7 +584,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                             w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm
                             ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-purple-600'}
                         `}>
-                                {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
+                                {msg.role === 'user' ? <User size={14} /> : <Feather size={14} />}
                             </div>
 
                             {/* Message Bubble */}

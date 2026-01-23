@@ -92,6 +92,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('export-to-docx', { projectId, chapterIds, filePath }),
     exportChapterToDocx: (chapterId: string, filePath: string) =>
         ipcRenderer.invoke('export-chapter-to-docx', { chapterId, filePath }),
+    exportToPdf: (projectId: string, chapterIds: string[], filePath: string) =>
+        ipcRenderer.invoke('export-to-pdf', { projectId, chapterIds, filePath }),
+    exportToEpub: (projectId: string, chapterIds: string[], filePath: string) =>
+        ipcRenderer.invoke('export-to-epub', { projectId, chapterIds, filePath }),
+    exportToJson: (projectId: string, filePath: string) =>
+        ipcRenderer.invoke('export-to-json', { projectId, filePath }),
 
     // Utility
     getAppDataPath: () => ipcRenderer.invoke('get-app-data-path'),

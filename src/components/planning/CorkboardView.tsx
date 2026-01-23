@@ -6,7 +6,7 @@ import { debounce } from 'lodash';
 
 export function CorkboardView() {
     const { chapters, currentProject, updateChapterInStore, removeChapter, addChapter } = useProjectStore();
-    const { setCurrentChapter, setActiveSidebarTab, setActiveBeat } = useEditorStore();
+    const { setCurrentChapter, setActiveSidebarTab, setActiveBeat, setChaptersViewMode } = useEditorStore();
 
     const handleCreateChapter = async () => {
         if (!currentProject) return;
@@ -56,6 +56,7 @@ export function CorkboardView() {
                             setCurrentChapter={setCurrentChapter}
                             setActiveSidebarTab={setActiveSidebarTab}
                             setActiveBeat={setActiveBeat}
+                            setChaptersViewMode={setChaptersViewMode}
                         />
                     ))}
 
@@ -82,13 +83,15 @@ interface ChapterCardProps {
     setCurrentChapter: (chapter: Chapter) => void;
     setActiveSidebarTab: (tab: any) => void;
     setActiveBeat: (beat: string | null) => void;
+    setChaptersViewMode: (mode: 'list' | 'corkboard') => void;
 }
 
-function ChapterCard({ chapter, onUpdate, onDelete, setCurrentChapter, setActiveSidebarTab, setActiveBeat }: ChapterCardProps) {
+function ChapterCard({ chapter, onUpdate, onDelete, setCurrentChapter, setActiveSidebarTab, setActiveBeat, setChaptersViewMode }: ChapterCardProps) {
     const [title, setTitle] = useState(chapter.title || '');
     const [summary, setSummary] = useState(chapter.summary || '');
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Auto-save logic
     const debouncedSave = useCallback(
@@ -122,6 +125,8 @@ function ChapterCard({ chapter, onUpdate, onDelete, setCurrentChapter, setActive
         if (!currentProject) return;
 
         setIsGenerating(true);
+        setErrorMessage(null);
+
         try {
             let result: string;
 
@@ -144,8 +149,8 @@ function ChapterCard({ chapter, onUpdate, onDelete, setCurrentChapter, setActive
                     {
                         role: 'user' as const,
                         content: `Project Title: ${currentProject.title}
- Project Synopsis: ${currentProject.blurb || 'Not provided'}
- Previous Chapter Summary: ${prevChapter?.summary || 'This is the first chapter.'}
+  Project Synopsis: ${currentProject.blurb || 'Not provided'}
+  Previous Chapter Summary: ${prevChapter?.summary || 'This is the first chapter.'}
 
 Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapter_number}).`
                     }
@@ -155,8 +160,19 @@ Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapte
                 setSummary(result);
                 // The useEffect will trigger the debounced save
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to generate beat:', err);
+            const errorMsg = err?.message || err?.toString() || 'Unknown error';
+
+            if (errorMsg.includes('429') || errorMsg.includes('rate limit') || errorMsg.includes('free-models-per-day')) {
+                setErrorMessage('Rate Limit: Free daily limit reached. Add credits to OpenRouter or wait until tomorrow.');
+            } else if (errorMsg.includes('401') || errorMsg.includes('API key')) {
+                setErrorMessage('API Key Error: Check Settings (⚙️) to configure your API key.');
+            } else if (errorMsg.includes('insufficient_quota')) {
+                setErrorMessage('Quota Exceeded: Your API quota has been reached.');
+            } else {
+                setErrorMessage(`Error: ${errorMsg}`);
+            }
         } finally {
             setIsGenerating(false);
         }
@@ -215,43 +231,51 @@ Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapte
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t bg-accent/5 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="px-2 py-0.5 rounded-full bg-accent text-[10px] text-muted-foreground font-medium">
-                        {chapter.word_count.toLocaleString()} words
+            <div className="p-3 border-t bg-accent/5 flex flex-col gap-2">
+                {errorMessage && (
+                    <div className="text-[10px] text-destructive bg-destructive/10 px-2 py-1 rounded border border-destructive/20">
+                        {errorMessage}
                     </div>
-                    {isSaving && <Loader2 size={10} className="animate-spin text-muted-foreground" />}
-                </div>
+                )}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="px-2 py-0.5 rounded-full bg-accent text-[10px] text-muted-foreground font-medium">
+                            {chapter.word_count.toLocaleString()} words
+                        </div>
+                        {isSaving && <Loader2 size={10} className="animate-spin text-muted-foreground" />}
+                    </div>
 
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={handleGenerateBeat}
-                        disabled={isGenerating}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary/20 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                        {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                        <span>✨ Generate Beat</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleGenerateBeat}
+                            disabled={isGenerating}
+                            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary/20 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                            <span>✨ Generate Beat</span>
+                        </button>
 
-                    <button
-                        onClick={async () => {
-                            if ((!chapter.content || chapter.content.trim() === '') && chapter.summary) {
-                                try {
-                                    await window.electronAPI.updateChapter(chapter.id, { content: chapter.summary });
-                                } catch (err) {
-                                    console.error('Failed to insert summary:', err);
+                        <button
+                            onClick={async () => {
+                                if ((!chapter.content || chapter.content.trim() === '') && chapter.summary) {
+                                    try {
+                                        await window.electronAPI.updateChapter(chapter.id, { content: chapter.summary });
+                                    } catch (err) {
+                                        console.error('Failed to insert summary:', err);
+                                    }
                                 }
-                            }
-                            setCurrentChapter(chapter);
-                            setActiveSidebarTab('chapters');
-                            if (chapter.summary) {
-                                setActiveBeat(chapter.summary);
-                            }
-                        }}
-                        className="p-1 px-3 text-[11px] font-bold bg-accent text-muted-foreground hover:text-foreground rounded-full transition-colors"
-                    >
-                        Write Prose
-                    </button>
+                                setCurrentChapter(chapter);
+                                setChaptersViewMode('list');
+                                setActiveSidebarTab('chapters');
+                                if (chapter.summary) {
+                                    setActiveBeat(chapter.summary);
+                                }
+                            }}
+                            className="p-1 px-3 text-[11px] font-bold bg-accent text-muted-foreground hover:text-foreground rounded-full transition-colors"
+                        >
+                            Write Prose
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -47,7 +47,8 @@ import {
 } from './services/security';
 import { createAIProvider } from './services/ai-provider';
 import { buildPrompt, refreshContextIndex, searchContext } from './services/context-engine';
-import { exportToDocx, exportChapterToDocx } from './services/export';
+import { exportToDocx, exportChapterToDocx, exportToEpub, buildManuscriptHtml, getProjectExportData, exportToProjectJson } from './services/export';
+import { writeFile } from 'fs/promises';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // Removed electron-squirrel-startup for ESM compatibility in this environment.
@@ -509,4 +510,68 @@ ipcMain.handle('export-to-docx', async (_event, { projectId, chapterIds, filePat
 
 ipcMain.handle('export-chapter-to-docx', async (_event, { chapterId, filePath }) => {
     return exportChapterToDocx(chapterId, filePath);
+});
+
+ipcMain.handle('export-to-epub', async (_event, { projectId, chapterIds, filePath }) => {
+    return exportToEpub(projectId, chapterIds || [], filePath);
+});
+
+ipcMain.handle('export-to-pdf', async (_event, { projectId, chapterIds, filePath }) => {
+    try {
+        const { project, chapters } = await getProjectExportData(projectId, chapterIds);
+        const html = buildManuscriptHtml(project, chapters);
+
+        // Debug: Log first 500 chars of HTML to check title page
+        console.log('[Export PDF] Generated HTML (first 500 chars):', html.substring(0, 500));
+        console.log('[Export PDF] Project title:', project.title);
+        console.log('[Export PDF] Project author:', project.author);
+        console.log('[Export PDF] Number of chapters:', chapters.length);
+
+        const tempWindow = new BrowserWindow({
+            show: false,
+            webPreferences: {
+                offscreen: true
+            }
+        });
+
+        // Use data URL to load the HTML content
+        await tempWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+
+        // Wait a bit for any internal rendering if necessary, though this is static HTML
+        // Generate PDF with professional headers and footers
+        const pdfBuffer = await tempWindow.webContents.printToPDF({
+            printBackground: true,
+            pageSize: 'Letter',
+            displayHeaderFooter: true,
+            headerTemplate: `
+                <div style="font-size: 9px; width: 100%; text-align: left; margin-left: 40px; color: #000; font-family: 'Times New Roman', serif;">
+                    ${project.title.toUpperCase()} &bull; ${new Date().getFullYear()}
+                </div>`,
+            footerTemplate: `
+                <div style="font-size: 9px; width: 100%; text-align: center; color: #000; font-family: 'Times New Roman', serif;">
+                    Page <span class="pageNumber"></span> | Confidential
+                </div>`,
+            margins: {
+                top: 1,
+                bottom: 1,
+                left: 1,
+                right: 1
+            }
+        });
+
+        await writeFile(filePath, pdfBuffer);
+        tempWindow.close();
+
+        return { success: true };
+    } catch (error) {
+        console.error('[Export PDF] Failed:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error during PDF export'
+        };
+    }
+});
+
+ipcMain.handle('export-to-json', async (_event, { projectId, filePath }) => {
+    return exportToProjectJson(projectId, filePath);
 });

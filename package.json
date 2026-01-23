@@ -2,6 +2,13 @@
   "name": "bouquine",
   "private": true,
   "version": "1.0.0",
+  "description": "AI-powered creative writing assistant for novelists",
+  "author": {
+    "name": "Francis",
+    "email": "francis@digital-factory.dev"
+  },
+  "repository": "https://github.com/ranmazoog/bouquine",
+  "license": "MIT",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
@@ -25,6 +32,7 @@
     "better-sqlite3": "^12.6.0",
     "docx": "^9.5.1",
     "electron-store": "^6.0.1",
+    "epub-gen-memory": "^1.1.2",
     "html-to-docx": "^1.8.0",
     "lucide-react": "^0.562.0",
     "openai": "^6.16.0",
@@ -66,20 +74,29 @@
   "build": {
     "appId": "com.bouquine.app",
     "productName": "Bouquine",
-    "copyright": "Copyright © 2025 Bouquine",
+    "copyright": "Copyright 2025 Bouquine",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "src/assets/icon.icns",
-      "target": "dmg",
-      "binaries": []
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.icns"
     },
     "win": {
-      "target": "nsis",
-      "icon": "src/assets/icon.ico"
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
     },
     "linux": {
-      "target": "AppImage",
-      "category": "Office"
+      "target": [
+        "AppImage"
+      ],
+      "icon": "build"
     },
     "files": [
       {
@@ -95,9 +112,6 @@
         "to": "node_modules"
       },
       "!node_modules/.cache"
-    ],
-    "directories": {
-      "output": "release"
-    }
+    ]
   }
 }

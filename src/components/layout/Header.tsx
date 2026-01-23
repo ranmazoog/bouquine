@@ -1,4 +1,4 @@
-import { Share, Download, ChevronDown, Plus, Trash2, FolderOpen, Maximize2, Minimize2, FileText, FileJson, FileType, Loader2 } from 'lucide-react';
+import { Share, Download, ChevronDown, Plus, Trash2, FolderOpen, Maximize2, Minimize2, FileText, FileJson, FileType, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import { useState, useRef, useEffect } from 'react';
 
@@ -76,13 +76,10 @@ export function Header({ onNewProject }: HeaderProps) {
         setIsExportOpen(false);
 
         try {
-            // Show save dialog
             const result = await window.electronAPI.showSaveDialog({
                 title: 'Export as Word Document',
                 defaultPath: `${currentProject.title}.docx`,
-                filters: [
-                    { name: 'Word Document', extensions: ['docx'] },
-                ],
+                filters: [{ name: 'Word Document', extensions: ['docx'] }],
             });
 
             if (result.canceled || !result.filePath) {
@@ -90,18 +87,114 @@ export function Header({ onNewProject }: HeaderProps) {
                 return;
             }
 
-            // Export all chapters
-            const exportResult = await window.electronAPI.exportToDocx(
-                currentProject.id,
-                [], // Empty = all chapters
-                result.filePath
-            );
+            const exportResult = await window.electronAPI.exportToDocx(currentProject.id, [], result.filePath);
 
             if (exportResult.success) {
                 setExportStatus('success');
                 setTimeout(() => setExportStatus('idle'), 3000);
             } else {
-                console.error('Export failed:', exportResult.error);
+                setExportStatus('error');
+                setTimeout(() => setExportStatus('idle'), 3000);
+            }
+        } catch (err) {
+            console.error('Export error:', err);
+            setExportStatus('error');
+            setTimeout(() => setExportStatus('idle'), 3000);
+        }
+    };
+
+    const handleExportToPdf = async () => {
+        if (!currentProject) return;
+
+        setExportStatus('exporting');
+        setIsExportOpen(false);
+
+        try {
+            const result = await window.electronAPI.showSaveDialog({
+                title: 'Export as Manuscript PDF',
+                defaultPath: `${currentProject.title}.pdf`,
+                filters: [{ name: 'PDF Document', extensions: ['pdf'] }],
+            });
+
+            if (result.canceled || !result.filePath) {
+                setExportStatus('idle');
+                return;
+            }
+
+            const exportResult = await window.electronAPI.exportToPdf(currentProject.id, [], result.filePath);
+
+            if (exportResult.success) {
+                setExportStatus('success');
+                setTimeout(() => setExportStatus('idle'), 3000);
+            } else {
+                setExportStatus('error');
+                setTimeout(() => setExportStatus('idle'), 3000);
+            }
+        } catch (err) {
+            console.error('Export error:', err);
+            setExportStatus('error');
+            setTimeout(() => setExportStatus('idle'), 3000);
+        }
+    };
+
+    const handleExportToEpub = async () => {
+        if (!currentProject) return;
+
+        setExportStatus('exporting');
+        setIsExportOpen(false);
+
+        try {
+            const result = await window.electronAPI.showSaveDialog({
+                title: 'Export as ePub eBook',
+                defaultPath: `${currentProject.title}.epub`,
+                filters: [{ name: 'ePub eBook', extensions: ['epub'] }],
+            });
+
+            if (result.canceled || !result.filePath) {
+                setExportStatus('idle');
+                return;
+            }
+
+            const exportResult = await window.electronAPI.exportToEpub(currentProject.id, [], result.filePath);
+
+            if (exportResult.success) {
+                setExportStatus('success');
+                setTimeout(() => setExportStatus('idle'), 3000);
+            } else {
+                setExportStatus('error');
+                setTimeout(() => setExportStatus('idle'), 3000);
+            }
+        } catch (err) {
+            console.error('Export error:', err);
+            setExportStatus('error');
+            setTimeout(() => setExportStatus('idle'), 3000);
+        }
+    };
+
+    const handleExportToJson = async () => {
+        if (!currentProject) return;
+
+        setExportStatus('exporting');
+        setIsExportOpen(false);
+
+        try {
+            const result = await window.electronAPI.showSaveDialog({
+                title: 'Export as JSON Backup',
+                defaultPath: `${currentProject.title}.json`,
+                filters: [{ name: 'JSON File', extensions: ['json'] }],
+            });
+
+            if (result.canceled || !result.filePath) {
+                setExportStatus('idle');
+                return;
+            }
+
+            const exportResult = await window.electronAPI.exportToJson(currentProject.id, result.filePath);
+
+            if (exportResult.success) {
+                setExportStatus('success');
+                setTimeout(() => setExportStatus('idle'), 3000);
+            } else {
                 setExportStatus('error');
                 setTimeout(() => setExportStatus('idle'), 3000);
             }
@@ -119,12 +212,12 @@ export function Header({ onNewProject }: HeaderProps) {
                     {/* Project Selector Dropdown */}
                     <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="flex items-center gap-2 hover:bg-accent px-3 py-1.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1.5 hover:bg-accent px-3 py-1.5 rounded-lg transition-colors"
                     >
-                        <h2 className="font-semibold text-sm truncate max-w-[250px]">
+                        <span className="font-semibold text-sm truncate max-w-[250px]">
                             {currentProject?.title || 'Select Project'}
-                        </h2>
-                        <ChevronDown size={16} className={`text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        </span>
+                        <ChevronDown size={14} className={`text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {currentProject && (
@@ -240,21 +333,31 @@ export function Header({ onNewProject }: HeaderProps) {
                                                         'Export as Word (.docx)'}
                                         </span>
                                     </button>
-                                    <button className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent flex items-center gap-2 opacity-50 cursor-not-allowed">
+                                    <button
+                                        onClick={handleExportToPdf}
+                                        disabled={!currentProject || exportStatus === 'exporting'}
+                                        className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
                                         <FileText size={14} />
                                         <span>Export as PDF</span>
-                                        <span className="ml-auto text-xs text-muted-foreground">Soon</span>
                                     </button>
-                                    <button className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent flex items-center gap-2 opacity-50 cursor-not-allowed">
+                                    <button
+                                        onClick={handleExportToEpub}
+                                        disabled={!currentProject || exportStatus === 'exporting'}
+                                        className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
                                         <Download size={14} />
-                                        <span>Export as Markdown</span>
-                                        <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+                                        <span>Export as ePub</span>
                                     </button>
-                                    <button className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent flex items-center gap-2 opacity-50 cursor-not-allowed">
+                                    <button
+                                        onClick={handleExportToJson}
+                                        disabled={!currentProject || exportStatus === 'exporting'}
+                                        className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
                                         <FileJson size={14} />
                                         <span>Export as JSON</span>
-                                        <span className="ml-auto text-xs text-muted-foreground">Soon</span>
                                     </button>
+
                                 </div>
                             </div>
                         )}
@@ -298,6 +401,25 @@ export function Header({ onNewProject }: HeaderProps) {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Export Toast Notification */}
+            {(exportStatus === 'success' || exportStatus === 'error') && (
+                <div
+                    className={`fixed top-20 right-6 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border transition-all duration-300 animate-in slide-in-from-top-2 fade-in ${exportStatus === 'success'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600'
+                            : 'bg-red-500/10 border-red-500/30 text-red-600'
+                        }`}
+                >
+                    {exportStatus === 'success' ? (
+                        <CheckCircle size={20} className="animate-in zoom-in duration-300" />
+                    ) : (
+                        <XCircle size={20} className="animate-in zoom-in duration-300" />
+                    )}
+                    <span className="font-medium text-sm">
+                        {exportStatus === 'success' ? 'Export completed successfully!' : 'Export failed. Please try again.'}
+                    </span>
                 </div>
             )}
         </>

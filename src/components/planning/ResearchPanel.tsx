@@ -393,7 +393,7 @@ export function ResearchPanel() {
                             className="w-full py-4 bg-primary/10 border border-primary/20 hover:bg-primary/20 rounded-xl text-primary font-bold shadow-sm transition-all flex flex-col items-center justify-center gap-2 group disabled:opacity-50"
                         >
                             <Sparkles size={20} className={isBrainstorming ? "animate-spin" : "group-hover:scale-110 transition-transform"} />
-                            {isBrainstorming ? "The Muse is thinking..." : "✨ Suggest Research Gaps"}
+                             {isBrainstorming ? <><span className="font-serif font-semibold">The Muse</span> is thinking...</> : "✨ Suggest Research Gaps"}
                         </button>
 
                         {brainstormSuggestions && (
@@ -586,7 +586,7 @@ export function ResearchPanel() {
 
                             {!isAddingLink && !isAddingNote && (
                                 <p className="text-[10px] text-muted-foreground text-center mt-2 px-2 italic">
-                                    Links and notes are automatically indexed for The Muse assistant.
+                                     Links and notes are automatically indexed for <span className="font-serif font-semibold">The Muse</span> assistant.
                                 </p>
                             )}
                         </div>

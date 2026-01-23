@@ -193,6 +193,12 @@ export interface IElectronAPI {
         Promise<{ success: boolean; error?: string }>;
     exportChapterToDocx: (chapterId: string, filePath: string) =>
         Promise<{ success: boolean; error?: string }>;
+    exportToPdf: (projectId: string, chapterIds: string[], filePath: string) =>
+        Promise<{ success: boolean; error?: string }>;
+    exportToEpub: (projectId: string, chapterIds: string[], filePath: string) =>
+        Promise<{ success: boolean; error?: string }>;
+    exportToJson: (projectId: string, filePath: string) =>
+        Promise<{ success: boolean; error?: string }>;
 
     // Utility
     getAppDataPath: () => Promise<string>;
