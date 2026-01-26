@@ -193,14 +193,16 @@ export interface IElectronAPI {
         Promise<{ success: boolean; error?: string }>;
     exportChapterToDocx: (chapterId: string, filePath: string) =>
         Promise<{ success: boolean; error?: string }>;
-    exportToDocxDirect: (projectId: string, chapterIds: string[], filePath: string) =>
+    exportToPdf: (projectId: string, chapterIds: string[], filePath: string) =>
         Promise<{ success: boolean; error?: string }>;
-    // exportToPdf: (projectId: string, chapterIds: string[], filePath: string) =>
-    //     Promise<{ success: boolean; error?: string }>;
-    // exportToEpub: (projectId: string, chapterIds: string[], filePath: string) =>
-    //     Promise<{ success: boolean; error?: string }>;
-    // exportToJson: (projectId: string, filePath: string) =>
-    //     Promise<{ success: boolean; error?: string }>;
+    exportToEpub: (projectId: string, chapterIds: string[], filePath: string) =>
+        Promise<{ success: boolean; error?: string }>;
+    exportToJson: (projectId: string, filePath: string) =>
+        Promise<{ success: boolean; error?: string }>;
+    exportToMarkdown: (projectId: string, chapterIds: string[], filePath: string) =>
+        Promise<{ success: boolean; error?: string }>;
+    exportToTxt: (projectId: string, chapterIds: string[], filePath: string) =>
+        Promise<{ success: boolean; error?: string }>;
 
     // Intelligence Features
     auditChapterConsistency: (payload: { projectId: string; chapterId: string; provider: string }) => Promise<string>;

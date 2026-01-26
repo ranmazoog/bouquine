@@ -47,7 +47,15 @@ import {
 } from './services/security';
 import { createAIProvider } from './services/ai-provider';
 import { buildPrompt, refreshContextIndex, searchContext } from './services/context-engine';
-import { exportToDocx, exportChapterToDocx, exportToDocxDirect } from './services/export';
+import {
+    exportToDocx,
+    exportChapterToDocx,
+    exportToPdf,
+    exportToEpub,
+    exportToJson,
+    exportToMarkdown,
+    exportToTxt
+} from './services/export';
 import { auditChapterConsistency } from './services/context-engine';
 import { getAuthorStyleAnalysisPrompt } from './services/vault';
 import { logger } from './services/logger';
@@ -100,6 +108,24 @@ app.on('window-all-closed', function () {
 // ============================================================================
 // IPC Handlers - Projects
 // ============================================================================
+
+// Show save dialog
+ipcMain.handle('show-save-dialog', async (_event, options: {
+    title?: string;
+    defaultPath?: string;
+    filters?: Array<{ name: string; extensions: string[] }>;
+}) => {
+    const result = await dialog.showSaveDialog({
+        title: options.title || 'Save File',
+        defaultPath: options.defaultPath,
+        filters: options.filters || [{ name: 'All Files', extensions: ['*'] }],
+    });
+
+    return {
+        canceled: result.canceled,
+        filePath: result.filePath,
+    };
+});
 
 ipcMain.handle('create-project', async (_event, data) => {
     return createProject(data);
@@ -506,150 +532,40 @@ ipcMain.handle('update-style-guide', async (_event, { projectId, data }) => {
 // IPC Handlers - Export
 // ============================================================================
 
-ipcMain.handle('show-save-dialog', async (_event, options: {
-    title?: string;
-    defaultPath?: string;
-    filters?: Array<{ name: string; extensions: string[] }>;
-}) => {
-    const result = await dialog.showSaveDialog({
-        title: options.title || 'Save File',
-        defaultPath: options.defaultPath,
-        filters: options.filters || [{ name: 'All Files', extensions: ['*'] }],
-    });
 
-    return {
-        canceled: result.canceled,
-        filePath: result.filePath,
-    };
-});
-
+// DOCX Export
 ipcMain.handle('export-to-docx', async (_event, { projectId, chapterIds, filePath }) => {
     return exportToDocx(projectId, chapterIds || [], filePath);
 });
 
-ipcMain.handle('export-chapter-to-docx', async (_event, { chapterId, filePath }) => {
-    return exportChapterToDocx(chapterId, filePath);
+// EPUB Export
+ipcMain.handle('export-to-epub', async (_event, { projectId, chapterIds, filePath }) => {
+    return exportToEpub(projectId, chapterIds || [], filePath);
 });
 
-// Direct DOCX export (more reliable, no HTML conversion)
-ipcMain.handle('export-to-docx-direct', async (_event, { projectId, chapterIds, filePath }) => {
-    return exportToDocxDirect(projectId, chapterIds || [], filePath);
-});
-
-// EPUB export temporarily disabled - moved to separate file
-// ipcMain.handle('export-to-epub', async (_event, { projectId, chapterIds, filePath }) => {
-//     return exportToEpub(projectId, chapterIds || [], filePath);
-// });
-
-// PDF export temporarily disabled - moved to separate file
-// ipcMain.handle('export-to-pdf', async (_event, { projectId, chapterIds, filePath }) => {
-//     try {
-//         const { project, chapters } = await getProjectExportData(projectId, chapterIds);
-//         const html = buildManuscriptHtml(project, chapters);
-// 
-//         // Debug: Log basic info about PDF generation
-//         logger.logInfo(`[Export PDF] Starting PDF generation for project ${projectId}`);
-//         logger.logInfo(`[Export PDF] Project has ${chapters.length} chapter(s)`);
-// 
-//         // Create a hidden browser window for PDF generation
-//         const pdfWindow = new BrowserWindow({
-//             show: false,
-//             webPreferences: {
-//                 nodeIntegration: false,
-//                 contextIsolation: true,
-//             },
-//         });
-// 
-//         // Load the HTML content
-//         await pdfWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
-// 
-//         // Wait for content to load
-//         await new Promise((resolve) => setTimeout(resolve, 1000));
-// 
-//         // Generate PDF
-//         const pdfData = await pdfWindow.webContents.printToPDF({
-//             marginsType: 0, // Default margins
-//             printBackground: true,
-//             printSelectionOnly: false,
-//             landscape: false,
-//             pageSize: 'Letter',
-//         });
-// 
-//         // Write PDF to file
-//         await writeFile(filePath, pdfData);
-// 
-//         // Close the hidden window
-//         pdfWindow.close();
-// 
-//         logger.logInfo(`[Export PDF] Successfully exported PDF to ${filePath}`);
-//         return { success: true };
-//     } catch (error: any) {
-//         logger.logError(`[Export PDF] Failed to export PDF: ${error.message}`);
-//         return { success: false, error: error.message };
-//     }
-// });
-
-// JSON export temporarily disabled - moved to separate file
-// ipcMain.handle('export-to-json', async (_event, { projectId, filePath }) => {
-//     return exportToProjectJson(projectId, filePath);
-// });
-
+// PDF Export
 ipcMain.handle('export-to-pdf', async (_event, { projectId, chapterIds, filePath }) => {
-    try {
-        const { project, chapters } = await getProjectExportData(projectId, chapterIds);
-        const html = buildManuscriptHtml(project, chapters);
-
-        // Debug: Log basic info about PDF generation
-        logger.logInfo(`[Export PDF] Starting PDF generation for project ${projectId}`);
-        logger.logInfo(`[Export PDF] Project has ${chapters.length} chapter(s)`);
-
-        const tempWindow = new BrowserWindow({
-            show: false,
-            webPreferences: {
-                offscreen: true
-            }
-        });
-
-        // Use data URL to load the HTML content
-        await tempWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
-
-        // Wait a bit for any internal rendering if necessary, though this is static HTML
-        // Generate PDF with professional headers and footers
-        const pdfBuffer = await tempWindow.webContents.printToPDF({
-            printBackground: true,
-            pageSize: 'Letter',
-            displayHeaderFooter: true,
-            headerTemplate: `
-                <div style="font-size: 9px; width: 100%; text-align: left; margin-left: 40px; color: #000; font-family: 'Times New Roman', serif;">
-                    ${project.title.toUpperCase()} &bull; ${new Date().getFullYear()}
-                </div>`,
-            footerTemplate: `
-                <div style="font-size: 9px; width: 100%; text-align: center; color: #000; font-family: 'Times New Roman', serif;">
-                    Page <span class="pageNumber"></span> | Confidential
-                </div>`,
-            margins: {
-                top: 1,
-                bottom: 1,
-                left: 1,
-                right: 1
-            }
-        });
-
-        await writeFile(filePath, pdfBuffer);
-        tempWindow.close();
-
-        return { success: true };
-    } catch (error) {
-        logger.logError('[Export PDF] Failed', error);
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error during PDF export'
-        };
-    }
+    return exportToPdf(projectId, chapterIds || [], filePath);
 });
 
+// JSON Export (Full Backup)
 ipcMain.handle('export-to-json', async (_event, { projectId, filePath }) => {
-    return exportToProjectJson(projectId, filePath);
+    return exportToJson(projectId, filePath);
+});
+
+// Markdown Export
+ipcMain.handle('export-to-markdown', async (_event, { projectId, chapterIds, filePath }) => {
+    return exportToMarkdown(projectId, chapterIds || [], filePath);
+});
+
+// Plain Text Export
+ipcMain.handle('export-to-txt', async (_event, { projectId, chapterIds, filePath }) => {
+    return exportToTxt(projectId, chapterIds || [], filePath);
+});
+
+// Legacy/Compatibility handlers
+ipcMain.handle('export-chapter-to-docx', async (_event, { chapterId, filePath }) => {
+    return exportToDocx('', [chapterId], filePath);
 });
 
 ipcMain.handle('audit-chapter-consistency', async (_event, { projectId, chapterId, provider }) => {
