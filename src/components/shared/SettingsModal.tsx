@@ -1,4 +1,4 @@
-import { X, Key, Shield, Check, Moon, Sun } from 'lucide-react';
+import { X, Key, Shield, Check, Moon, Sun, FolderOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { AIProvider } from '../../types/electron';
 
@@ -16,12 +16,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const [encryptionMethod, setEncryptionMethod] = useState<'keychain' | 'base64'>('keychain');
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
     const [openrouterModel, setOpenrouterModel] = useState(DEFAULT_OPENROUTER_MODEL);
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             loadSettings();
+            setSaveError(null);
         }
     }, [isOpen, selectedProvider]);
 
@@ -53,6 +55,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
         setIsSaving(true);
         setSaveSuccess(false);
+        setSaveError(null);
 
         try {
             await window.electronAPI.setAPIKey(selectedProvider, apiKey);
@@ -69,6 +72,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
             console.error('Failed to save API key:', error);
+            setSaveError(error instanceof Error ? error.message : 'Failed to save API key');
+            // Don't clear the input on error - let user try again
         } finally {
             setIsSaving(false);
         }
@@ -100,6 +105,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             setApiKey('');
         } catch (error) {
             console.error('Failed to delete API key:', error);
+        }
+    };
+
+    const handleOpenLogs = async () => {
+        try {
+            await window.electronAPI.openLogsFolder();
+        } catch (error) {
+            console.error('Failed to open logs folder:', error);
+            alert(`Failed to open logs folder: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
@@ -222,22 +236,31 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             </div>
                         )}
 
-                        <input
-                            type="password"
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            className="w-full bg-accent/30 border border-border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
-                            placeholder={hasKey ? "Enter new key to update..." : selectedProvider === 'openrouter' ? "sk-or-..." : "sk-..."}
-                        />
-                        <p className="text-xs text-muted-foreground mt-2">
-                            {selectedProvider === 'openai' ? (
-                                <>Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenAI Platform</a></>
-                            ) : selectedProvider === 'anthropic' ? (
-                                <>Get your API key from <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Anthropic Console</a></>
-                            ) : (
-                                <>Get your free API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenRouter</a></>
-                            )}
-                        </p>
+                         <input
+                             type="password"
+                             value={apiKey}
+                             onChange={(e) => {
+                                 setApiKey(e.target.value);
+                                 setSaveError(null);
+                             }}
+                             className="w-full bg-accent/30 border border-border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
+                             placeholder={hasKey ? "Enter new key to update..." : selectedProvider === 'openrouter' ? "sk-or-..." : "sk-..."}
+                         />
+                         <p className="text-xs text-muted-foreground mt-2">
+                             {selectedProvider === 'openai' ? (
+                                 <>Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenAI Platform</a></>
+                             ) : selectedProvider === 'anthropic' ? (
+                                 <>Get your API key from <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Anthropic Console</a></>
+                             ) : (
+                                 <>Get your free API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenRouter</a></>
+                             )}
+                         </p>
+                         
+                         {saveError && (
+                             <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                                 <p className="text-sm text-destructive">{saveError}</p>
+                             </div>
+                         )}
                     </div>
 
                     {/* OpenRouter Model Selection */}
@@ -261,6 +284,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             </p>
                         </div>
                     )}
+
+                    {/* Troubleshooting Section */}
+                    <div className="pt-6 mt-6 border-t">
+                        <h3 className="text-sm font-medium mb-3">Troubleshooting</h3>
+                        <div className="space-y-3">
+                            <button
+                                onClick={handleOpenLogs}
+                                className="w-full flex items-center gap-3 px-4 py-3 bg-accent/30 hover:bg-accent/50 border border-border rounded-lg transition-colors text-sm"
+                            >
+                                <FolderOpen size={18} />
+                                <div className="text-left flex-1">
+                                    <div className="font-medium">📂 Open Debug Logs</div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">
+                                        This file contains technical error codes. It does not contain your manuscript. Attach this if reporting a bug.
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
 
                     {/* Save Button */}
                     <div className="flex gap-3 pt-4 border-t">

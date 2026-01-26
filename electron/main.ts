@@ -47,7 +47,10 @@ import {
 } from './services/security';
 import { createAIProvider } from './services/ai-provider';
 import { buildPrompt, refreshContextIndex, searchContext } from './services/context-engine';
-import { exportToDocx, exportChapterToDocx, exportToEpub, buildManuscriptHtml, getProjectExportData, exportToProjectJson } from './services/export';
+import { exportToDocx, exportChapterToDocx, exportToDocxDirect } from './services/export';
+import { auditChapterConsistency } from './services/context-engine';
+import { getAuthorStyleAnalysisPrompt } from './services/vault';
+import { logger } from './services/logger';
 import { writeFile } from 'fs/promises';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -79,6 +82,11 @@ app.whenReady().then(() => {
     getDatabase();
 
     createWindow();
+
+    // Log startup
+    logger.logInfo('Bouquine app starting...').catch(err => {
+        console.error('Failed to log startup:', err);
+    });
 
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -185,6 +193,17 @@ ipcMain.handle('open-link', async (_event, url) => {
 
 ipcMain.handle('get-app-data-path', () => {
     return app.getPath('userData');
+});
+
+ipcMain.handle('open-logs-folder', async () => {
+    try {
+        const logPath = await logger.getLogPathOrCreate();
+        shell.showItemInFolder(logPath);
+        return { success: true };
+    } catch (error) {
+        logger.logError('Failed to open logs folder', error);
+        throw error;
+    }
 });
 
 // ============================================================================
@@ -319,7 +338,7 @@ ipcMain.handle('ai-generate-stream', async (event, { provider, messages, options
 
 ipcMain.handle('ai-chat-message', async (event, { projectId, chapterId, message, provider, selectedText }) => {
     const apiKey = getAPIKey(provider);
-    console.log(`[AI] Provider: ${provider}, Has API Key: ${!!apiKey}`);
+    logger.logInfo(`[AI] Provider: ${provider}, Has API Key: ${!!apiKey}`);
 
     if (!apiKey) {
         throw new Error(`No API key found for provider: ${provider}. Please configure your API key in Settings.`);
@@ -329,7 +348,7 @@ ipcMain.handle('ai-chat-message', async (event, { projectId, chapterId, message,
     const model = provider === 'openrouter'
         ? (getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free')
         : undefined;
-    console.log(`[AI] Using model: ${model}`);
+    logger.logInfo(`[AI] Using model: ${model}`);
 
     const aiProvider = createAIProvider(provider, apiKey, model);
     // buildPrompt is now async to support RAG search - pass selectedText for context
@@ -512,20 +531,77 @@ ipcMain.handle('export-chapter-to-docx', async (_event, { chapterId, filePath })
     return exportChapterToDocx(chapterId, filePath);
 });
 
-ipcMain.handle('export-to-epub', async (_event, { projectId, chapterIds, filePath }) => {
-    return exportToEpub(projectId, chapterIds || [], filePath);
+// Direct DOCX export (more reliable, no HTML conversion)
+ipcMain.handle('export-to-docx-direct', async (_event, { projectId, chapterIds, filePath }) => {
+    return exportToDocxDirect(projectId, chapterIds || [], filePath);
 });
+
+// EPUB export temporarily disabled - moved to separate file
+// ipcMain.handle('export-to-epub', async (_event, { projectId, chapterIds, filePath }) => {
+//     return exportToEpub(projectId, chapterIds || [], filePath);
+// });
+
+// PDF export temporarily disabled - moved to separate file
+// ipcMain.handle('export-to-pdf', async (_event, { projectId, chapterIds, filePath }) => {
+//     try {
+//         const { project, chapters } = await getProjectExportData(projectId, chapterIds);
+//         const html = buildManuscriptHtml(project, chapters);
+// 
+//         // Debug: Log basic info about PDF generation
+//         logger.logInfo(`[Export PDF] Starting PDF generation for project ${projectId}`);
+//         logger.logInfo(`[Export PDF] Project has ${chapters.length} chapter(s)`);
+// 
+//         // Create a hidden browser window for PDF generation
+//         const pdfWindow = new BrowserWindow({
+//             show: false,
+//             webPreferences: {
+//                 nodeIntegration: false,
+//                 contextIsolation: true,
+//             },
+//         });
+// 
+//         // Load the HTML content
+//         await pdfWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+// 
+//         // Wait for content to load
+//         await new Promise((resolve) => setTimeout(resolve, 1000));
+// 
+//         // Generate PDF
+//         const pdfData = await pdfWindow.webContents.printToPDF({
+//             marginsType: 0, // Default margins
+//             printBackground: true,
+//             printSelectionOnly: false,
+//             landscape: false,
+//             pageSize: 'Letter',
+//         });
+// 
+//         // Write PDF to file
+//         await writeFile(filePath, pdfData);
+// 
+//         // Close the hidden window
+//         pdfWindow.close();
+// 
+//         logger.logInfo(`[Export PDF] Successfully exported PDF to ${filePath}`);
+//         return { success: true };
+//     } catch (error: any) {
+//         logger.logError(`[Export PDF] Failed to export PDF: ${error.message}`);
+//         return { success: false, error: error.message };
+//     }
+// });
+
+// JSON export temporarily disabled - moved to separate file
+// ipcMain.handle('export-to-json', async (_event, { projectId, filePath }) => {
+//     return exportToProjectJson(projectId, filePath);
+// });
 
 ipcMain.handle('export-to-pdf', async (_event, { projectId, chapterIds, filePath }) => {
     try {
         const { project, chapters } = await getProjectExportData(projectId, chapterIds);
         const html = buildManuscriptHtml(project, chapters);
 
-        // Debug: Log first 500 chars of HTML to check title page
-        console.log('[Export PDF] Generated HTML (first 500 chars):', html.substring(0, 500));
-        console.log('[Export PDF] Project title:', project.title);
-        console.log('[Export PDF] Project author:', project.author);
-        console.log('[Export PDF] Number of chapters:', chapters.length);
+        // Debug: Log basic info about PDF generation
+        logger.logInfo(`[Export PDF] Starting PDF generation for project ${projectId}`);
+        logger.logInfo(`[Export PDF] Project has ${chapters.length} chapter(s)`);
 
         const tempWindow = new BrowserWindow({
             show: false,
@@ -564,7 +640,7 @@ ipcMain.handle('export-to-pdf', async (_event, { projectId, chapterIds, filePath
 
         return { success: true };
     } catch (error) {
-        console.error('[Export PDF] Failed:', error);
+        logger.logError('[Export PDF] Failed', error);
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error during PDF export'
@@ -574,4 +650,55 @@ ipcMain.handle('export-to-pdf', async (_event, { projectId, chapterIds, filePath
 
 ipcMain.handle('export-to-json', async (_event, { projectId, filePath }) => {
     return exportToProjectJson(projectId, filePath);
+});
+
+ipcMain.handle('audit-chapter-consistency', async (_event, { projectId, chapterId, provider }) => {
+    const apiKey = getAPIKey(provider);
+    if (!apiKey) throw new Error(`No API key found for provider: ${provider}`);
+
+    const promptMessage = await auditChapterConsistency(projectId, chapterId);
+
+    // Get model for OpenRouter
+    const model = provider === 'openrouter'
+        ? (getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free')
+        : undefined;
+
+    const aiProvider = createAIProvider(provider, apiKey, model);
+
+    const messages = [
+        { role: 'system' as const, content: 'You are a detail-oriented manuscript auditor.' },
+        { role: 'user' as const, content: promptMessage }
+    ];
+
+    return await aiProvider.generate(messages);
+});
+
+ipcMain.handle('analyze-author-style', async (_event, { projectId, provider }) => {
+    const apiKey = getAPIKey(provider);
+    if (!apiKey) throw new Error(`No API key found for provider: ${provider}`);
+
+    const { prompt: promptMessage, proseSample } = getAuthorStyleAnalysisPrompt(projectId);
+
+    // Get model for OpenRouter
+    const model = provider === 'openrouter'
+        ? (getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free')
+        : undefined;
+
+    const aiProvider = createAIProvider(provider, apiKey, model);
+
+    const messages = [
+        { role: 'system' as const, content: 'You are an expert literary critic and writing style analyst. Analyze ONLY the actual observed writing style - vocabulary preferences, sentence structure, tone, and voice. Do NOT speculate about author influences or similar authors.' },
+        { role: 'user' as const, content: promptMessage }
+    ];
+
+    const result = await aiProvider.generate(messages);
+
+    // Update the Style Guide - ONLY update vocabulary_preferences and prose_samples
+    // Do NOT update author_influences - that's for manual user input only
+    updateStyleGuide(projectId, {
+        vocabulary_preferences: result,
+        prose_samples: proseSample
+    });
+
+    return result;
 });

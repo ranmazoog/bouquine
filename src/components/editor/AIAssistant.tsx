@@ -1,5 +1,5 @@
-import { Send, Feather, Sparkles, User, Trash2, FileText, Loader2, ChevronDown, ChevronRight, ArrowLeft, Copy, Check, X, RotateCcw, Wand2, StretchVertical, Scissors, MessageSquare, Settings, Link as LinkIcon, Plus, ExternalLink, Crown } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Send, Feather, Sparkles, User, Trash2, FileText, Loader2, ChevronDown, ChevronRight, ArrowLeft, Copy, Check, X, RotateCcw, Wand2, StretchVertical, Scissors, MessageSquare, Settings, Link as LinkIcon, Plus, ExternalLink, Shield } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import type { AIProvider } from '../../types/electron';
 import { debounce } from 'lodash';
@@ -38,6 +38,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
     ]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isAuditing, setIsAuditing] = useState(false);
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [selectedProvider, setSelectedProvider] = useState<AIProvider>('openrouter');
     const [showProviderMenu, setShowProviderMenu] = useState(false);
@@ -82,6 +83,46 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
             window.electronAPI.removeAIChatListener();
         };
     }, []);
+
+    const handleAudit = useCallback(async () => {
+        if (!currentProject || !currentChapter || isLoading || isAuditing) return;
+
+        setIsAuditing(true);
+        setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: `🛡️ Running logical consistency audit for chapter "${currentChapter.title || currentChapter.chapter_number}" against the Vault and Synopsis...`
+        }]);
+
+        try {
+            const result = await window.electronAPI.auditChapterConsistency({
+                projectId: currentProject.id,
+                chapterId: currentChapter.id,
+                provider: selectedProvider
+            });
+
+            setMessages(prev => [
+                ...prev.slice(0, -1),
+                { role: 'assistant', content: `🛡️ **Integrity Check Results:**\n\n${result}` }
+            ]);
+        } catch (err) {
+            console.error('Audit failed:', err);
+            setMessages(prev => [
+                ...prev.slice(0, -1),
+                { role: 'assistant', content: '🛡️ Audit failed. Ensure you have character and synopsis context in your Vault.' }
+            ]);
+        } finally {
+            setIsAuditing(false);
+        }
+    }, [currentProject, currentChapter, isLoading, isAuditing, selectedProvider]);
+
+    const { pendingAudit, triggerAudit } = useEditorStore();
+
+    useEffect(() => {
+        if (pendingAudit) {
+            handleAudit();
+            triggerAudit(false); // Reset the flag
+        }
+    }, [pendingAudit, handleAudit, triggerAudit]);
 
     useEffect(() => {
         if (activeBeat && currentChapter) {
@@ -505,7 +546,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                                                         }}
                                                         className="w-full py-1.5 bg-primary text-primary-foreground rounded text-[10px] font-bold hover:bg-primary/90 flex items-center justify-center gap-1.5 transition-colors"
                                                     >
-                                                        <Sparkles size={12} />
+                                                        <Feather size={12} />
                                                         Consult The Muse
                                                     </button>
                                                 </div>
@@ -545,13 +586,18 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
             {/* Rebranded Header */}
             <div className="p-4 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                     <div className="relative">
-                         <Crown size={18} className="text-primary" />
-                         <Feather size={10} className="absolute -top-1 -right-1 text-yellow-500 rotate-45" />
-                     </div>
-                     <h3 className="font-serif font-semibold text-sm tracking-wide">The Muse</h3>
+                    <Feather size={18} className="text-primary" />
+                    <h3 className="font-serif font-semibold text-sm tracking-wide">The Muse</h3>
                 </div>
                 <div className="flex items-center gap-1">
+                    <button
+                        onClick={handleAudit}
+                        disabled={isLoading || isAuditing}
+                        className={`text-muted-foreground hover:text-primary transition-colors p-1 rounded hover:bg-accent ${isAuditing ? 'animate-pulse text-primary' : ''}`}
+                        title="Integrity Check (Manual Audit)"
+                    >
+                        {isAuditing ? <Loader2 size={14} className="animate-spin" /> : <Shield size={14} />}
+                    </button>
                     <button
                         onClick={onSettingsClick}
                         className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded hover:bg-accent"

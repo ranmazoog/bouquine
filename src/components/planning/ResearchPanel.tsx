@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
-import { Plus, Trash2, ExternalLink, FileText, Link as LinkIcon, Loader2, Sparkles, Tag, Layers, Search, X, Check, Save, Edit3 } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, FileText, Link as LinkIcon, Loader2, Tag, Layers, Search, X, Check, Save, Edit3, Feather } from 'lucide-react';
 import type { Reference, Character, WorldElement, Chapter } from '../../types/electron';
 
 export function ResearchPanel() {
@@ -392,7 +392,7 @@ export function ResearchPanel() {
                             disabled={isBrainstorming}
                             className="w-full py-4 bg-primary/10 border border-primary/20 hover:bg-primary/20 rounded-xl text-primary font-bold shadow-sm transition-all flex flex-col items-center justify-center gap-2 group disabled:opacity-50"
                         >
-                            <Sparkles size={20} className={isBrainstorming ? "animate-spin" : "group-hover:scale-110 transition-transform"} />
+                            <Feather size={20} className={isBrainstorming ? "animate-spin" : "group-hover:scale-110 transition-transform"} />
                              {isBrainstorming ? <><span className="font-serif font-semibold">The Muse</span> is thinking...</> : "✨ Suggest Research Gaps"}
                         </button>
 
@@ -400,7 +400,7 @@ export function ResearchPanel() {
                             <div className="bg-accent/20 p-5 rounded-xl border border-border/50 animate-in fade-in slide-in-from-top-4 duration-500">
                                 <div className="flex items-center justify-between mb-3">
                                     <h4 className="text-sm font-bold flex items-center gap-2">
-                                        <Sparkles size={14} className="text-yellow-500" />
+                                        <Feather size={14} className="text-yellow-500" />
                                         Suggested Focus:
                                     </h4>
                                     <button onClick={() => setBrainstormSuggestions(null)}>

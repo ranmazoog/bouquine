@@ -1,4 +1,4 @@
-import { Book, Users, Globe, Palette, Settings, ChevronRight, Plus, Trash2, LayoutDashboard, FileText, Link, Moon, Sun } from 'lucide-react';
+import { Book, Users, Globe, Palette, Settings, ChevronRight, Plus, Trash2, LayoutDashboard, FileText, Link, Moon, Sun, Bug } from 'lucide-react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import type { SidebarTab } from '../../stores/projectStore';
 import { useEffect, useState } from 'react';
@@ -11,6 +11,7 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
     const { chapters, currentProject, addChapter, removeChapter } = useProjectStore();
     const { currentChapter, setCurrentChapter, activeSidebarTab, setActiveSidebarTab } = useEditorStore();
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isOpeningEmail, setIsOpeningEmail] = useState(false);
 
     useEffect(() => {
         setIsDarkMode(document.documentElement.classList.contains('dark'));
@@ -204,6 +205,73 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                 >
                     {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
                     <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                </button>
+                <button
+                    onClick={async () => {
+                        const confirmed = window.confirm(
+                            'This will open your email client to send feedback to the Bouquine team.\n\n' +
+                            'Subject: Bouquine Beta Feedback (v1.0)\n' +
+                            'To: beta@bouquine.app\n\n' +
+                            'Click OK to continue, or Cancel to go back.'
+                        );
+                        
+                        if (!confirmed) return;
+                        
+                        setIsOpeningEmail(true);
+                        const subject = encodeURIComponent('Bouquine Beta Feedback (v1.0)');
+                        const body = encodeURIComponent('Describe your issue here... (Please attach your debug log if this is a crash).');
+                        const mailtoUrl = `mailto:beta@bouquine.app?subject=${subject}&body=${body}`;
+                        console.log('Opening email client:', mailtoUrl);
+                        
+                        try {
+                            // Try Electron's shell.openExternal first
+                            await window.electronAPI.openLink(mailtoUrl);
+                            console.log('Email client opened via Electron');
+                            
+                            // Show success message
+                            setTimeout(() => {
+                                alert('Email client opened successfully! Please send your feedback to help improve Bouquine.');
+                            }, 500);
+                        } catch (error) {
+                            console.error('Failed to open email client via Electron:', error);
+                            // Fallback to creating a link element
+                            try {
+                                const link = document.createElement('a');
+                                link.href = mailtoUrl;
+                                link.target = '_blank';
+                                link.rel = 'noopener noreferrer';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                console.log('Email client opened via link element');
+                                
+                                // Show success message
+                                setTimeout(() => {
+                                    alert('Email client opened successfully! Please send your feedback to help improve Bouquine.');
+                                }, 500);
+                            } catch (fallbackError) {
+                                console.error('Failed to open email client via link element:', fallbackError);
+                                alert(
+                                    'Unable to open email client automatically.\n\n' +
+                                    'Please manually email:\n' +
+                                    'To: beta@bouquine.app\n' +
+                                    'Subject: Bouquine Beta Feedback (v1.0)\n\n' +
+                                    'Include details about your issue and attach debug logs if available.'
+                                );
+                            }
+                        } finally {
+                            setIsOpeningEmail(false);
+                        }
+                    }}
+                    disabled={isOpeningEmail}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isOpeningEmail ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                    ) : (
+                        <Bug size={18} />
+                    )}
+                    <span>{isOpeningEmail ? 'Opening email...' : 'Bug / Feedback'}</span>
                 </button>
                 <button
                     onClick={onSettingsClick}

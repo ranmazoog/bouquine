@@ -284,3 +284,39 @@ export function updateStyleGuide(projectId: string, data: Partial<StyleGuide>): 
     stmt.run(...values);
     return db.prepare('SELECT * FROM style_guides WHERE project_id = ?').get(projectId) as StyleGuide;
 }
+
+/**
+ * Prepare a prompt for analyzing the author's writing style based on Chapter 1.
+ * Returns an object with both the prompt and the prose sample text.
+ */
+export function getAuthorStyleAnalysisPrompt(projectId: string): { prompt: string; proseSample: string } {
+    const db = getDatabase();
+
+    // 1. Fetch Chapter 1
+    const chapter1 = db.prepare('SELECT content FROM chapters WHERE project_id = ? AND chapter_number = 1').get(projectId) as { content: string } | undefined;
+
+    if (!chapter1 || !chapter1.content || chapter1.content.trim().length === 0) {
+        throw new Error('Chapter 1 content not found. Please write at least 500 words in Chapter 1 first.');
+    }
+
+    // Strip HTML tags to get plain text
+    // 1. Replace tags like <p> with a space so words don't stick together
+    // 2. Collapse multiple spaces into one
+    const plainText = chapter1.content
+        .replace(/<[^>]+>/g, ' ') // Remove tags
+        .replace(/\s+/g, ' ')     // Normalize whitespace
+        .trim();
+
+    // Capture roughly first 2000 words of PLAIN text
+    const proseSample = plainText.split(/\s+/).slice(0, 2000).join(' ');
+
+    const prompt = `Analyze this text for authorial voice. Describe the sentence structure (length, complexity), tone, vocabulary level, and Point of View (POV). 
+Return a concise, descriptive paragraph (max 150 words) that captures the core essence of this author's voice.
+
+TEXT TO ANALYZE:
+"""
+${proseSample}
+"""`;
+
+    return { prompt, proseSample };
+}

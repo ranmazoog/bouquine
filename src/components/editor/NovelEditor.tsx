@@ -3,10 +3,13 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useEditorStore, useProjectStore } from '../../stores/projectStore';
-import { Bold, Italic, Strikethrough, FileText, Loader2, X, ChevronDown, ChevronRight, Heading2, Heading3 } from 'lucide-react';
+import { Bold, Italic, Strikethrough, FileText, Loader2, X, ChevronDown, ChevronRight, Heading2, Heading3, Shield } from 'lucide-react';
 
 export function NovelEditor() {
-    const { currentChapter, setSaveStatus, setCurrentChapter, pendingInsertion, clearInsert, lastSelection, setSelection } = useEditorStore();
+    const {
+        currentChapter, setSaveStatus, setCurrentChapter, pendingInsertion,
+        clearInsert, lastSelection, setSelection, isFocusMode, triggerAudit
+    } = useEditorStore();
     const { updateChapterInStore } = useProjectStore();
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -14,6 +17,20 @@ export function NovelEditor() {
     const [chapterTitle, setChapterTitle] = useState(currentChapter?.title || '');
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
+    const [showFocusExitToast, setShowFocusExitToast] = useState(false);
+
+    // Track Focus Mode exit
+    const prevFocusModeRef = useRef(isFocusMode);
+
+    useEffect(() => {
+        if (prevFocusModeRef.current === true && isFocusMode === false) {
+            // User just exited Focus Mode
+            setShowFocusExitToast(true);
+            // Hide after 8 seconds
+            setTimeout(() => setShowFocusExitToast(false), 8000);
+        }
+        prevFocusModeRef.current = isFocusMode;
+    }, [isFocusMode]);
 
     // Initialize title when component mounts (with key prop, this runs once per chapter)
     useEffect(() => {
@@ -284,6 +301,38 @@ export function NovelEditor() {
             )}
 
             <EditorContent editor={editor} />
+
+            {/* Focus Mode Exit Notification */}
+            {showFocusExitToast && (
+                <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-card border border-border shadow-2xl rounded-2xl p-4 flex items-center gap-4 max-w-md">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <Shield size={20} />
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="text-sm font-bold">Session finished</h4>
+                            <p className="text-xs text-muted-foreground">Would you like to check this chapter for logical contradictions?</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    triggerAudit(true);
+                                    setShowFocusExitToast(false);
+                                }}
+                                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:bg-primary/90 transition-colors"
+                            >
+                                Audit
+                            </button>
+                            <button
+                                onClick={() => setShowFocusExitToast(false)}
+                                className="p-1.5 hover:bg-accent rounded-lg text-muted-foreground transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

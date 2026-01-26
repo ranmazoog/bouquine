@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouquine — The Sanctuary for Writers</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <style>
+        /* --- Tokens --- */
+        :root {
+            --bg: #FDFBF7;
+            /* Make surface slightly more transparent to let glow show through */
+            --surface: rgba(255, 255, 255, 0.85);
+            --surface-highlight: #F3F4F6;
+            --ink: #0F172A;
+            --ink-light: #475569;
+            --accent: #2563EB;
+            --accent-purple: #9333ea;
+            --accent-cyan: #06b6d4;
+            --border: rgba(15, 23, 42, 0.08);
+            --radius: 16px;
+            --container: 1100px;
+        }
+
+        /* --- Reset & Base --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--ink);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'DM Serif Display', serif;
+            font-weight: 400;
+            line-height: 1.1;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            max-width: var(--container);
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* --- TURBO-CHARGED GLOW EFFECTS --- */
+
+        /* 1. The Mouse Follower (Intensified) */
+        .cursor-glow {
+            position: fixed;
+            width: 500px;
+            /* Slightly smaller for more concentration */
+            height: 500px;
+            /* Much higher opacity (0.25 vs 0.08) */
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+            /* Changed blend mode to darken slightly for better visibility on white */
+            mix-blend-mode: darken;
+            filter: blur(20px);
+        }
+
+        /* 2. Floating Orbs (Brighter) */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            /* Increased from 0.4 */
+            z-index: 0;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: #C7D2FE;
+            top: 10%;
+            left: -5%;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: #E9D5FF;
+            bottom: 20%;
+            right: -10%;
+            animation-delay: -5s;
+        }
+
+        @keyframes orbFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+        }
+
+        /* --- THE MAGIC HOVER CARD --- */
+        .glow-hover {
+            position: relative;
+            background: var(--surface);
+            z-index: 1;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* The Glow Generator - Louder & Brighter */
+        .glow-hover::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            /* Tighter glow */
+            border-radius: inherit;
+            /* Stronger Colors */
+            background: linear-gradient(135deg, #2563EB, #A855F7, #06B6D4);
+            z-index: -1;
+            filter: blur(15px);
+            /* Reduced blur to make it more defined */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glow-hover:hover::before {
+            opacity: 0.8;
+            /* Almost fully visible */
+        }
+
+        .glow-hover:hover {
+            transform: translateY(-6px);
+            border-color: transparent;
+        }
+
+        /* --- UI Elements --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.6rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            z-index: 10;
+            position: relative;
+        }
+
+        .btn-primary {
+            background: var(--ink);
+            color: white;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--border);
+            color: var(--ink);
+            backdrop-filter: blur(4px);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--ink);
+            background: white;
+        }
+
+        /* --- Nav --- */
+        nav {
+            padding: 2rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .beta-tag {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.7rem;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* --- Hero --- */
+        .hero {
+            padding: 6rem 0 4rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 5rem);
+            margin-bottom: 1.5rem;
+            color: var(--ink);
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+            font-style: italic;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--ink-light);
+            max-width: 580px;
+            margin: 0 auto 2.5rem;
+        }
+
+        .hero-preview {
+            margin-top: 3rem;
+            position: relative;
+            perspective: 2000px;
+            z-index: 2;
+        }
+
+        .app-window {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5), 0 25px 50px -12px rgba(15, 23, 42, 0.15);
+            padding: 8px;
+            transform: rotateX(5deg) scale(0.95);
+            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .app-window:hover {
+            transform: rotateX(0deg) scale(1);
+        }
+
+        .app-window img {
+            width: 100%;
+            border-radius: 6px;
+            display: block;
+            border: 1px solid var(--border);
+        }
+
+        /* --- Features (Bento) --- */
+        .bento-section {
+            padding: 6rem 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 300px);
+            gap: 1.5rem;
+        }
+
+        .bento-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            /* Applies glow-hover base styles */
+            position: relative;
+            background: var(--surface);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .bento-large {
+            grid-column: span 2;
+        }
+
+        .bento-tall {
+            grid-row: span 2;
+            background: var(--ink);
+            color: white;
+        }
+
+        .bento-tall:hover {
+            transform: translateY(-4px);
+        }
+
+        /* No glow for dark card */
+
+        .bento-tall h3,
+        .bento-tall p {
+            color: white;
+        }
+
+        .bento-tall .icon {
+            color: var(--accent);
+        }
+
+        .bento-card h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .bento-card p {
+            font-size: 0.95rem;
+            color: var(--ink-light);
+        }
+
+        .bento-card .icon {
+            width: 40px;
+            height: 40px;
+            background: var(--surface-highlight);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--ink);
+        }
+
+        /* --- Installation (Tickets) --- */
+        .install-section {
+            background: rgba(255, 255, 255, 0.4);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 6rem 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .ticket-container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .ticket {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            flex: 1;
+            min-width: 300px;
+            max-width: 350px;
+            background: var(--surface);
+            /* Ensure background is solid for glow */
+        }
+
+        .ticket-step {
+            font-family: 'DM Serif Display', serif;
+            font-size: 4rem;
+            color: rgba(15, 23, 42, 0.1);
+            position: absolute;
+            top: 0;
+            right: 1.5rem;
+            line-height: 1;
+        }
+
+        .ticket h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        /* --- Protocol --- */
+        .protocol-section {
+            padding: 6rem 0;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+        }
+
+        .protocol-list {
+            max-width: 800px;
+            margin: 3rem auto 0;
+            border-left: 1px solid var(--border);
+        }
+
+        .protocol-item {
+            padding-left: 2rem;
+            padding-bottom: 3rem;
+            position: relative;
+        }
+
+        .protocol-item::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: var(--bg);
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            position: absolute;
+            left: -7px;
+            top: 5px;
+            z-index: 2;
+        }
+
+        .protocol-item h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mission-box {
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            background: var(--surface);
+        }
+
+        footer {
+            background: var(--ink);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        footer a {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        footer a:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+
+            .bento-large,
+            .bento-tall {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .cursor-glow {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <div class="container">
+        <nav>
+            <div class="logo"><i data-lucide="book-open"></i> Bouquine <span class="beta-tag">Beta</span></div>
+            <div><a href="#missions" class="btn btn-outline">Beta Missions</a></div>
+        </nav>
+
+        <header class="hero">
+            <h1>The Intelligence of AI.<br>The <span>Sanctuary</span> of Privacy.</h1>
+            <p>A local-first writing studio that remembers every character, plot twist, and rule in your world. No
+                subscriptions. No cloud leaks.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="YOUR_GOOGLE_DRIVE_LINK_HERE" class="btn btn-primary"><i data-lucide="download"></i> Download
+                    for Mac</a>
+                <a href="#install" class="btn btn-outline"><i data-lucide="shield"></i> Install Guide</a>
+            </div>
+            <div class="hero-preview">
+                <div class="app-window">
+                    <img src="dashboard-screenshot.png" alt="Bouquine Interface">
+                </div>
+            </div>
+        </header>
+
+        <!-- FEATURES BENTO (Now with Glow!) -->
+        <section class="bento-section">
+            <div class="bento-grid">
+                <!-- Tall Dark Card (No Glow, keeps visual anchor) -->
+                <div class="bento-card bento-tall">
+                    <div>
+                        <div class="icon" style="background: rgba(255,255,255,0.1); color: white;"><i
+                                data-lucide="lock"></i></div>
+                        <h3>The Vault</h3>
+                        <p style="color: rgba(255,255,255,0.7);">Your manuscript never leaves your device. SQLite
+                            database. 100% Private.</p>
+                    </div>
+                    <div style="margin-top: auto;"><span
+                            style="font-size: 3rem; font-family: 'DM Serif Display'; opacity: 0.2;">100%</span></div>
+                </div>
+
+                <!-- Glow Cards -->
+                <div class="bento-card bento-large glow-hover">
+                    <div class="icon"><i data-lucide="brain-circuit"></i></div>
+                    <h3>Infinite Context Memory</h3>
+                    <p>Standard AI forgets Chapter 1 by Chapter 10. Bouquine uses Vector Search to recall every detail.
+                    </p>
+                </div>
+                <div class="bento-card glow-hover">
+                    <div class="icon"><i data-lucide="file-up"></i></div>
+                    <h3>Pro Export</h3>
+                    <p>DOCX, PDF, ePub. Agent-ready formatting.</p>
+                </div>
+                <div class="bento-card glow-hover">
+                    <div class="icon"><i data-lucide="eye-off"></i></div>
+                    <h3>Focus Mode</h3>
+                    <p>Kill the UI and silence the AI. Just you and words.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- INSTALLATION (Tickets with Glow) -->
+    <section id="install" class="install-section">
+        <div class="container">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h2>The Gatekeeper Protocol</h2>
+                <p>MacOS protects you from unverified developers. Here is how to let Bouquine in.</p>
+            </div>
+            <div class="ticket-container">
+                <div class="ticket glow-hover">
+                    <div class="ticket-step">1</div>
+                    <h4>Download</h4>
+                    <p>Get the .DMG file. Drag icon to Applications.</p>
+                </div>
+                <div class="ticket glow-hover">
+                    <div class="ticket-step">2</div>
+                    <h4>Right-Click</h4>
+                    <p><strong>Right-click</strong> the app icon and select <strong>Open</strong>.</p>
+                </div>
+                <div class="ticket glow-hover">
+                    <div class="ticket-step">3</div>
+                    <h4>Confirm</h4>
+                    <p>Click <strong>Open</strong> on the popup warning.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MISSIONS (Updated for v1.0 AI Features) -->
+    <section id="missions" class="protocol-section">
+        <div class="container">
+            <h2 style="text-align: center;">The Architect's Missions</h2>
+            <div class="protocol-list">
+                
+                <!-- Mission 01: RAG -->
+                <div class="protocol-item">
+                    <h3>Mission 01: The Memory Check</h3>
+                    <div class="mission-box glow-hover">
+                        <strong>Task:</strong> Create a character in the Vault with a specific secret (e.g., "Allergic to silver"). Ask The Muse to write a dining scene.<br><br>
+                        <em>Success: The AI refuses to let them touch the silverware.</em>
+                    </div>
+                </div>
+
+                <!-- Mission 02: Style Mimicry (NEW) -->
+                <div class="protocol-item">
+                    <h3>Mission 02: The Mirror Test</h3>
+                    <div class="mission-box glow-hover">
+                        <strong>Task:</strong> Write 300 words of your unique prose in Chapter 1. Go to Style Guide and click <strong>"✨ Analyze My Voice"</strong>. Then ask The Muse to continue the story.<br><br>
+                        <em>Success: The AI writes the next paragraph sounding exactly like you.</em>
+                    </div>
+                </div>
+
+                <!-- Mission 03: Integrity Shield (NEW) -->
+                <div class="protocol-item">
+                    <h3>Mission 03: The Logic Audit</h3>
+                    <div class="mission-box glow-hover">
+                        <strong>Task:</strong> Intentionally write a plot hole (e.g., a character who is dead in the Synopsis appears in Chapter 3). Click the <strong>Shield Icon 🛡️</strong> in The Muse.<br><br>
+                        <em>Success: The AI catches the contradiction and flags it in the report.</em>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <h3>Bouquine</h3>
+            <p style="opacity: 0.6; margin-top: 1rem;">Built for the craft.</p>
+            
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; align-items: center;">
+                <a href="mailto:beta@bouquine.app" class="btn btn-outline" style="border-color: rgba(255,255,255,0.2); color: white;">
+                    <i data-lucide="bug"></i> Report a Bug
+                </a>
+                <button onclick="openPrivacy()" class="btn btn-outline" style="border-color: rgba(255,255,255,0.2); color: white; background: transparent;">
+                    <i data-lucide="shield"></i> Privacy Pledge
+                </button>
+            </div>
+
+            <div style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; font-size: 0.9rem; color: rgba(255,255,255,0.5);">
+                &copy; 2026 Bouquine. All rights reserved. <br>
+                <span style="font-size: 0.8rem;">Local-First Architecture.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        const cursorGlow = document.getElementById('cursorGlow');
+        document.addEventListener('mousemove', (e) => {
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+        });
+
+        // Privacy Modal Logic
+        function openPrivacy() {
+            const modal = document.getElementById('privacyModal');
+            modal.style.display = 'flex';
+            // Small timeout to allow display:flex to apply before opacity transition
+            setTimeout(() => { modal.style.opacity = '1'; }, 10);
+            // Re-initialize icons inside modal if needed
+            lucide.createIcons();
+        }
+
+        function closePrivacy() {
+            const modal = document.getElementById('privacyModal');
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+
+        // Close if clicking outside the card
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('privacyModal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target.id === 'privacyModal') closePrivacy();
+                });
+            }
+        });
+    </script>
+<!-- Privacy Modal -->
+<div id="privacyModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+    <div style="background: #FDFBF7; padding: 3rem; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; color: #0F172A;">
+        <button onclick="closePrivacy()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; cursor: pointer; color: #475569;">
+            <i data-lucide="x"></i>
+        </button>
+        
+        <h2 style="font-family: 'DM Serif Display', serif; font-size: 2rem; margin-bottom: 1.5rem;">The Privacy Pledge</h2>
+        
+        <div style="font-family: 'Inter', sans-serif; line-height: 1.7; color: #475569;">
+            <p><strong>Effective Date:</strong> January 2026</p>
+            <p>Bouquine is designed to be a sanctuary. Here is exactly how we handle your data:</p>
+            
+            <h4 style="color: #0F172A; margin-top: 1.5rem;">1. Your Manuscript is Local</h4>
+            <p>We do not have a cloud database. Your projects, characters, and notes are stored in a SQLite database on your personal device. If you uninstall the app, your data remains on your drive.</p>
+
+            <h4 style="color: #0F172A; margin-top: 1.5rem;">2. AI & Data Transmission</h4>
+            <p>When you use "The Muse," text fragments are sent to the AI Provider you selected (OpenRouter, OpenAI, or Anthropic). This data is sent <strong>only</strong> to generate a response and is not stored by Bouquine. We advise reviewing the API data policy of your chosen provider (e.g., OpenRouter does not train on API data).</p>
+
+            <h4 style="color: #0F172A; margin-top: 1.5rem;">3. Telemetry</h4>
+            <p>This Beta version does NOT include tracking pixels or analytics. We rely entirely on you emailing us bugs.</p>
+            
+            <h4 style="color: #0F172A; margin-top: 1.5rem;">4. Beta Contact</h4>
+            <p>We collected your email solely to send you the download link and update notifications. We will never sell your email.</p>
+        </div>
+
+        <button onclick="closePrivacy()" class="btn btn-primary" style="width: 100%; margin-top: 2rem; justify-content: center;">
+            I Understand
+        </button>
+    </div>
+</div>
+</body>
+
+</html>

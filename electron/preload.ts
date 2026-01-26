@@ -92,13 +92,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('export-to-docx', { projectId, chapterIds, filePath }),
     exportChapterToDocx: (chapterId: string, filePath: string) =>
         ipcRenderer.invoke('export-chapter-to-docx', { chapterId, filePath }),
-    exportToPdf: (projectId: string, chapterIds: string[], filePath: string) =>
-        ipcRenderer.invoke('export-to-pdf', { projectId, chapterIds, filePath }),
-    exportToEpub: (projectId: string, chapterIds: string[], filePath: string) =>
-        ipcRenderer.invoke('export-to-epub', { projectId, chapterIds, filePath }),
-    exportToJson: (projectId: string, filePath: string) =>
-        ipcRenderer.invoke('export-to-json', { projectId, filePath }),
+    exportToDocxDirect: (projectId: string, chapterIds: string[], filePath: string) =>
+        ipcRenderer.invoke('export-to-docx-direct', { projectId, chapterIds, filePath }),
+    // exportToPdf: (projectId: string, chapterIds: string[], filePath: string) =>
+    //     ipcRenderer.invoke('export-to-pdf', { projectId, chapterIds, filePath }),
+    // exportToEpub: (projectId: string, chapterIds: string[], filePath: string) =>
+    //     ipcRenderer.invoke('export-to-epub', { projectId, chapterIds, filePath }),
+    // exportToJson: (projectId: string, filePath: string) =>
+    //     ipcRenderer.invoke('export-to-json', { projectId, filePath }),
+
+    // Intelligence Features
+    auditChapterConsistency: (payload: any) => ipcRenderer.invoke('audit-chapter-consistency', payload),
+    analyzeAuthorStyle: (payload: any) => ipcRenderer.invoke('analyze-author-style', payload),
 
     // Utility
     getAppDataPath: () => ipcRenderer.invoke('get-app-data-path'),
+    openLogsFolder: () => ipcRenderer.invoke('open-logs-folder'),
 });

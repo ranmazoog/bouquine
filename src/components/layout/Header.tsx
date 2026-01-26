@@ -1,4 +1,4 @@
-import { Share, Download, ChevronDown, Plus, Trash2, FolderOpen, Maximize2, Minimize2, FileText, FileJson, FileType, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Share, ChevronDown, Plus, Trash2, FolderOpen, Maximize2, Minimize2, FileType, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import { useState, useRef, useEffect } from 'react';
 
@@ -103,107 +103,42 @@ export function Header({ onNewProject }: HeaderProps) {
         }
     };
 
-    const handleExportToPdf = async () => {
-        if (!currentProject) return;
+    // PDF export temporarily disabled
+    // const handleExportToPdf = async () => {
+    //     if (!currentProject) return;
+    // 
+    //     setExportStatus('exporting');
+    // 
+    //     const result = await window.electronAPI.showSaveDialog({
+    //         title: 'Export as PDF',
+    //         defaultPath: `${currentProject.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+    //         filters: [
+    //             { name: 'PDF Files', extensions: ['pdf'] },
+    //             { name: 'All Files', extensions: ['*'] }
+    //         ]
+    //     });
+    // 
+    //     if (result.canceled || !result.filePath) {
+    //         setExportStatus('idle');
+    //         return;
+    //     }
+    // 
+    //     const exportResult = await window.electronAPI.exportToPdf(currentProject.id, [], result.filePath);
+    // 
+    //     if (exportResult.success) {
+    //         setExportStatus('success');
+    //         setTimeout(() => setExportStatus('idle'), 3000);
+    //     } else {
+    //         setExportStatus('error');
+    //         setTimeout(() => setExportStatus('idle'), 3000);
+    //     }
+    // };
+    // 
+    // 
 
-        setExportStatus('exporting');
-        setIsExportOpen(false);
 
-        try {
-            const result = await window.electronAPI.showSaveDialog({
-                title: 'Export as Manuscript PDF',
-                defaultPath: `${currentProject.title}.pdf`,
-                filters: [{ name: 'PDF Document', extensions: ['pdf'] }],
-            });
 
-            if (result.canceled || !result.filePath) {
-                setExportStatus('idle');
-                return;
-            }
 
-            const exportResult = await window.electronAPI.exportToPdf(currentProject.id, [], result.filePath);
-
-            if (exportResult.success) {
-                setExportStatus('success');
-                setTimeout(() => setExportStatus('idle'), 3000);
-            } else {
-                setExportStatus('error');
-                setTimeout(() => setExportStatus('idle'), 3000);
-            }
-        } catch (err) {
-            console.error('Export error:', err);
-            setExportStatus('error');
-            setTimeout(() => setExportStatus('idle'), 3000);
-        }
-    };
-
-    const handleExportToEpub = async () => {
-        if (!currentProject) return;
-
-        setExportStatus('exporting');
-        setIsExportOpen(false);
-
-        try {
-            const result = await window.electronAPI.showSaveDialog({
-                title: 'Export as ePub eBook',
-                defaultPath: `${currentProject.title}.epub`,
-                filters: [{ name: 'ePub eBook', extensions: ['epub'] }],
-            });
-
-            if (result.canceled || !result.filePath) {
-                setExportStatus('idle');
-                return;
-            }
-
-            const exportResult = await window.electronAPI.exportToEpub(currentProject.id, [], result.filePath);
-
-            if (exportResult.success) {
-                setExportStatus('success');
-                setTimeout(() => setExportStatus('idle'), 3000);
-            } else {
-                setExportStatus('error');
-                setTimeout(() => setExportStatus('idle'), 3000);
-            }
-        } catch (err) {
-            console.error('Export error:', err);
-            setExportStatus('error');
-            setTimeout(() => setExportStatus('idle'), 3000);
-        }
-    };
-
-    const handleExportToJson = async () => {
-        if (!currentProject) return;
-
-        setExportStatus('exporting');
-        setIsExportOpen(false);
-
-        try {
-            const result = await window.electronAPI.showSaveDialog({
-                title: 'Export as JSON Backup',
-                defaultPath: `${currentProject.title}.json`,
-                filters: [{ name: 'JSON File', extensions: ['json'] }],
-            });
-
-            if (result.canceled || !result.filePath) {
-                setExportStatus('idle');
-                return;
-            }
-
-            const exportResult = await window.electronAPI.exportToJson(currentProject.id, result.filePath);
-
-            if (exportResult.success) {
-                setExportStatus('success');
-                setTimeout(() => setExportStatus('idle'), 3000);
-            } else {
-                setExportStatus('error');
-                setTimeout(() => setExportStatus('idle'), 3000);
-            }
-        } catch (err) {
-            console.error('Export error:', err);
-            setExportStatus('error');
-            setTimeout(() => setExportStatus('idle'), 3000);
-        }
-    };
 
     return (
         <>
@@ -333,30 +268,33 @@ export function Header({ onNewProject }: HeaderProps) {
                                                         'Export as Word (.docx)'}
                                         </span>
                                     </button>
-                                    <button
+                                    {/* PDF export temporarily disabled */}
+                                    {/* <button
                                         onClick={handleExportToPdf}
                                         disabled={!currentProject || exportStatus === 'exporting'}
                                         className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <FileText size={14} />
                                         <span>Export as PDF</span>
-                                    </button>
-                                    <button
+                                    </button> */}
+                                    {/* EPUB export temporarily disabled */}
+                                    {/* <button
                                         onClick={handleExportToEpub}
                                         disabled={!currentProject || exportStatus === 'exporting'}
                                         className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Download size={14} />
                                         <span>Export as ePub</span>
-                                    </button>
-                                    <button
+                                    </button> */}
+                                    {/* JSON export temporarily disabled */}
+                                    {/* <button
                                         onClick={handleExportToJson}
                                         disabled={!currentProject || exportStatus === 'exporting'}
                                         className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <FileJson size={14} />
                                         <span>Export as JSON</span>
-                                    </button>
+                                    </button> */}
 
                                 </div>
                             </div>

@@ -9,6 +9,54 @@ export interface ContextPrompt {
 
 const MAX_CONTEXT_CHARS = 20000;
 
+/**
+ * Audit a chapter for logical contradictions and consistency issues.
+ */
+export async function auditChapterConsistency(
+    projectId: string,
+    chapterId: string
+): Promise<string> {
+    const db = getDatabase();
+
+    // 1. Fetch Project Info (Synopsis/Title)
+    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId) as Project;
+    if (!project) throw new Error(`Project not found: ${projectId}`);
+
+    // 2. Fetch Current Chapter
+    const chapter = db.prepare('SELECT * FROM chapters WHERE id = ?').get(chapterId) as Chapter;
+    if (!chapter) throw new Error(`Chapter not found: ${chapterId}`);
+
+    // 3. Fetch Vault Data (Characters/World)
+    const characters = getCharactersByProject(projectId);
+    const worldElements = getWorldElementsByProject(projectId);
+
+    // 4. Format Context
+    const charList = characters.map(c => `- ${c.name} (${c.role}): ${c.description || 'No description'}`).join('\n');
+    const worldList = worldElements.map(e => `- ${e.name} (${e.category}): ${e.description || 'No description'}`).join('\n');
+
+    const prompt = `AUDIT REQUEST: Check this chapter for logical contradictions and plot holes against the Vault and Synopsis.
+Focus on plot and character facts (e.g., 'Character A is dead in synopsis but alive here', 'The setting is winter but flowers are blooming'). Ignore grammar/style.
+
+SYNOPSIS:
+${project.synopsis || project.blurb || 'Not specified'}
+
+VAULT CHARACTERS:
+${charList || 'None listed'}
+
+VAULT WORLD ELEMENTS:
+${worldList || 'None listed'}
+
+CHAPTER CONTENT:
+"""
+${chapter.content}
+"""
+
+INSTRUCTIONS: 
+Return a Markdown list of potential consistency issues. Start with a brief header like "🛡️ Integrity Audit: ${chapter.title || `Chapter ${chapter.chapter_number}`}". If no issues are found, state "No consistency issues detected."`;
+
+    return prompt;
+}
+
 // Orama schema for RAG
 const oramaSchema = {
     id: 'string',
@@ -298,8 +346,12 @@ INSTRUCTIONS: The user has highlighted the text above. Focus your response speci
 - Book Blurb (Premise): ${project.blurb || 'Not specified'}`;
 
     // 9. Construct System Prompt
-    const systemPrompt = `You are an expert fiction editor and writing assistant. Your core role is to act as a contextual suggestion engine for the user.
+    const styleMimicrySection = styleGuide.prose_samples && styleGuide.prose_samples.trim()
+        ? `\nSTYLE REFERENCE (Mimic this writing style exactly):\n"""\n${styleGuide.prose_samples.trim()}\n"""\n`
+        : '';
 
+    const systemPrompt = `You are an expert fiction editor and writing assistant. Your core role is to act as a contextual suggestion engine for the user.
+${styleMimicrySection}
 When the user provides or asks about research cards (Notes/Links), you must:
 1. Synthesize BOTH the 'Card Title' and the 'Card Content/Notes' to understand the full intention.
 2. Generate ideas, insights, or plot developments that are directly derived from AND expand upon this integrated information.

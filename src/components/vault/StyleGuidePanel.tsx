@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Palette, Save, Loader2 } from 'lucide-react';
+import { Palette, Save, Loader2, Feather } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import type { StyleGuide } from '../../types/electron';
 
@@ -21,6 +21,7 @@ export function StyleGuidePanel() {
     const [styleGuide, setStyleGuide] = useState<StyleGuide | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -53,6 +54,31 @@ export function StyleGuidePanel() {
             if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         };
     }, []);
+
+    const handleAnalyzeVoice = async () => {
+        if (!currentProject || isAnalyzing) return;
+
+        setIsAnalyzing(true);
+        try {
+            await window.electronAPI.analyzeAuthorStyle({
+                projectId: currentProject.id,
+                provider: 'openrouter'
+            });
+
+            // The backend already updates vocabulary_preferences and prose_samples
+            // Just reload the style guide to get the updated data
+            if (currentProject) {
+                const refreshedGuide = await window.electronAPI.getStyleGuide(currentProject.id);
+                setStyleGuide(refreshedGuide);
+                setLastSaved(new Date());
+            }
+        } catch (err: any) {
+            console.error('Failed to analyze voice:', err);
+            alert(err?.message || 'Failed to analyze writing voice. Make sure Chapter 1 has content.');
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
 
     const saveStyleGuide = async (data: Partial<StyleGuide>) => {
         if (!currentProject) return;
@@ -163,8 +189,22 @@ export function StyleGuidePanel() {
                 </div>
 
                 {/* Vocabulary Preferences (Voice/Tone) */}
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">Voice & Tone / Vocabulary Preferences</label>
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-foreground">Voice & Tone / Vocabulary Preferences</label>
+                        <button
+                            onClick={handleAnalyzeVoice}
+                            disabled={isAnalyzing}
+                            className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-bold bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-all disabled:opacity-50 border border-primary/20"
+                        >
+                            {isAnalyzing ? (
+                                <Loader2 size={12} className="animate-spin" />
+                            ) : (
+                                <Feather size={12} />
+                            )}
+                            {isAnalyzing ? 'Analyzing Chapters...' : '✨ Analyze My Voice from Chapters'}
+                        </button>
+                    </div>
                     <p className="text-xs text-muted-foreground">
                         Describe the writing style, tone, and vocabulary rules. E.g., "British English", "formal tone", "avoid contractions".
                     </p>
