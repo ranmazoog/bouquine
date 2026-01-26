@@ -256,19 +256,33 @@ Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapte
                         </button>
 
                         <button
-                            onClick={async () => {
-                                if ((!chapter.content || chapter.content.trim() === '') && chapter.summary) {
-                                    try {
-                                        await window.electronAPI.updateChapter(chapter.id, { content: chapter.summary });
-                                    } catch (err) {
-                                        console.error('Failed to insert summary:', err);
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                console.log('[Corkboard] Write Prose clicked', { chapterId: chapter.id, hasContent: !!chapter.content, hasSummary: !!chapter.summary });
+
+                                try {
+                                    let targetChapter = chapter;
+
+                                    // If content is empty but summary exists, populate content with summary
+                                    if ((!chapter.content || chapter.content.trim() === '') && chapter.summary) {
+                                        console.log('[Corkboard] Promoting summary to content...');
+                                        const updated = await window.electronAPI.updateChapter(chapter.id, { content: chapter.summary });
+                                        console.log('[Corkboard] Chapter updated:', updated);
+                                        onUpdate(updated);
+                                        targetChapter = updated;
                                     }
-                                }
-                                setCurrentChapter(chapter);
-                                setChaptersViewMode('list');
-                                setActiveSidebarTab('chapters');
-                                if (chapter.summary) {
-                                    setActiveBeat(chapter.summary);
+
+                                    console.log('[Corkboard] Switching view to list/editor...');
+                                    setCurrentChapter(targetChapter);
+                                    setActiveSidebarTab('chapters');
+                                    setChaptersViewMode('list');
+
+                                    if (targetChapter.summary) {
+                                        setActiveBeat(targetChapter.summary);
+                                    }
+                                } catch (err) {
+                                    console.error('[Corkboard] Failed to handle Write Prose click:', err);
+                                    alert('Failed to open editor. Check console for details.');
                                 }
                             }}
                             className="p-1 px-3 text-[11px] font-bold bg-accent text-muted-foreground hover:text-foreground rounded-full transition-colors"

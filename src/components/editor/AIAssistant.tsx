@@ -124,17 +124,22 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
         }
     }, [pendingAudit, handleAudit, triggerAudit]);
 
+    const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
+
     useEffect(() => {
-        if (activeBeat && currentChapter) {
+        if (activeBeat && currentChapter && isHistoryLoaded) {
             const prompt = `I'm ready to write this chapter. Here is the outline:\n\n${activeBeat}\n\nWrite the opening scene.`;
             setMessages(prev => [...prev, { role: 'user', content: prompt }]);
             setActiveBeat(null);
+            // Auto-send the message once added
+            setTimeout(() => handleSend(prompt), 100);
         }
-    }, [activeBeat, currentChapter, setActiveBeat]);
+    }, [activeBeat, currentChapter, setActiveBeat, isHistoryLoaded]);
 
     // Load chat history when chapter changes
     useEffect(() => {
         const loadChatHistory = async () => {
+            setIsHistoryLoaded(false); // Reset loading state
             if (!currentChapter) return;
             try {
                 const chapter = await window.electronAPI.getChapter(currentChapter.id);
@@ -142,6 +147,8 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
                     const history = JSON.parse(chapter.chat_history);
                     if (Array.isArray(history) && history.length > 0) {
                         setMessages(history);
+                    } else {
+                        setMessages([{ role: 'assistant', content: "Hello! I'm your creative partner. I can see your current chapter and help with ideas, feedback, or rewrites. What would you like to work on?" }]);
                     }
                 } else {
                     // Only set default welcome message if no history
@@ -151,6 +158,8 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
                 }
             } catch (err) {
                 console.error('Failed to load chat history:', err);
+            } finally {
+                setIsHistoryLoaded(true);
             }
         };
         loadChatHistory();

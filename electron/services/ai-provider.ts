@@ -47,7 +47,7 @@ export class OpenAIProvider implements AIProvider {
             response_format: options?.jsonMode ? { type: 'json_object' } : undefined,
         });
 
-        return response.choices[0]?.message?.content || '';
+        return response.choices?.[0]?.message?.content || '';
     }
 
     async generateStream(
@@ -175,7 +175,7 @@ export class OpenRouterProvider implements AIProvider {
                 max_tokens: options?.maxOutputTokens ?? 4000,
             });
 
-            return response.choices[0]?.message?.content || '';
+            return response.choices?.[0]?.message?.content || '';
         } catch (error: any) {
             console.error('[OpenRouter] API Error:', error.response?.data || error.message);
             throw error;
