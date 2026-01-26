@@ -129,35 +129,41 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                 {/* Chapter list - only show when chapters tab is active */}
                 {activeSidebarTab === 'chapters' && (
                     <div className="pt-4 border-t border-border/50">
-                        <div className="flex items-center justify-between px-2 mb-2">
-                            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                Chapters
-                            </h2>
-                            <div className="flex items-center gap-1">
-                                <div className="flex bg-accent/50 rounded-lg p-0.5 mr-1">
+                        <div className="flex flex-col gap-3 px-2 mb-3">
+                            {/* View Controls & Action */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex bg-accent/80 border border-border/50 rounded-lg p-0.5 w-full mr-2">
                                     <button
-                                        onClick={() => useEditorStore.getState().setChaptersViewMode('list')}
-                                        className={`p-1 rounded-md transition-all ${useEditorStore.getState().chaptersViewMode === 'list' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                                        title="List View"
+                                        onClick={() => useEditorStore.getState().setViewMode('write')}
+                                        className={`flex-1 p-1 rounded-md transition-all flex items-center justify-center gap-1.5 ${useEditorStore.getState().viewMode === 'write' ? 'bg-background shadow-sm text-primary font-medium border border-border/20' : 'text-muted-foreground hover:text-foreground'}`}
+                                        title="Write Mode"
                                     >
                                         <Book size={12} />
+                                        <span className="text-[10px]">Write</span>
                                     </button>
                                     <button
-                                        onClick={() => useEditorStore.getState().setChaptersViewMode('corkboard')}
-                                        className={`p-1 rounded-md transition-all ${useEditorStore.getState().chaptersViewMode === 'corkboard' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                                        title="Corkboard View"
+                                        onClick={() => useEditorStore.getState().setViewMode('plan')}
+                                        className={`flex-1 p-1 rounded-md transition-all flex items-center justify-center gap-1.5 ${useEditorStore.getState().viewMode === 'plan' ? 'bg-background shadow-sm text-primary font-medium border border-border/20' : 'text-muted-foreground hover:text-foreground'}`}
+                                        title="Plan Mode"
                                     >
                                         <LayoutDashboard size={12} />
+                                        <span className="text-[10px]">Plan</span>
                                     </button>
                                 </div>
                                 <button
                                     onClick={handleCreateChapter}
                                     disabled={!currentProject}
-                                    className="p-1 hover:bg-accent rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground"
+                                    className="p-1.5 bg-accent/50 hover:bg-accent rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground border border-border/50"
+                                    title="New Chapter"
                                 >
                                     <Plus size={14} />
                                 </button>
                             </div>
+
+                            {/* Section Label */}
+                            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">
+                                {useEditorStore.getState().viewMode === 'write' ? 'Chapters' : 'Storyboard'}
+                            </h2>
                         </div>
 
                         <div className="space-y-1">
@@ -169,7 +175,10 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                                             ? 'bg-primary/10 text-primary font-medium'
                                             : 'hover:bg-accent text-muted-foreground hover:text-foreground'
                                             }`}
-                                        onClick={() => setCurrentChapter(chapter)}
+                                        onClick={() => {
+                                            setCurrentChapter(chapter);
+                                            useEditorStore.getState().setViewMode('write');
+                                        }}
                                     >
                                         <ChevronRight size={14} className={`flex-shrink-0 group-hover:text-foreground ${currentChapter?.id === chapter.id ? 'text-primary' : 'text-muted-foreground'
                                             }`} />
@@ -214,20 +223,20 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                             'To: beta@bouquine.app\n\n' +
                             'Click OK to continue, or Cancel to go back.'
                         );
-                        
+
                         if (!confirmed) return;
-                        
+
                         setIsOpeningEmail(true);
                         const subject = encodeURIComponent('Bouquine Beta Feedback (v1.0)');
                         const body = encodeURIComponent('Describe your issue here... (Please attach your debug log if this is a crash).');
                         const mailtoUrl = `mailto:beta@bouquine.app?subject=${subject}&body=${body}`;
                         console.log('Opening email client:', mailtoUrl);
-                        
+
                         try {
                             // Try Electron's shell.openExternal first
                             await window.electronAPI.openLink(mailtoUrl);
                             console.log('Email client opened via Electron');
-                            
+
                             // Show success message
                             setTimeout(() => {
                                 alert('Email client opened successfully! Please send your feedback to help improve Bouquine.');
@@ -244,7 +253,7 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                                 link.click();
                                 document.body.removeChild(link);
                                 console.log('Email client opened via link element');
-                                
+
                                 // Show success message
                                 setTimeout(() => {
                                     alert('Email client opened successfully! Please send your feedback to help improve Bouquine.');

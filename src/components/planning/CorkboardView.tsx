@@ -6,7 +6,7 @@ import { debounce } from 'lodash';
 
 export function CorkboardView() {
     const { chapters, currentProject, updateChapterInStore, removeChapter, addChapter } = useProjectStore();
-    const { setCurrentChapter, setActiveSidebarTab, setActiveBeat, setChaptersViewMode } = useEditorStore();
+    const { setCurrentChapter, setActiveSidebarTab, setActiveBeat } = useEditorStore();
 
     const handleCreateChapter = async () => {
         if (!currentProject) return;
@@ -56,7 +56,6 @@ export function CorkboardView() {
                             setCurrentChapter={setCurrentChapter}
                             setActiveSidebarTab={setActiveSidebarTab}
                             setActiveBeat={setActiveBeat}
-                            setChaptersViewMode={setChaptersViewMode}
                         />
                     ))}
 
@@ -83,10 +82,9 @@ interface ChapterCardProps {
     setCurrentChapter: (chapter: Chapter) => void;
     setActiveSidebarTab: (tab: any) => void;
     setActiveBeat: (beat: string | null) => void;
-    setChaptersViewMode: (mode: 'list' | 'corkboard') => void;
 }
 
-function ChapterCard({ chapter, onUpdate, onDelete, setCurrentChapter, setActiveSidebarTab, setActiveBeat, setChaptersViewMode }: ChapterCardProps) {
+function ChapterCard({ chapter, onUpdate, onDelete, setCurrentChapter, setActiveSidebarTab, setActiveBeat }: ChapterCardProps) {
     const [title, setTitle] = useState(chapter.title || '');
     const [summary, setSummary] = useState(chapter.summary || '');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -275,7 +273,7 @@ Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapte
                                     console.log('[Corkboard] Switching view to list/editor...');
                                     setCurrentChapter(targetChapter);
                                     setActiveSidebarTab('chapters');
-                                    setChaptersViewMode('list');
+                                    useEditorStore.getState().setViewMode('write');
 
                                     if (targetChapter.summary) {
                                         setActiveBeat(targetChapter.summary);

@@ -19,7 +19,7 @@ import { CheckCircle2, RotateCw, AlertCircle, FileText } from 'lucide-react';
 
 function App() {
   const { setProjects, setCurrentProject, setChapters, addProject, updateProjectInStore, currentProject } = useProjectStore();
-  const { currentChapter, saveStatus, isFocusMode, activeSidebarTab, chaptersViewMode } = useEditorStore();
+  const { currentChapter, saveStatus, isFocusMode, activeSidebarTab } = useEditorStore();
   const { createProject } = useProject();
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -86,6 +86,19 @@ function App() {
       }
     }
   }, [currentChapter?.id, currentProject?.id, updateProjectInStore]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        const currentMode = useEditorStore.getState().viewMode;
+        useEditorStore.getState().setViewMode(currentMode === 'write' ? 'plan' : 'write');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleCreateProject = async (data: {
     title: string;
@@ -156,7 +169,7 @@ function App() {
           {/* Main editor area - only show for chapters tab */}
           {activeSidebarTab === 'chapters' && (
             <>
-              {chaptersViewMode === 'corkboard' ? (
+              {useEditorStore.getState().viewMode === 'plan' ? (
                 <CorkboardView />
               ) : (
                 <>

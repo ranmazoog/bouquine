@@ -8,7 +8,8 @@ interface EditorState {
     saveStatus: 'saved' | 'saving' | 'unsaved';
     isFocusMode: boolean;
     activeSidebarTab: SidebarTab;
-    chaptersViewMode: 'list' | 'corkboard';
+    chaptersViewMode: 'list' | 'corkboard'; // Keeping for backward compatibility if needed, or removing? User said "changing navigation structure". I will replace it to be clean.
+    viewMode: 'write' | 'plan';
     pendingInsertion: string | null;
     lastSelection: { from: number; to: number; text: string } | null;
     activeBeat: string | null;
@@ -18,6 +19,7 @@ interface EditorState {
     setFocusMode: (isFocus: boolean) => void;
     setActiveSidebarTab: (tab: SidebarTab) => void;
     setChaptersViewMode: (mode: 'list' | 'corkboard') => void;
+    setViewMode: (mode: 'write' | 'plan') => void;
     triggerInsert: (content: string) => void;
     clearInsert: () => void;
     setSelection: (selection: { from: number; to: number; text: string } | null) => void;
@@ -101,6 +103,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     isFocusMode: false,
     activeSidebarTab: 'overview',
     chaptersViewMode: 'list',
+    viewMode: 'write',
     pendingInsertion: null,
     lastSelection: null,
     activeBeat: null,
@@ -110,6 +113,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     setFocusMode: (isFocusMode) => set({ isFocusMode }),
     setActiveSidebarTab: (activeSidebarTab) => set({ activeSidebarTab }),
     setChaptersViewMode: (chaptersViewMode) => set({ chaptersViewMode }),
+    setViewMode: (viewMode) => set({ viewMode }),
     triggerInsert: (content) => set({ pendingInsertion: content }),
     clearInsert: () => set({ pendingInsertion: null }),
     setSelection: (lastSelection) => set({ lastSelection }),
