@@ -57,7 +57,6 @@ jobs:
       - name: Fix Linux permissions
         if: matrix.os == 'ubuntu-latest'
         run: |
-          # Brute-force unlock all app-builder binaries
           find ./node_modules/app-builder-bin -type f -name "app-builder" -exec chmod +x {} +
           mkdir -p build
 
@@ -66,7 +65,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run ${{ matrix.build_script }}
 
-       - name: Upload artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
@@ -87,14 +86,13 @@ jobs:
         with:
           path: artifacts
 
-       - name: Create Release
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref_name }}
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          # FIX: We only target the actual installers, avoiding duplicate .yml files
           files: |
             artifacts/**/*.dmg
             artifacts/**/*.exe
