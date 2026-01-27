@@ -17,14 +17,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-latest # This builds for Apple Silicon (M1/M2/M3)
             artifact_name: Bouquine-mac-arm64
             build_script: build:mac
-            arch: arm64
-          - os: macos-13 # Standard GitHub runner for Intel (x64) Macs
+          - os: macos-13 # This is the specific label for Intel Macs on GitHub
             artifact_name: Bouquine-mac-x64
             build_script: build:mac
-            arch: x64
           - os: windows-latest
             artifact_name: Bouquine-win
             build_script: build:win
@@ -42,16 +40,6 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Cache Electron
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
-          key: ${{ runner.os }}-electron-v1-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-electron-v1-
-
       - name: Install dependencies
         run: npm ci
 
@@ -67,13 +55,7 @@ jobs:
       - name: Build and package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ "${{ matrix.os }}" == "macos-latest" ] && [ -n "${{ matrix.arch }}" ]; then
-            echo "Building for macOS ${{ matrix.arch }}"
-            npm run build && npx electron-builder --mac --${{ matrix.arch }}
-          else
-            npm run ${{ matrix.build_script }}
-          fi
+        run: npm run ${{ matrix.build_script }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -103,7 +85,6 @@ jobs:
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          # This filter ensures only the installers are uploaded, preventing conflicts
           files: |
             artifacts/**/*.dmg
             artifacts/**/*.exe
