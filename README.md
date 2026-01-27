@@ -63,7 +63,7 @@ export default defineConfig([
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        project: ['./tsconfig.node.json', ['./tsconfig.app.json'],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
@@ -71,3 +71,37 @@ export default defineConfig([
   },
 ])
 ```
+
+## GitHub Actions - Automated Releases
+
+This project includes a GitHub Actions workflow for automated cross-platform builds. The workflow is triggered when you push a tag starting with 'v' (e.g., `v1.0.0`).
+
+### Workflow Features:
+- **Matrix Build**: Builds on macOS, Windows, and Ubuntu
+- **Native Modules**: Automatically rebuilds `better-sqlite3` for each platform
+- **Draft Releases**: Creates draft releases with all platform binaries
+- **Icons**: Uses icons from `/build` folder for each platform
+
+### Setup Required:
+1. **GitHub Token**: The workflow uses the default `GITHUB_TOKEN` which is automatically provided by GitHub Actions. No additional secrets are required.
+
+2. **Creating a Release**:
+   ```bash
+   # Create and push a tag
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+3. **Review and Publish**:
+   - Go to your GitHub repository → Releases
+   - Find the draft release created by the workflow
+   - Review the uploaded binaries (.dmg, .exe, .AppImage)
+   - Edit release notes if needed
+   - Click "Publish release"
+
+### Build Outputs:
+- **macOS**: `.dmg` installer
+- **Windows**: `.exe` installer (NSIS)
+- **Linux**: `.AppImage`
+
+The workflow file is located at `.github/workflows/release.yml`.
