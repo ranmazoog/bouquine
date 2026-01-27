@@ -81,7 +81,6 @@ jobs:
   create-release:
     needs: release
     runs-on: ubuntu-latest
-    if: always() && (needs.release.result == 'success' || contains(needs.release.result, 'success'))
     permissions:
       contents: write
     steps:
@@ -97,9 +96,8 @@ jobs:
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
+          # FIX: We only target the actual installers, avoiding duplicate .yml files
           files: |
             artifacts/**/*.dmg
             artifacts/**/*.exe
             artifacts/**/*.AppImage
-            artifacts/**/*.blockmap
-            artifacts/**/*.yml
