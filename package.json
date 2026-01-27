@@ -14,7 +14,8 @@
     "dev": "vite",
     "test": "vitest",
     "build": "tsc -b && vite build",
-    "build:mac": "npm run build && npx electron-builder --mac",
+    "build:mac": "npm run build && npx electron-builder --mac --arm64",
+    "build:mac-x64": "npm run build && npx electron-builder --mac --x64",
     "build:win": "npm run build && npx electron-builder --win",
     "build:linux": "npm run build && npx electron-builder --linux",
     "lint": "eslint .",
@@ -82,7 +83,10 @@
     },
     "mac": {
       "category": "public.app-category.productivity",
-      "target": ["dmg"],
+      "target": {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      },
       "icon": "build/icon.icns"
     },
     "win": {
