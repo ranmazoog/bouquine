@@ -6,11 +6,28 @@ on:
       - 'v*'
 
 jobs:
-  mac-arm64:
-    name: Build macOS (Apple Silicon)
-    runs-on: macos-latest
+  release-build:
+    name: Build ${{ matrix.artifact_name }}
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact_name: Bouquine-mac-arm64
+            build_script: build:mac-arm
+          - os: macos-15
+            artifact_name: Bouquine-mac-x64
+            build_script: build:mac-intel
+          - os: windows-latest
+            artifact_name: Bouquine-win
+            build_script: build:win
+          - os: ubuntu-latest
+            artifact_name: Bouquine-linux
+            build_script: build:linux
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,108 +42,11 @@ jobs:
         run: npm ci
 
       - name: Rebuild native modules
-        run: npm run rebuild
-
-      - name: Build and package (ARM64)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build:mac-arm
-
-      - name: Upload ARM64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Bouquine-mac-arm64
-          path: dist/*.dmg
-          if-no-files-found: error
-
-  mac-x64:
-    name: Build macOS (Intel)
-    runs-on: macos-15
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Rebuild native modules
-        run: npm run rebuild
-
-      - name: Build and package (x64)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build:mac-intel
-
-      - name: Upload x64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Bouquine-mac-x64
-          path: dist/*.dmg
-          if-no-files-found: error
-
-  windows:
-    name: Build Windows (.exe)
-    runs-on: windows-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Rebuild native modules
-        run: npm run rebuild
-
-      - name: Build and package
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build:win
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Bouquine-win
-          path: dist/*.exe
-          if-no-files-found: error
-
-  linux:
-    name: Build Linux (.AppImage)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Rebuild native modules
-        run: npm run rebuild
+        # This is the "Magic Command" that replaces electron-rebuild
+        run: npx electron-builder install-app-deps
 
       - name: Fix Linux permissions
+        if: matrix.os == 'ubuntu-latest'
         run: |
           find ./node_modules/app-builder-bin -type f -name "app-builder" -exec chmod +x {} +
           mkdir -p build
@@ -134,18 +54,23 @@ jobs:
       - name: Build and package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build:linux
+        # We specify the shell explicitly for Windows compatibility
+        shell: bash
+        run: npm run ${{ matrix.build_script }}
 
-      - name: Upload Linux artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Bouquine-linux
-          path: dist/*.AppImage
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist/Bouquine*.dmg
+            dist/Bouquine*.exe
+            dist/Bouquine*.AppImage
           if-no-files-found: error
 
-  create-release:
-    name: Finalize Release
-    needs: [mac-arm64, mac-x64, windows, linux]
+  finalize-release:
+    name: Create GitHub Release
+    needs: release-build
     runs-on: ubuntu-latest
     if: always()
     permissions:
@@ -164,6 +89,6 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            artifacts/**/*.dmg
-            artifacts/**/*.exe
-            artifacts/**/*.AppImage
+            artifacts/**/Bouquine*.dmg
+            artifacts/**/Bouquine*.exe
+            artifacts/**/Bouquine*.AppImage
