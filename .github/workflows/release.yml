@@ -8,7 +8,7 @@ on:
 jobs:
   mac-arm64:
     name: Build macOS (Apple Silicon)
-    runs-on: macos-latest
+    runs-on: macos-latest  # This is ARM64 (M1/M2/M3)
     permissions:
       contents: write
     steps:
@@ -41,7 +41,7 @@ jobs:
 
   mac-x64:
     name: Build macOS (Intel)
-    runs-on: macos-13 # macos-13 is the dedicated Intel runner on GitHub
+    runs-on: macos-15  # GitHub's newest runner for Intel builds
     permissions:
       contents: write
     steps:
@@ -147,6 +147,7 @@ jobs:
     name: Finalize Release
     needs: [mac-arm64, mac-x64, windows, linux]
     runs-on: ubuntu-latest
+    if: always() # Run even if one job fails to salvage others
     permissions:
       contents: write
     steps:
