@@ -76,29 +76,23 @@
   "build": {
     "appId": "com.bouquine.app",
     "productName": "Bouquine",
-    "copyright": "Copyright 2025 Bouquine",
     "directories": {
       "output": "dist",
       "buildResources": "build"
     },
     "mac": {
       "category": "public.app-category.productivity",
-      "target": [
-        "dmg"
-      ],
+      "target": ["dmg"],
       "icon": "build/icon.icns"
     },
     "win": {
-      "target": [
-        "nsis"
-      ],
+      "target": ["nsis"],
       "icon": "build/icon.ico"
     },
     "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "icon": "build"
+      "category": "Office",
+      "icon": "build/icon.png", 
+      "target": ["AppImage"]
     },
     "files": [
       {
