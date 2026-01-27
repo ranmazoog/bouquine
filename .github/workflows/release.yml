@@ -7,12 +7,10 @@ on:
 
 jobs:
   mac-arm64:
+    name: Build macOS (Apple Silicon)
     runs-on: macos-latest
     permissions:
       contents: write
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,16 +20,6 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-
-      - name: Cache Electron
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
-          key: macos-arm64-electron-v1-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            macos-arm64-electron-v1-
 
       - name: Install dependencies
         run: npm ci
@@ -48,17 +36,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Bouquine-mac-arm64
-          path: |
-            dist/Bouquine*.dmg
+          path: dist/*.dmg
           if-no-files-found: error
 
   mac-x64:
-    runs-on: macos-15
+    name: Build macOS (Intel)
+    runs-on: macos-13 # macos-13 is the dedicated Intel runner on GitHub
     permissions:
       contents: write
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -68,16 +53,6 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-
-      - name: Cache Electron
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
-          key: macos-x64-electron-v1-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            macos-x64-electron-v1-
 
       - name: Install dependencies
         run: npm ci
@@ -94,17 +69,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Bouquine-mac-x64
-          path: |
-            dist/Bouquine*.dmg
+          path: dist/*.dmg
           if-no-files-found: error
 
   windows:
+    name: Build Windows (.exe)
     runs-on: windows-latest
     permissions:
       contents: write
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -114,16 +86,6 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-
-      - name: Cache Electron
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
-          key: windows-electron-v1-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            windows-electron-v1-
 
       - name: Install dependencies
         run: npm ci
@@ -140,17 +102,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Bouquine-win
-          path: |
-            dist/Bouquine*.exe
+          path: dist/*.exe
           if-no-files-found: error
 
   linux:
+    name: Build Linux (.AppImage)
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -160,16 +119,6 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-
-      - name: Cache Electron
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
-          key: linux-electron-v1-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            linux-electron-v1-
 
       - name: Install dependencies
         run: npm ci
@@ -191,58 +140,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Bouquine-linux
-          path: |
-            dist/Bouquine*.AppImage
-          if-no-files-found: error
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Cache Electron
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
-          key: ${{ runner.os }}-electron-v1-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-electron-v1-
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Rebuild native modules
-        run: npm run rebuild
-
-      - name: Fix Linux permissions
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          find ./node_modules/app-builder-bin -type f -name "app-builder" -exec chmod +x {} +
-          mkdir -p build
-
-      - name: Build and package
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run ${{ matrix.build_script }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: |
-            dist/Bouquine*.dmg
-            dist/Bouquine*.exe
-            dist/Bouquine*.AppImage
+          path: dist/*.AppImage
           if-no-files-found: error
 
   create-release:
+    name: Finalize Release
     needs: [mac-arm64, mac-x64, windows, linux]
     runs-on: ubuntu-latest
     permissions:
@@ -261,6 +163,6 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            artifacts/**/Bouquine*.dmg
-            artifacts/**/Bouquine*.exe
-            artifacts/**/Bouquine*.AppImage
+            artifacts/**/*.dmg
+            artifacts/**/*.exe
+            artifacts/**/*.AppImage
