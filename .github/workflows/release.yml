@@ -10,7 +10,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
-    # Force all steps to use Bash, even on Windows
     defaults:
       run:
         shell: bash
@@ -33,7 +32,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-       - name: Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -57,20 +56,14 @@ jobs:
 
       - name: Fix permissions and verify icons
         run: |
-          # Ensure build directory exists
           mkdir -p build
-          ls -R build
-          
-          # Linux-specific execution fix
           if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
             chmod +x ./node_modules/app-builder-bin/linux/x64/app-builder
           fi
 
-       - name: Build and package
+      - name: Build and package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_CACHE: ~/.cache/electron
-          ELECTRON_BUILDER_CACHE: ~/.cache/electron-builder
         run: npm run ${{ matrix.build_script }}
 
       - name: Upload artifacts
