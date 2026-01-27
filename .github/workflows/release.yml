@@ -20,7 +20,7 @@ jobs:
           - os: macos-latest # This builds for Apple Silicon (M1/M2/M3)
             artifact_name: Bouquine-mac-arm64
             build_script: build:mac
-          - os: macos-13 # This is the specific label for Intel Macs on GitHub
+          - os: macos-15 # This is the specific label for Intel Macs on GitHub
             artifact_name: Bouquine-mac-x64
             build_script: build:mac
           - os: windows-latest
