@@ -227,13 +227,91 @@
 
         .beta-tag {
             font-family: 'Inter', sans-serif;
-            font-size: 0.7rem;
-            background: rgba(37, 99, 235, 0.1);
-            color: var(--accent);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 600;
+            font-size: 0.75rem;
+            background: var(--ink);
+            color: var(--bg);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .version-string {
+            font-size: 0.75rem;
+            color: var(--ink-light);
+            margin-top: 1rem;
+            opacity: 0.7;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* --- Why Voice Matters Section --- */
+        .perks-section {
+            padding: 6rem 0;
+            background: rgba(15, 23, 42, 0.02);
+            border-top: 1px solid var(--border);
+        }
+
+        .perks-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .perk-item {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .perk-item h4 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* --- Beta Command Center --- */
+        .command-center {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            max-width: 900px;
+            margin: 2rem auto 0;
+        }
+
+        .command-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .command-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .command-btn i {
+            color: var(--accent-cyan);
         }
 
         /* --- Hero --- */
@@ -504,19 +582,22 @@
 
     <div class="container">
         <nav>
-            <div class="logo"><i data-lucide="book-open"></i> Bouquine <span class="beta-tag">Beta</span></div>
-            <div><a href="#missions" class="btn btn-outline">Beta Missions</a></div>
+            <div class="logo"><i data-lucide="book-open"></i> Bouquine <span class="beta-tag"><i data-lucide="lock"
+                        size="12"></i> Private Beta • Invitation Only</span></div>
+            <div><a href="#missions" class="btn btn-outline">Engineer Access</a></div>
         </nav>
 
         <header class="hero">
             <h1>The Intelligence of AI.<br>The <span>Sanctuary</span> of Privacy.</h1>
             <p>A local-first writing studio that remembers every character, plot twist, and rule in your world. No
                 subscriptions. No cloud leaks.</p>
-            <div style="display: flex; gap: 1rem; justify-content: center;">
-                <a href="YOUR_GOOGLE_DRIVE_LINK_HERE" class="btn btn-primary"><i data-lucide="download"></i> Download
-                    for Mac</a>
-                <a href="#install" class="btn btn-outline"><i data-lucide="shield"></i> Install Guide</a>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="#macos-download" class="btn btn-primary"><i data-lucide="apple"></i> Download for macOS
+                    (Silicon/Intel)</a>
+                <a href="#windows-download" class="btn btn-primary"><i data-lucide="monitor"></i> Download for Windows
+                    (.exe)</a>
             </div>
+            <div class="version-string">Build v1.1.0 • Released Jan 27, 2026</div>
             <div class="hero-preview">
                 <div class="app-window">
                     <img src="dashboard-screenshot.png" alt="Bouquine Interface">
@@ -550,12 +631,14 @@
                 <div class="bento-card glow-hover">
                     <div class="icon"><i data-lucide="file-up"></i></div>
                     <h3>Pro Export</h3>
-                    <p>DOCX, PDF, ePub. Agent-ready formatting.</p>
+                    <p>DOCX, PDF, ePub. <strong>Standard Manuscript Format</strong> with automatic indentation and clean
+                        headers.</p>
                 </div>
                 <div class="bento-card glow-hover">
-                    <div class="icon"><i data-lucide="eye-off"></i></div>
-                    <h3>Focus Mode</h3>
-                    <p>Kill the UI and silence the AI. Just you and words.</p>
+                    <div class="icon"><i data-lucide="sparkles"></i></div>
+                    <h3>Synopsis Workshop</h3>
+                    <p>Stop staring at a blank page. Our guided wizard interviews you about your plot and builds a
+                        cohesive roadmap.</p>
                 </div>
             </div>
         </section>
@@ -593,12 +676,13 @@
         <div class="container">
             <h2 style="text-align: center;">The Architect's Missions</h2>
             <div class="protocol-list">
-                
+
                 <!-- Mission 01: RAG -->
                 <div class="protocol-item">
                     <h3>Mission 01: The Memory Check</h3>
                     <div class="mission-box glow-hover">
-                        <strong>Task:</strong> Create a character in the Vault with a specific secret (e.g., "Allergic to silver"). Ask The Muse to write a dining scene.<br><br>
+                        <strong>Task:</strong> Create a character in the Vault with a specific secret (e.g., "Allergic
+                        to silver"). Ask The Muse to write a dining scene.<br><br>
                         <em>Success: The AI refuses to let them touch the silverware.</em>
                     </div>
                 </div>
@@ -607,16 +691,18 @@
                 <div class="protocol-item">
                     <h3>Mission 02: The Mirror Test</h3>
                     <div class="mission-box glow-hover">
-                        <strong>Task:</strong> Write 300 words of your unique prose in Chapter 1. Go to Style Guide and click <strong>"✨ Analyze My Voice"</strong>. Then ask The Muse to continue the story.<br><br>
+                        <strong>Task:</strong> Write 300 words of your unique prose in Chapter 1. Go to Style Guide and
+                        click <strong>"✨ Analyze My Voice"</strong>. Then ask The Muse to continue the story.<br><br>
                         <em>Success: The AI writes the next paragraph sounding exactly like you.</em>
                     </div>
                 </div>
 
-                <!-- Mission 03: Integrity Shield (NEW) -->
+                <!-- Mission 03: Story Audit (NEW) -->
                 <div class="protocol-item">
-                    <h3>Mission 03: The Logic Audit</h3>
+                    <h3>Mission 03: The Story Audit</h3>
                     <div class="mission-box glow-hover">
-                        <strong>Task:</strong> Intentionally write a plot hole (e.g., a character who is dead in the Synopsis appears in Chapter 3). Click the <strong>Shield Icon 🛡️</strong> in The Muse.<br><br>
+                        <strong>Task:</strong> Intentionally write a plot hole (e.g., a character who is dead in the
+                        Synopsis appears in Chapter 3). Click the <strong>Shield Icon 🛡️</strong> in The Muse.<br><br>
                         <em>Success: The AI catches the contradiction and flags it in the report.</em>
                     </div>
                 </div>
@@ -625,43 +711,85 @@
         </div>
     </section>
 
+    <!-- BETA TESTER PERKS -->
+    <section class="perks-section">
+        <div class="container" style="text-align: center;">
+            <h2>Why your voice matters</h2>
+            <p style="margin-bottom: 2rem;">You aren't just a user; you are a co-architect of the final sanctuary.</p>
+
+            <div class="perks-grid">
+                <div class="perk-item glow-hover">
+                    <h4><i data-lucide="check-circle" class="text-accent" style="color: #2563EB;"></i> Founding Status
+                    </h4>
+                    <p style="font-size: 0.85rem;">Your name will be permanently etched in the "About" credits of
+                        Bouquine v1.0.</p>
+                </div>
+                <div class="perk-item glow-hover">
+                    <h4><i data-lucide="check-circle" class="text-accent" style="color: #2563EB;"></i> Lifetime
+                        Privilege</h4>
+                    <p style="font-size: 0.85rem;">Early architects receive a 50% discount on the final product license,
+                        forever.</p>
+                </div>
+                <div class="perk-item glow-hover">
+                    <h4><i data-lucide="check-circle" class="text-accent" style="color: #2563EB;"></i> Direct Access
+                    </h4>
+                    <p style="font-size: 0.85rem;">Skip the support queue. You have a direct line to the founding
+                        developers via Discord/Email.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <footer>
         <div class="container">
             <h3>Bouquine</h3>
             <p style="opacity: 0.6; margin-top: 1rem;">Built for the craft.</p>
-            
-            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; align-items: center;">
-                <a href="mailto:beta@bouquine.app" class="btn btn-outline" style="border-color: rgba(255,255,255,0.2); color: white;">
-                    <i data-lucide="bug"></i> Report a Bug
+
+            <div class="command-center">
+                <a href="mailto:beta@bouquine.app" class="command-btn">
+                    <i data-lucide="bug"></i>
+                    <span>Report a Bug</span>
                 </a>
-                <button onclick="openPrivacy()" class="btn btn-outline" style="border-color: rgba(255,255,255,0.2); color: white; background: transparent;">
-                    <i data-lucide="shield"></i> Privacy Pledge
-                </button>
+                <a href="https://tally.so/r/npx" target="_blank" class="command-btn">
+                    <i data-lucide="message-square"></i>
+                    <span>Submit Feature Request</span>
+                </a>
+                <a href="https://github.com/orgs/bouquine/projects/1" target="_blank" class="command-btn">
+                    <i data-lucide="map"></i>
+                    <span>View Live Roadmap</span>
+                </a>
             </div>
 
-            <div style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; font-size: 0.9rem; color: rgba(255,255,255,0.5);">
-                &copy; 2026 Bouquine. All rights reserved. <br>
-                <span style="font-size: 0.8rem;">Local-First Architecture.</span>
+            <div
+                style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; font-size: 0.9rem; color: rgba(255,255,255,0.5); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                <p>&copy; 2026 Bouquine. All rights reserved.</p>
+                <div style="display: flex; gap: 2rem;">
+                    <span style="font-size: 0.8rem;">Local-First Architecture.</span>
+                    <button onclick="openPrivacy()"
+                        style="background: none; border: none; color: inherit; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Privacy
+                        Pledge</button>
+                </div>
             </div>
         </div>
     </footer>
 
     <script>
+        // 1. Initialize Lucide icons
         lucide.createIcons();
+
+        // 2. The Magic Glow Logic (Mouse Follower)
         const cursorGlow = document.getElementById('cursorGlow');
         document.addEventListener('mousemove', (e) => {
             cursorGlow.style.left = e.clientX + 'px';
             cursorGlow.style.top = e.clientY + 'px';
         });
 
-        // Privacy Modal Logic
+        // 3. Privacy Modal Logic
         function openPrivacy() {
             const modal = document.getElementById('privacyModal');
             modal.style.display = 'flex';
-            // Small timeout to allow display:flex to apply before opacity transition
             setTimeout(() => { modal.style.opacity = '1'; }, 10);
-            // Re-initialize icons inside modal if needed
-            lucide.createIcons();
+            lucide.createIcons(); // Refresh icons inside modal
         }
 
         function closePrivacy() {
@@ -670,47 +798,59 @@
             setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
 
-        // Close if clicking outside the card
-        document.addEventListener('DOMContentLoaded', () => {
+        // 4. Close modal if clicking outside the content card
+        window.onclick = function (event) {
             const modal = document.getElementById('privacyModal');
-            if (modal) {
-                modal.addEventListener('click', (e) => {
-                    if (e.target.id === 'privacyModal') closePrivacy();
-                });
+            if (event.target == modal) {
+                closePrivacy();
             }
-        });
+        }
     </script>
-<!-- Privacy Modal -->
-<div id="privacyModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
-    <div style="background: #FDFBF7; padding: 3rem; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; color: #0F172A;">
-        <button onclick="closePrivacy()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; cursor: pointer; color: #475569;">
-            <i data-lucide="x"></i>
-        </button>
-        
-        <h2 style="font-family: 'DM Serif Display', serif; font-size: 2rem; margin-bottom: 1.5rem;">The Privacy Pledge</h2>
-        
-        <div style="font-family: 'Inter', sans-serif; line-height: 1.7; color: #475569;">
-            <p><strong>Effective Date:</strong> January 2026</p>
-            <p>Bouquine is designed to be a sanctuary. Here is exactly how we handle your data:</p>
-            
-            <h4 style="color: #0F172A; margin-top: 1.5rem;">1. Your Manuscript is Local</h4>
-            <p>We do not have a cloud database. Your projects, characters, and notes are stored in a SQLite database on your personal device. If you uninstall the app, your data remains on your drive.</p>
 
-            <h4 style="color: #0F172A; margin-top: 1.5rem;">2. AI & Data Transmission</h4>
-            <p>When you use "The Muse," text fragments are sent to the AI Provider you selected (OpenRouter, OpenAI, or Anthropic). This data is sent <strong>only</strong> to generate a response and is not stored by Bouquine. We advise reviewing the API data policy of your chosen provider (e.g., OpenRouter does not train on API data).</p>
+    <!-- Privacy Modal -->
+    <div id="privacyModal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div
+            style="background: #FDFBF7; padding: 3rem; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; color: #0F172A; border: 1px solid rgba(0,0,0,0.1);">
+            <button onclick="closePrivacy()"
+                style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; cursor: pointer; color: #475569;">
+                <i data-lucide="x"></i>
+            </button>
 
-            <h4 style="color: #0F172A; margin-top: 1.5rem;">3. Telemetry</h4>
-            <p>This Beta version does NOT include tracking pixels or analytics. We rely entirely on you emailing us bugs.</p>
-            
-            <h4 style="color: #0F172A; margin-top: 1.5rem;">4. Beta Contact</h4>
-            <p>We collected your email solely to send you the download link and update notifications. We will never sell your email.</p>
+            <h2 style="font-family: 'DM Serif Display', serif; font-size: 2.2rem; margin-bottom: 1.5rem;">The Privacy
+                Pledge</h2>
+
+            <div style="font-family: 'Inter', sans-serif; line-height: 1.8; color: #475569; font-size: 0.95rem;">
+                <p style="margin-bottom: 1rem;"><strong>Effective Date:</strong> January 2026</p>
+                <p style="margin-bottom: 1.5rem;">Bouquine is designed to be a sanctuary for intellectual property. We
+                    believe your stories belong to you alone.</p>
+
+                <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">1. Your Manuscript stays Local
+                </h4>
+                <p>We do not use a cloud database. Your projects, characters, and research notes are stored in a private
+                    SQLite database on your own device. If the internet goes out, your studio keeps working.</p>
+
+                <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">2. Transparent AI Transmission
+                </h4>
+                <p>When you consult <strong>The Muse</strong>, only the relevant context is sent to your selected AI
+                    Provider (OpenRouter, OpenAI, or Anthropic). This data is never stored by Bouquine and, per major
+                    provider terms, is not used for model training.</p>
+
+                <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">3. Zero Hidden Tracking</h4>
+                <p>Our beta includes no telemetry, no tracking pixels, and no background analytics. We find out about
+                    bugs only when you tell us about them.</p>
+
+                <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">4. Intellectual Ownership</h4>
+                <p>You retain 100% ownership of everything created within Bouquine. We provide the forge; you provide
+                    the fire.</p>
+            </div>
+
+            <button onclick="closePrivacy()" class="btn btn-primary"
+                style="width: 100%; margin-top: 2.5rem; justify-content: center; font-family: 'Inter', sans-serif;">
+                I Understand
+            </button>
         </div>
-
-        <button onclick="closePrivacy()" class="btn btn-primary" style="width: 100%; margin-top: 2rem; justify-content: center;">
-            I Understand
-        </button>
     </div>
-</div>
 </body>
 
 </html>
