@@ -16,10 +16,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
         include:
           - os: macos-latest
-            artifact_name: Bouquine-mac
+            artifact_name: Bouquine-mac-arm64
+            build_script: build:mac
+          - os: macos-13 # Standard GitHub runner for Intel (x64) Macs
+            artifact_name: Bouquine-mac-x64
             build_script: build:mac
           - os: windows-latest
             artifact_name: Bouquine-win
@@ -93,6 +95,7 @@ jobs:
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
+          # This filter ensures only the installers are uploaded, preventing conflicts
           files: |
             artifacts/**/*.dmg
             artifacts/**/*.exe
