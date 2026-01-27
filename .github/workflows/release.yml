@@ -33,7 +33,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-       - name: Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -66,7 +66,7 @@ jobs:
             chmod +x ./node_modules/app-builder-bin/linux/x64/app-builder
           fi
 
-       - name: Build and package
+      - name: Build and package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ELECTRON_CACHE: ~/.cache/electron
