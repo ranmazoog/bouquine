@@ -8,7 +8,10 @@ on:
 jobs:
   release:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         include:
@@ -39,6 +42,9 @@ jobs:
         run: npm run rebuild
 
       - name: Build and package
+        # THIS ENABLES THE UPLOAD
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run ${{ matrix.build_script }}
 
       - name: Upload artifacts
@@ -70,6 +76,7 @@ jobs:
           name: Release ${{ github.ref_name }}
           draft: true
           prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             artifacts/**/*.dmg
             artifacts/**/*.exe
