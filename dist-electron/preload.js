@@ -56,6 +56,7 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   summarizeChapter: (chapterId, provider) => electron.ipcRenderer.invoke("summarize-chapter", { chapterId, provider }),
   // Project Utilities
   generateBlurb: (projectId, synopsis) => electron.ipcRenderer.invoke("generate-blurb", { projectId, synopsis }),
+  generateSynopsisFromInputs: (inputs) => electron.ipcRenderer.invoke("generate-synopsis-from-inputs", inputs),
   // References (Research)
   getReferences: (projectId) => electron.ipcRenderer.invoke("get-references", projectId),
   createReference: (data) => electron.ipcRenderer.invoke("create-reference", data),
@@ -77,6 +78,12 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   exportToPdf: (projectId, chapterIds, filePath) => electron.ipcRenderer.invoke("export-to-pdf", { projectId, chapterIds, filePath }),
   exportToEpub: (projectId, chapterIds, filePath) => electron.ipcRenderer.invoke("export-to-epub", { projectId, chapterIds, filePath }),
   exportToJson: (projectId, filePath) => electron.ipcRenderer.invoke("export-to-json", { projectId, filePath }),
+  exportToMarkdown: (projectId, chapterIds, filePath) => electron.ipcRenderer.invoke("export-to-markdown", { projectId, chapterIds, filePath }),
+  exportToTxt: (projectId, chapterIds, filePath) => electron.ipcRenderer.invoke("export-to-txt", { projectId, chapterIds, filePath }),
+  // Intelligence Features
+  auditChapterConsistency: (payload) => electron.ipcRenderer.invoke("audit-chapter-consistency", payload),
+  analyzeAuthorStyle: (payload) => electron.ipcRenderer.invoke("analyze-author-style", payload),
   // Utility
-  getAppDataPath: () => electron.ipcRenderer.invoke("get-app-data-path")
+  getAppDataPath: () => electron.ipcRenderer.invoke("get-app-data-path"),
+  openLogsFolder: () => electron.ipcRenderer.invoke("open-logs-folder")
 });

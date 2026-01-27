@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
-import { Plus, Trash2, ExternalLink, FileText, Link as LinkIcon, Loader2, Tag, Layers, Search, X, Check, Save, Edit3, Feather } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, FileText, Link as LinkIcon, Loader2, Tag, Layers, Search, X, Check, Save, Edit3, Feather, Sparkles } from 'lucide-react';
 import type { Reference, Character, WorldElement, Chapter } from '../../types/electron';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function ResearchPanel() {
     const { currentProject } = useProjectStore();
@@ -9,8 +10,10 @@ export function ResearchPanel() {
     const [isLoading, setIsLoading] = useState(false);
 
     // Form state
+    const [isFABExpanded, setIsFABExpanded] = useState(false);
     const [isAddingLink, setIsAddingLink] = useState(false);
     const [isAddingNote, setIsAddingNote] = useState(false);
+
     const [linkTitle, setLinkTitle] = useState('');
     const [linkUrl, setLinkUrl] = useState('');
     const [noteTitle, setNoteTitle] = useState('');
@@ -111,6 +114,7 @@ export function ResearchPanel() {
         setSelectedElements([]);
         setIsAddingLink(false);
         setIsAddingNote(false);
+        setIsFABExpanded(false);
         setSearchQuery('');
     };
 
@@ -235,7 +239,7 @@ export function ResearchPanel() {
 
     return (
         <div className="flex-1 overflow-y-auto bg-card p-8">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto pb-32">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold mb-2">Research & References</h1>
                     <p className="text-muted-foreground text-sm">
@@ -244,355 +248,473 @@ export function ResearchPanel() {
                 </div>
 
                 {/* Search Bar */}
-                <div className="relative mb-6">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <div className="relative mb-8">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
                     <input
                         type="text"
                         value={listSearchQuery}
                         onChange={(e) => setListSearchQuery(e.target.value)}
                         placeholder="Search notes, links, tags..."
-                        className="w-full bg-accent/20 border border-border/50 rounded-xl py-3 pl-10 pr-10 focus:ring-2 focus:ring-primary/50 transition-all text-sm"
+                        className="w-full bg-accent/20 border border-border/50 rounded-2xl py-4 pl-12 pr-12 focus:ring-4 focus:ring-primary/10 transition-all text-base shadow-sm"
                     />
                     {listSearchQuery && (
                         <button
                             onClick={() => setListSearchQuery('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-accent rounded-full text-muted-foreground transition-colors"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 hover:bg-accent rounded-full text-muted-foreground transition-colors"
                         >
-                            <X size={14} />
+                            <X size={16} />
                         </button>
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="flex flex-col md:flex-row gap-8">
                     {/* Main Content Area */}
-                    <div className="md:col-span-2 space-y-6">
+                    <div className="flex-1 space-y-6">
                         {isLoading ? (
-                            <div className="flex items-center justify-center p-8">
-                                <Loader2 className="animate-spin text-muted-foreground" />
+                            <div className="flex items-center justify-center p-12">
+                                <Loader2 className="animate-spin text-primary" size={32} />
                             </div>
                         ) : filteredReferences.length === 0 ? (
-                            <div className="text-center p-12 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground bg-accent/5">
+                            <div className="text-center p-20 border-2 border-dashed border-border/50 rounded-2xl text-muted-foreground bg-accent/5 shadow-inner">
                                 {listSearchQuery ? (
-                                    <div className="space-y-2">
-                                        <p>No matches found for "{listSearchQuery}"</p>
+                                    <div className="space-y-4">
+                                        <p className="text-lg">No matches found for "{listSearchQuery}"</p>
                                         <button
                                             onClick={() => setListSearchQuery('')}
-                                            className="text-primary hover:underline text-sm font-medium"
+                                            className="text-primary hover:underline font-bold"
                                         >
                                             Clear search
                                         </button>
                                     </div>
                                 ) : (
-                                    "No references added yet."
+                                    <div className="space-y-4">
+                                        <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 border border-border/50">
+                                            <Layers size={32} className="text-muted-foreground/30" />
+                                        </div>
+                                        <p className="text-lg font-bold opacity-80">Your research vault is empty.</p>
+                                        <p className="text-sm opacity-60">Use the floating button in the corner to add links and notes.</p>
+                                    </div>
                                 )}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 gap-4">
-                                {filteredReferences.map(ref => {
-                                    const related = ref.related_elements ? JSON.parse(ref.related_elements) : [];
-                                    return (
-                                        <div key={ref.id} className="bg-accent/30 border border-border/50 rounded-lg p-4 group hover:border-primary/30 transition-colors">
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div className="flex flex-col gap-1">
-                                                    <h3 className="font-semibold flex items-center gap-2">
-                                                        {ref.type === 'link' ? <LinkIcon size={14} className="text-blue-400" /> : <FileText size={14} className="text-yellow-400" />}
-                                                        {highlightMatch(ref.title, listSearchQuery)}
-                                                    </h3>
-                                                    {ref.tag && (
-                                                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center gap-1 w-fit">
-                                                            <Tag size={8} />
-                                                            {highlightMatch(ref.tag, listSearchQuery)}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    {ref.type !== 'link' && (
+                                <AnimatePresence initial={false}>
+                                    {filteredReferences.map(ref => {
+                                        const related = ref.related_elements ? JSON.parse(ref.related_elements) : [];
+                                        return (
+                                            <motion.div
+                                                key={ref.id}
+                                                layout
+                                                initial={{ opacity: 0, scale: 0.98 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.98 }}
+                                                className="bg-accent/30 border border-border/50 rounded-2xl p-6 group hover:border-primary/30 hover:bg-accent/50 transition-all duration-300 shadow-sm hover:shadow-md"
+                                            >
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div className="flex flex-col gap-2">
+                                                        <h3 className="text-lg font-bold flex items-center gap-2">
+                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${ref.type === 'link' ? 'bg-blue-500/10 text-blue-500' : 'bg-yellow-500/10 text-yellow-500'} border border-current/10`}>
+                                                                {ref.type === 'link' ? <LinkIcon size={16} /> : <FileText size={16} />}
+                                                            </div>
+                                                            {highlightMatch(ref.title, listSearchQuery)}
+                                                        </h3>
+                                                        {ref.tag && (
+                                                            <span className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center gap-1.5 w-fit font-bold uppercase tracking-wider border border-primary/20">
+                                                                <Tag size={10} />
+                                                                {highlightMatch(ref.tag, listSearchQuery)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {ref.type !== 'link' && (
+                                                            <button
+                                                                onClick={() => startEditingNote(ref)}
+                                                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg sm:opacity-0 group-hover:opacity-100 transition-all"
+                                                                title="Edit note"
+                                                            >
+                                                                <Edit3 size={16} />
+                                                            </button>
+                                                        )}
                                                         <button
-                                                            onClick={() => startEditingNote(ref)}
-                                                            className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                                                            title="Edit note"
+                                                            onClick={() => handleDelete(ref.id)}
+                                                            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg sm:opacity-0 group-hover:opacity-100 transition-all"
+                                                            title="Delete"
                                                         >
-                                                            <Edit3 size={14} />
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        onClick={() => handleDelete(ref.id)}
-                                                        className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            {ref.type === 'link' ? (
-                                                <button
-                                                    onClick={() => openLink(ref.url!)}
-                                                    className="text-sm text-primary hover:underline flex items-center gap-1 mt-2"
-                                                >
-                                                    <ExternalLink size={12} />
-                                                    {ref.url}
-                                                </button>
-                                            ) : editingNote?.id === ref.id ? (
-                                                <div className="mt-2 space-y-3">
-                                                    <textarea
-                                                        value={editContent}
-                                                        onChange={(e) => setEditContent(e.target.value)}
-                                                        className="w-full bg-background border border-border rounded px-3 py-2 text-sm h-32 resize-none focus:ring-1 focus:ring-primary/50"
-                                                        placeholder="Note content..."
-                                                    />
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={saveEditedNote}
-                                                            className="flex-1 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-primary/90"
-                                                        >
-                                                            Save Changes
-                                                        </button>
-                                                        <button
-                                                            onClick={cancelEditingNote}
-                                                            className="px-3 py-1.5 bg-accent text-foreground rounded text-xs hover:bg-accent/80"
-                                                        >
-                                                            Cancel
+                                                            <Trash2 size={16} />
                                                         </button>
                                                     </div>
                                                 </div>
-                                            ) : (
-                                                <div>
-                                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">
-                                                        {highlightMatch(ref.content || '', listSearchQuery)}
-                                                    </p>
-                                                    <p className="text-[10px] text-muted-foreground/50 mt-2">
-                                                        {ref.updated_at !== ref.created_at
-                                                            ? `Edited ${formatDate(ref.updated_at)}`
-                                                            : `Created ${formatDate(ref.created_at)}`}
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {related.length > 0 && (
-                                                <div className="mt-4 flex flex-wrap gap-2 border-t border-border/20 pt-3">
-                                                    {related.map((el: any) => (
-                                                        <span key={el.id} className="text-[10px] bg-accent/50 text-muted-foreground px-2 py-1 rounded-full flex items-center gap-1">
-                                                            <Layers size={8} />
-                                                            {el.title}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                                                {ref.type === 'link' ? (
+                                                    <button
+                                                        onClick={() => openLink(ref.url!)}
+                                                        className="text-sm text-primary hover:underline flex items-center gap-2 mt-2 bg-primary/5 px-3 py-2 rounded-lg w-fit transition-colors group/link border border-primary/10 shadow-sm"
+                                                    >
+                                                        <ExternalLink size={14} className="group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+                                                        <span className="truncate max-w-xs">{ref.url}</span>
+                                                    </button>
+                                                ) : editingNote?.id === ref.id ? (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        className="mt-4 space-y-4"
+                                                    >
+                                                        <textarea
+                                                            value={editContent}
+                                                            onChange={(e) => setEditContent(e.target.value)}
+                                                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm h-40 resize-none focus:ring-4 focus:ring-primary/10 font-serif shadow-inner transition-all"
+                                                            placeholder="Note content..."
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={saveEditedNote}
+                                                                className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 active:scale-95"
+                                                            >
+                                                                Save Changes
+                                                            </button>
+                                                            <button
+                                                                onClick={cancelEditingNote}
+                                                                className="px-4 py-2.5 bg-accent text-foreground rounded-xl font-semibold hover:bg-accent/80 transition-all active:scale-95"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                ) : (
+                                                    <div>
+                                                        <div className="text-sm text-muted-foreground whitespace-pre-wrap mt-3 font-serif leading-relaxed line-clamp-6 opacity-80 group-hover:opacity-100 transition-opacity">
+                                                            {highlightMatch(ref.content || '', listSearchQuery)}
+                                                        </div>
+                                                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/30">
+                                                            <p className="text-[10px] text-muted-foreground/40">
+                                                                {ref.updated_at !== ref.created_at
+                                                                    ? `Edited ${formatDate(ref.updated_at)}`
+                                                                    : `Added ${formatDate(ref.created_at)}`}
+                                                            </p>
+                                                            {related.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1.5 justify-end">
+                                                                    {related.map((el: any) => (
+                                                                        <span key={el.id} className="text-[9px] bg-accent/50 text-muted-foreground px-2 py-0.5 rounded-full flex items-center gap-1 border border-border/50 font-medium">
+                                                                            <Layers size={8} className="opacity-50" />
+                                                                            {el.title}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        );
+                                    })}
+                                </AnimatePresence>
                             </div>
                         )}
                     </div>
 
-                    {/* Sidebar Actions */}
-                    <div className="space-y-6">
-                        <button
-                            onClick={handleSuggestGaps}
-                            disabled={isBrainstorming}
-                            className="w-full py-4 bg-primary/10 border border-primary/20 hover:bg-primary/20 rounded-xl text-primary font-bold shadow-sm transition-all flex flex-col items-center justify-center gap-2 group disabled:opacity-50"
-                        >
-                            <Feather size={20} className={isBrainstorming ? "animate-spin" : "group-hover:scale-110 transition-transform"} />
-                             {isBrainstorming ? <><span className="font-serif font-semibold">The Muse</span> is thinking...</> : "✨ Suggest Research Gaps"}
-                        </button>
+                    {/* Muse Suggestions Sidebar */}
+                    <div className="w-full md:w-72 space-y-6">
+                        <div className="p-6 bg-primary/5 border border-primary/20 rounded-2xl space-y-4 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                    <Feather size={18} />
+                                </div>
+                                <h3 className="font-bold">The Muse</h3>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Let AI analyze your story and suggest critical research gaps.
+                            </p>
+                            <button
+                                onClick={handleSuggestGaps}
+                                disabled={isBrainstorming}
+                                className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isBrainstorming ? (
+                                    <Loader2 size={16} className="animate-spin" />
+                                ) : (
+                                    <Sparkles size={16} />
+                                )}
+                                {isBrainstorming ? "Analyzing..." : "Suggest Gaps"}
+                            </button>
+                        </div>
 
-                        {brainstormSuggestions && (
-                            <div className="bg-accent/20 p-5 rounded-xl border border-border/50 animate-in fade-in slide-in-from-top-4 duration-500">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h4 className="text-sm font-bold flex items-center gap-2">
-                                        <Feather size={14} className="text-yellow-500" />
-                                        Suggested Focus:
-                                    </h4>
-                                    <button onClick={() => setBrainstormSuggestions(null)}>
-                                        <X size={14} className="text-muted-foreground hover:text-foreground" />
+                        <AnimatePresence>
+                            {brainstormSuggestions && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="bg-card p-6 rounded-2xl border border-border shadow-xl space-y-6"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-sm font-bold flex items-center gap-2">
+                                            <Feather size={14} className="text-yellow-500" />
+                                            Suggested Focus
+                                        </h4>
+                                        <button onClick={() => setBrainstormSuggestions(null)} className="p-1 hover:bg-accent rounded-full transition-colors text-muted-foreground">
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground prose prose-invert leading-relaxed max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                        {brainstormSuggestions.split('\n').filter(l => l.trim()).map((line, i) => (
+                                            <p key={i} className="mb-2 italic border-l-2 border-primary/20 pl-2 opacity-80">{line}</p>
+                                        ))}
+                                    </div>
+                                    <button
+                                        onClick={handleSaveSuggestionsAsNote}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent hover:bg-accent/80 text-foreground rounded-xl text-xs font-bold transition-all border border-border/50 active:scale-95"
+                                    >
+                                        <Save size={14} />
+                                        Save as Project Note
                                     </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
+            </div>
+
+            {/* RESEARCH FAB */}
+            <div className="fixed bottom-8 right-8 z-[60] flex flex-col items-end gap-3">
+                {/* Action Bubbles */}
+                <AnimatePresence>
+                    {isFABExpanded && (
+                        <div className="flex flex-col items-end gap-3 mb-1">
+                            <motion.button
+                                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                                transition={{ delay: 0.05 }}
+                                onClick={() => { setIsAddingNote(true); setIsFABExpanded(false); }}
+                                className="flex items-center gap-3 px-5 py-3.5 bg-card border border-border rounded-2xl shadow-2xl hover:bg-accent transition-all group/btn active:scale-95"
+                            >
+                                <span className="text-xs font-bold">📝 Add Research Note</span>
+                                <div className="w-10 h-10 bg-yellow-500/10 text-yellow-500 rounded-xl flex items-center justify-center group-hover/btn:scale-110 transition-transform border border-yellow-500/20 shadow-sm">
+                                    <FileText size={18} />
                                 </div>
-                                <div className="text-xs text-muted-foreground prose prose-invert leading-relaxed mb-4">
-                                    {brainstormSuggestions.split('\n').map((line, i) => (
-                                        <p key={i} className="mb-2">{line}</p>
-                                    ))}
+                            </motion.button>
+                            <motion.button
+                                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                                onClick={() => { setIsAddingLink(true); setIsFABExpanded(false); }}
+                                className="flex items-center gap-3 px-5 py-3.5 bg-card border border-border rounded-2xl shadow-2xl hover:bg-accent transition-all group/btn active:scale-95"
+                            >
+                                <span className="text-xs font-bold">🔗 Add Research Link</span>
+                                <div className="w-10 h-10 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center group-hover/btn:scale-110 transition-transform border border-blue-500/20 shadow-sm">
+                                    <LinkIcon size={18} />
                                 </div>
-                                <button
-                                    onClick={handleSaveSuggestionsAsNote}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                                >
-                                    <Save size={14} />
-                                    Save as Note
+                            </motion.button>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Main FAB Toggle */}
+                <motion.button
+                    onClick={() => setIsFABExpanded(!isFABExpanded)}
+                    animate={{
+                        rotate: isFABExpanded ? 45 : 0,
+                        backgroundColor: isFABExpanded ? 'var(--accent)' : '#2563eb', // Blue-600
+                        color: isFABExpanded ? 'var(--foreground)' : '#ffffff'
+                    }}
+                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 active:scale-90 border border-border/20"
+                >
+                    <Plus size={32} />
+                </motion.button>
+            </div>
+
+            {/* ADD LINK/NOTE MODALS */}
+            <AnimatePresence>
+                {(isAddingLink || isAddingNote) && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={resetForm}
+                        />
+
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-card w-full max-w-lg rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[90vh]"
+                        >
+                            <div className="p-6 border-b border-border/50 bg-accent/5 flex items-center justify-between">
+                                <h2 className="text-xl font-bold flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAddingLink ? 'bg-blue-500/10 text-blue-500' : 'bg-yellow-500/10 text-yellow-500'} border border-current/10 shadow-sm`}>
+                                        {isAddingLink ? <LinkIcon size={20} /> : <FileText size={20} />}
+                                    </div>
+                                    {isAddingLink ? 'Add Research Link' : 'Add Research Note'}
+                                </h2>
+                                <button onClick={resetForm} className="p-2 hover:bg-accent rounded-full transition-colors text-muted-foreground">
+                                    <X size={20} />
                                 </button>
                             </div>
-                        )}
 
-                        <div className="bg-accent/20 p-4 rounded-xl border border-border/50">
-                            <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                <Plus size={16} />
-                                Collect Info
-                            </h3>
-                            <div className="flex gap-2 mb-4">
-                                <button
-                                    onClick={() => { setIsAddingLink(true); setIsAddingNote(false); }}
-                                    className={`flex-1 py-2 text-xs rounded-md transition-all ${isAddingLink ? 'bg-primary text-primary-foreground font-bold' : 'bg-background hover:bg-accent border border-border'}`}
-                                >
-                                    Link
-                                </button>
-                                <button
-                                    onClick={() => { setIsAddingNote(true); setIsAddingLink(false); }}
-                                    className={`flex-1 py-2 text-xs rounded-md transition-all ${isAddingNote ? 'bg-primary text-primary-foreground font-bold' : 'bg-background hover:bg-accent border border-border'}`}
-                                >
-                                    Note
-                                </button>
-                            </div>
-
-                            {(isAddingLink || isAddingNote) && (
-                                <div className="space-y-4 animate-in fade-in duration-300">
-                                    {isAddingLink ? (
-                                        <>
+                            <div className="p-8 overflow-y-auto space-y-6">
+                                {isAddingLink ? (
+                                    <>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 opacity-70">Source Title</label>
                                             <input
                                                 type="text"
                                                 value={linkTitle}
                                                 onChange={e => setLinkTitle(e.target.value)}
-                                                className="w-full bg-background border border-border rounded px-3 py-2 text-sm focus:ring-1 focus:ring-primary/50"
-                                                placeholder="Link Title (e.g. Monaco F1 Spec)"
+                                                className="w-full bg-background border border-border rounded-xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-primary/10 transition-all font-bold shadow-inner"
+                                                placeholder="e.g. Monaco F1 Technical Specs"
                                                 autoFocus
                                             />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 opacity-70">URL</label>
                                             <input
                                                 type="url"
                                                 value={linkUrl}
                                                 onChange={e => setLinkUrl(e.target.value)}
-                                                className="w-full bg-background border border-border rounded px-3 py-2 text-sm focus:ring-1 focus:ring-primary/50"
-                                                placeholder="https://wikipedia.org/..."
+                                                className="w-full bg-background border border-border rounded-xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+                                                placeholder="https://wikipedia.org/wiki/Monaco_Grand_Prix"
                                             />
-                                        </>
-                                    ) : (
-                                        <>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 opacity-70">Note Title</label>
                                             <input
                                                 type="text"
                                                 value={noteTitle}
                                                 onChange={e => setNoteTitle(e.target.value)}
-                                                className="w-full bg-background border border-border rounded px-3 py-2 text-sm focus:ring-1 focus:ring-primary/50"
-                                                placeholder="Note Title"
+                                                className="w-full bg-background border border-border rounded-xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-primary/10 transition-all font-bold shadow-inner"
+                                                placeholder="e.g. Key Plot Points for Finale"
                                                 autoFocus
                                             />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 opacity-70">Content</label>
                                             <textarea
                                                 value={noteContent}
                                                 onChange={e => setNoteContent(e.target.value)}
-                                                className="w-full bg-background border border-border rounded px-3 py-2 text-sm h-24 resize-none focus:ring-1 focus:ring-primary/50"
-                                                placeholder="Note content..."
+                                                className="w-full bg-background border border-border rounded-xl px-4 py-3.5 text-sm h-40 resize-none focus:ring-4 focus:ring-primary/10 transition-all font-serif leading-relaxed shadow-inner"
+                                                placeholder="Type your notes here..."
                                             />
-                                        </>
-                                    )}
-
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
-                                            <Tag size={12} />
-                                            Extra Meta
                                         </div>
+                                    </>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 flex items-center gap-2 opacity-70">
+                                            <Tag size={12} /> Search Tags
+                                        </label>
                                         <input
                                             type="text"
                                             value={noteTag}
                                             onChange={e => setNoteTag(e.target.value)}
-                                            className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
-                                            placeholder="Tag (e.g. Monaco, F1)"
+                                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+                                            placeholder="e.g. World Building, Plot"
                                         />
                                     </div>
 
-                                    <div className="space-y-2 relative">
-                                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
-                                            <Layers size={12} />
-                                            Linked Elements
-                                        </div>
-                                        <div className="flex flex-wrap gap-1.5 mb-2">
-                                            {selectedElements.map(el => (
-                                                <span key={el.id} className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                    {el.title}
-                                                    <button onClick={() => toggleElementLink(el.id, el.type, el.title)} className="hover:text-foreground">
-                                                        <X size={10} />
-                                                    </button>
-                                                </span>
-                                            ))}
-                                            {selectedElements.length === 0 && <span className="text-[10px] text-muted-foreground italic px-1">No links selected</span>}
-                                        </div>
-
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 flex items-center gap-2 opacity-70">
+                                            <Layers size={12} /> Linked Elements
+                                        </label>
                                         <div className="relative">
                                             <input
                                                 type="text"
                                                 value={searchQuery}
                                                 onFocus={() => setShowLinkMenu(true)}
                                                 onChange={e => setSearchQuery(e.target.value)}
-                                                className="w-full bg-background border border-border rounded px-3 py-2 pr-8 text-sm"
+                                                className="w-full bg-background border border-border rounded-xl px-4 py-3 pr-10 text-sm focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
                                                 placeholder="Search to link..."
                                             />
-                                            <Search size={14} className="absolute right-3 top-2.5 text-muted-foreground" />
+                                            <Search size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground opacity-50" />
 
-                                            {showLinkMenu && (
-                                                <div className="absolute bottom-full left-0 w-full mb-2 bg-card border border-border rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
-                                                    <div className="p-1">
-                                                        {[...characters, ...worldElements, ...chapters]
-                                                            .filter(item => {
-                                                                const title = (item as any).name || (item as any).title || '';
-                                                                return title.toLowerCase().includes(searchQuery.toLowerCase());
-                                                            })
-                                                            .slice(0, 10)
-                                                            .map(item => {
-                                                                const id = item.id;
-                                                                const title = (item as any).name || (item as any).title || ((item as any).chapter_number ? `Chapter ${(item as any).chapter_number}` : 'Unknown');
-                                                                const type = (item as any).role ? 'character' : (item as any).category ? 'world' : 'chapter';
-                                                                const isSelected = selectedElements.some(e => e.id === id);
+                                            <AnimatePresence>
+                                                {showLinkMenu && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: -10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -10 }}
+                                                        className="absolute bottom-full left-0 w-full mb-2 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-above-all flex flex-col"
+                                                    >
+                                                        <div className="p-2 space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+                                                            {[...characters, ...worldElements, ...chapters]
+                                                                .filter(item => {
+                                                                    const title = (item as any).name || (item as any).title || '';
+                                                                    return title.toLowerCase().includes(searchQuery.toLowerCase());
+                                                                })
+                                                                .slice(0, 10)
+                                                                .map(item => {
+                                                                    const id = item.id;
+                                                                    const title = (item as any).name || (item as any).title || ((item as any).chapter_number ? `Chapter ${(item as any).chapter_number}` : 'Unknown');
+                                                                    const type = (item as any).role ? 'character' : (item as any).category ? 'world' : 'chapter';
+                                                                    const isSelected = selectedElements.some(e => e.id === id);
 
-                                                                return (
-                                                                    <button
-                                                                        key={id}
-                                                                        onClick={() => toggleElementLink(id, type, title)}
-                                                                        className={`w-full text-left px-3 py-2 text-xs hover:bg-accent rounded flex items-center justify-between ${isSelected ? 'text-primary font-bold' : ''}`}
-                                                                    >
-                                                                        <span className="flex items-center gap-2">
-                                                                            <span className="opacity-50 uppercase text-[8px]">{type}</span>
-                                                                            {title}
-                                                                        </span>
-                                                                        {isSelected && <Check size={12} />}
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                        <div className="p-2 border-t border-border mt-1">
+                                                                    return (
+                                                                        <button
+                                                                            key={id}
+                                                                            onClick={() => toggleElementLink(id, type, title)}
+                                                                            className={`w-full text-left px-3 py-2.5 text-xs hover:bg-accent rounded-lg flex items-center justify-between transition-colors ${isSelected ? 'bg-primary/10 text-primary font-bold' : ''}`}
+                                                                        >
+                                                                            <div className="flex flex-col">
+                                                                                <span className="opacity-40 uppercase text-[8px] font-bold tracking-widest">{type}</span>
+                                                                                <span>{title}</span>
+                                                                            </div>
+                                                                            {isSelected && <Check size={14} />}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                        </div>
+                                                        <div className="p-2 bg-accent/30 border-t border-border/50">
                                                             <button
                                                                 onClick={() => setShowLinkMenu(false)}
-                                                                className="w-full text-center text-[10px] text-muted-foreground hover:text-foreground"
+                                                                className="w-full text-center py-2 text-[10px] text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider bg-card rounded-lg transition-colors border border-border/50 shadow-sm"
                                                             >
-                                                                Close Menu
+                                                                Done Linking
                                                             </button>
                                                         </div>
-                                                    </div>
-                                                </div>
-                                            )}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     </div>
-
-                                    <div className="flex gap-2 pt-2">
-                                        <button
-                                            onClick={isAddingLink ? handleAddLink : handleAddNote}
-                                            disabled={(isAddingLink && (!linkTitle || !linkUrl)) || (isAddingNote && (!noteTitle || !noteContent))}
-                                            className="flex-1 bg-primary text-primary-foreground py-2 rounded text-sm font-medium hover:bg-primary/90 disabled:opacity-50 shadow-md"
-                                        >
-                                            Save Research
-                                        </button>
-                                        <button
-                                            onClick={resetForm}
-                                            className="px-3 py-2 bg-accent text-foreground rounded text-sm hover:bg-accent/80"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
                                 </div>
-                            )}
 
-                            {!isAddingLink && !isAddingNote && (
-                                <p className="text-[10px] text-muted-foreground text-center mt-2 px-2 italic">
-                                     Links and notes are automatically indexed for <span className="font-serif font-semibold">The Muse</span> assistant.
-                                </p>
-                            )}
-                        </div>
+                                {selectedElements.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 p-3 bg-accent/20 rounded-xl border border-border/50 shadow-inner">
+                                        {selectedElements.map(el => (
+                                            <span key={el.id} className="text-[10px] bg-primary/20 text-primary px-2.5 py-1 rounded-full flex items-center gap-1.5 font-bold border border-primary/20 shadow-sm">
+                                                {el.title}
+                                                <button onClick={() => toggleElementLink(el.id, el.type, el.title)} className="hover:text-primary-foreground hover:bg-primary rounded-full transition-colors p-0.5">
+                                                    <X size={10} />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="p-6 bg-accent/5 border-t border-border/50 flex gap-3">
+                                <button
+                                    onClick={resetForm}
+                                    className="flex-1 py-3 bg-accent hover:bg-accent/80 text-foreground rounded-xl font-bold transition-all active:scale-95"
+                                >
+                                    Discard
+                                </button>
+                                <button
+                                    onClick={isAddingLink ? handleAddLink : handleAddNote}
+                                    disabled={(isAddingLink && (!linkTitle || !linkUrl)) || (isAddingNote && (!noteTitle || !noteContent))}
+                                    className="flex-[2] bg-blue-600 text-white py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-blue-600/20"
+                                >
+                                    Save Research
+                                </button>
+                            </div>
+                        </motion.div>
                     </div>
-                </div>
-            </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

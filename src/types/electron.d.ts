@@ -165,6 +165,7 @@ export interface IElectronAPI {
 
     // Project Utilities
     generateBlurb: (projectId: string, synopsis: string) => Promise<string>;
+    generateSynopsisFromInputs: (inputs: { protagonist: string; goal: string; conflict: string; ending: string }) => Promise<string>;
 
     // References (Research)
     getReferences: (projectId: string) => Promise<Reference[]>;

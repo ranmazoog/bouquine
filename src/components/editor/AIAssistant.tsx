@@ -32,13 +32,17 @@ interface RelevantResearch {
 
 export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
     const { currentProject, updateChapterInStore } = useProjectStore();
-    const { currentChapter, setCurrentChapter, triggerInsert, lastSelection, setSelection, activeBeat, setActiveBeat } = useEditorStore();
+    const {
+        currentChapter, setCurrentChapter, triggerInsert, lastSelection,
+        setSelection, activeBeat, setActiveBeat, isAuditing, setIsAuditing,
+        pendingAudit, triggerAudit, setActiveSidebarTab
+    } = useEditorStore();
+
     const [messages, setMessages] = useState<ChatMessage[]>([
         { role: 'assistant', content: "Hello! I'm your creative partner. I can see your current chapter and help with ideas, feedback, or rewrites. What would you like to work on?" }
     ]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isAuditing, setIsAuditing] = useState(false);
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [selectedProvider, setSelectedProvider] = useState<AIProvider>('openrouter');
     const [showProviderMenu, setShowProviderMenu] = useState(false);
@@ -53,7 +57,6 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
     const [quickAddUrl, setQuickAddUrl] = useState('');
     const [activeResearchPreview, setActiveResearchPreview] = useState<string | null>(null);
 
-    const { setActiveSidebarTab } = useEditorStore();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -90,7 +93,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
         setIsAuditing(true);
         setMessages(prev => [...prev, {
             role: 'assistant',
-            content: `🛡️ Running logical consistency audit for chapter "${currentChapter.title || currentChapter.chapter_number}" against the Vault and Synopsis...`
+            content: `🛡️ **The Muse is performing a Story Audit...**\n\nChecking chapter "${currentChapter.title || currentChapter.chapter_number}" against character arcs, world elements, and synopsis context. This deep analysis ensures your narrative remains logically consistent.`
         }]);
 
         try {
@@ -113,9 +116,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
         } finally {
             setIsAuditing(false);
         }
-    }, [currentProject, currentChapter, isLoading, isAuditing, selectedProvider]);
-
-    const { pendingAudit, triggerAudit } = useEditorStore();
+    }, [currentProject, currentChapter, isLoading, isAuditing, selectedProvider, setIsAuditing]);
 
     useEffect(() => {
         if (pendingAudit) {
@@ -427,21 +428,34 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
     return (
         <div className="w-80 glass flex flex-col h-full border-l border-white/5">
             {/* Relevant Research Panel */}
-            <div className="border-b border-white/5 bg-accent/10">
+            <div className={`border-b border-blue-500/20 bg-blue-50/50 overflow-hidden transition-all duration-300 ${isContextExpanded ? 'ring-1 ring-blue-500/30 shadow-inner' : ''}`}>
                 <button
                     onClick={() => setIsContextExpanded(!isContextExpanded)}
-                    className="w-full px-4 py-2 flex items-center justify-between hover:bg-accent/20 transition-colors"
+                    className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-accent/20 transition-colors"
                 >
                     <div className="flex items-center gap-2">
-                        <LinkIcon size={14} className="text-primary" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Relevant Research</span>
+                        <LinkIcon size={14} className={`${isContextExpanded ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <span className={`text-[11px] font-bold uppercase tracking-wider ${isContextExpanded ? 'text-foreground' : 'text-muted-foreground'}`}>
+                            Relevant Research
+                        </span>
                         {relevantResearch.length > 0 && (
-                            <span className="bg-primary/20 text-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                            <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold min-w-[18px] text-center shadow-sm">
                                 {relevantResearch.length}
                             </span>
                         )}
                     </div>
-                    {isContextExpanded ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
+                    <div className="flex items-center gap-2">
+                        {!isContextExpanded && relevantResearch.length > 0 && (
+                            <div className="flex -space-x-1.5 overflow-hidden">
+                                {relevantResearch.slice(0, 3).map((res, i) => (
+                                    <div key={i} className="w-4 h-4 rounded-full bg-accent border border-white/20 flex items-center justify-center">
+                                        {res.type === 'link' ? <LinkIcon size={8} className="text-blue-400" /> : <FileText size={8} className="text-yellow-400" />}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {isContextExpanded ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
+                    </div>
                 </button>
 
                 {isContextExpanded && (
@@ -570,17 +584,17 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                                     </p>
                                 )}
 
-                                <div className="flex items-center justify-between pt-1">
+                                <div className="flex items-center justify-between pt-2 border-t border-border/30">
                                     <button
                                         onClick={() => setIsQuickAdding(true)}
-                                        className="text-[10px] text-primary hover:underline flex items-center gap-1 font-medium"
+                                        className="text-[10px] text-primary hover:text-primary/80 flex items-center gap-1 font-bold transition-colors"
                                     >
                                         <Plus size={10} />
                                         Quick Add
                                     </button>
                                     <button
                                         onClick={() => setActiveSidebarTab('research')}
-                                        className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+                                        className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 font-medium transition-colors"
                                     >
                                         View All
                                         <ChevronRight size={10} />
@@ -598,24 +612,25 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                     <Feather size={18} className="text-primary" />
                     <h3 className="font-serif font-semibold text-sm tracking-wide">The Muse</h3>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={handleAudit}
                         disabled={isLoading || isAuditing}
-                        className={`text-muted-foreground hover:text-primary transition-colors p-1 rounded hover:bg-accent ${isAuditing ? 'animate-pulse text-primary' : ''}`}
-                        title="Integrity Check (Manual Audit)"
+                        className={`group flex flex-col items-center gap-0.5 transition-colors ${isAuditing ? 'text-blue-500 animate-pulse' : 'text-muted-foreground hover:text-blue-500 active:scale-95'}`}
+                        title="Run Integrity Check (Your on-call editor)"
                     >
-                        {isAuditing ? <Loader2 size={14} className="animate-spin" /> : <Shield size={14} />}
+                        {isAuditing ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}
+                        <span className="text-[8px] uppercase font-extrabold tracking-tighter leading-none opacity-80 group-hover:opacity-100 transition-opacity">Story Audit</span>
                     </button>
                     <button
                         onClick={onSettingsClick}
-                        className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded hover:bg-accent"
+                        className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded hover:bg-accent active:scale-95"
                         title="Settings"
                     >
-                        <Settings size={14} />
+                        <Settings size={16} />
                     </button>
-                    <button onClick={handleClear} className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded hover:bg-accent" title="Clear Chat">
-                        <Trash2 size={14} />
+                    <button onClick={handleClear} className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded hover:bg-accent active:scale-95" title="Clear Chat">
+                        <Trash2 size={16} />
                     </button>
                 </div>
             </div>
@@ -822,19 +837,19 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                             {PROVIDER_LABELS[selectedProvider]}
                             <ChevronDown size={10} />
                         </button>
+
                         {showProviderMenu && (
-                            <div className="absolute bottom-full left-0 mb-1 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[120px] z-10">
-                                {(Object.keys(PROVIDER_LABELS) as AIProvider[]).map((provider) => (
+                            <div className="absolute bottom-full left-0 mb-1 w-32 bg-card border border-border rounded-lg shadow-xl py-1 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                {(['openrouter', 'openai', 'anthropic'] as AIProvider[]).map((p) => (
                                     <button
-                                        key={provider}
+                                        key={p}
                                         onClick={() => {
-                                            setSelectedProvider(provider);
+                                            setSelectedProvider(p);
                                             setShowProviderMenu(false);
                                         }}
-                                        className={`w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors ${selectedProvider === provider ? 'text-primary font-medium' : 'text-muted-foreground'
-                                            }`}
+                                        className={`w-full text-left px-3 py-1.5 text-[10px] hover:bg-accent transition-colors ${selectedProvider === p ? 'text-primary font-bold bg-primary/5' : 'text-foreground'}`}
                                     >
-                                        {PROVIDER_LABELS[provider]}
+                                        {PROVIDER_LABELS[p]}
                                     </button>
                                 ))}
                             </div>

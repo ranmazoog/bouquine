@@ -282,7 +282,7 @@ ipcMain.handle('ai-generate', async (_event, { provider, messages, options }) =>
 });
 
 ipcMain.handle('generate-blurb', async (_event, { _projectId, synopsis }) => {
-    const provider = 'openrouter'; // Default to OpenRouter
+    const provider = 'openrouter';
     const apiKey = getAPIKey(provider);
     if (!apiKey) {
         throw new Error(`No API key found for provider: ${provider}`);
@@ -300,6 +300,31 @@ ipcMain.handle('generate-blurb', async (_event, { _projectId, synopsis }) => {
             role: 'user' as const,
             content: `Here is the synopsis for the book:\n\n${synopsis}`
         }
+    ];
+
+    return await aiProvider.generate(messages, { temperature: 0.7 });
+});
+
+ipcMain.handle('generate-synopsis-from-inputs', async (_event, { protagonist, goal, conflict, ending }) => {
+    const provider = 'openrouter';
+    const apiKey = getAPIKey(provider);
+    if (!apiKey) throw new Error(`No API key found for provider: ${provider}`);
+
+    const model = getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free';
+    const aiProvider = createAIProvider(provider, apiKey, model);
+
+    const prompt = `You are a professional book editor helping a writer craft a story synopsis. Based on these elements:
+
+Protagonist: ${protagonist}
+Goal: ${goal}
+Conflict: ${conflict}
+Ending: ${ending}
+
+Write a compelling 300-word synopsis that weaves these elements together into a cohesive narrative. Use an engaging but professional tone suitable for a book blurb. Focus on the narrative arc and key beats. Do NOT include any preamble or introductory text, just the synopsis itself.`;
+
+    const messages = [
+        { role: 'system' as const, content: 'You are a professional book editor.' },
+        { role: 'user' as const, content: prompt }
     ];
 
     return await aiProvider.generate(messages, { temperature: 0.7 });

@@ -64,6 +64,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // Project Utilities
     generateBlurb: (projectId: string, synopsis: string) => ipcRenderer.invoke('generate-blurb', { projectId, synopsis }),
+    generateSynopsisFromInputs: (inputs: { protagonist: string; goal: string; conflict: string; ending: string }) => ipcRenderer.invoke('generate-synopsis-from-inputs', inputs),
 
     // References (Research)
     getReferences: (projectId: string) => ipcRenderer.invoke('get-references', projectId),

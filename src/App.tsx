@@ -15,11 +15,15 @@ import { OnboardingGuide } from './components/onboarding/OnboardingGuide';
 import { useProjectStore, useEditorStore } from './stores/projectStore';
 import { useProject } from './hooks/useProject';
 import { useEffect, useState } from 'react';
-import { CheckCircle2, RotateCw, AlertCircle, FileText } from 'lucide-react';
+import { CheckCircle2, RotateCw, AlertCircle, FileText, Sparkles, Plus } from 'lucide-react';
 
 function App() {
   const { setProjects, setCurrentProject, setChapters, addProject, updateProjectInStore, currentProject } = useProjectStore();
-  const { currentChapter, saveStatus, isFocusMode, activeSidebarTab } = useEditorStore();
+  const {
+    currentChapter, setCurrentChapter, saveStatus, isFocusMode,
+    activeSidebarTab, setViewMode, setActiveSidebarTab
+  } = useEditorStore();
+  const { chapters, addChapter } = useProjectStore();
   const { createProject } = useProject();
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -73,6 +77,40 @@ function App() {
 
     loadChapters();
   }, [currentProject?.id, setChapters]);
+
+  const handleStartChapter1 = async () => {
+    if (!currentProject) return;
+    try {
+      const newChapter = await window.electronAPI.createChapter({
+        project_id: currentProject.id,
+        chapter_number: 1,
+        title: 'Chapter 1'
+      });
+      addChapter(newChapter);
+      setCurrentChapter(newChapter);
+      setViewMode('write');
+      setActiveSidebarTab('chapters');
+    } catch (err) {
+      console.error('Failed to create Chapter 1:', err);
+    }
+  };
+
+  const handleCreateNewChapter = async () => {
+    if (!currentProject) return;
+    try {
+      const newChapter = await window.electronAPI.createChapter({
+        project_id: currentProject.id,
+        chapter_number: chapters.length + 1,
+        title: `Chapter ${chapters.length + 1}`
+      });
+      addChapter(newChapter);
+      setCurrentChapter(newChapter);
+      setViewMode('write');
+      setActiveSidebarTab('chapters');
+    } catch (err) {
+      console.error('Failed to create chapter:', err);
+    }
+  };
 
   // Track last visited chapter
   useEffect(() => {
@@ -197,18 +235,52 @@ function App() {
                         </div>
                       ) : !currentChapter ? (
                         // Project Dashboard (No Chapter Selected)
-                        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
-                          <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mb-2">
-                            <FileText size={32} className="text-muted-foreground" />
+                        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
+                          <div className="relative">
+                            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-2 ring-1 ring-primary/20">
+                              <Sparkles size={40} className="text-primary animate-pulse" />
+                            </div>
+                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent rounded-full flex items-center justify-center shadow-sm">
+                              <FileText size={12} className="text-muted-foreground" />
+                            </div>
                           </div>
-                          <h2 className="text-2xl font-bold">{currentProject.title}</h2>
-                          <div className="flex gap-4 text-sm text-muted-foreground">
-                            {currentProject.genre && <span>{currentProject.genre}</span>}
-                            {currentProject.target_word_count && <span>Target: {currentProject.target_word_count.toLocaleString()} words</span>}
+
+                          <div className="space-y-3">
+                            <h2 className="text-3xl font-serif font-bold tracking-tight">{currentProject.title}</h2>
+                            <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground font-medium">
+                              {currentProject.genre && <span className="px-2 py-0.5 bg-accent/50 rounded-md">{currentProject.genre}</span>}
+                              {currentProject.target_word_count && (
+                                <span className="flex items-center gap-1">
+                                  <CheckCircle2 size={12} className="text-primary/60" />
+                                  {currentProject.target_word_count.toLocaleString()} words
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <p className="text-muted-foreground max-w-sm">
-                            Select a chapter from the sidebar to begin writing, or create a new one.
-                          </p>
+
+                          <div className="space-y-6 max-w-md">
+                            <p className="text-lg text-muted-foreground leading-relaxed">
+                              Ready to write your story? Your AI muse is ready. <br />
+                              <span className="text-foreground/80 font-medium">Pick a chapter to start, or create a new one to begin.</span>
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                              <button
+                                onClick={handleStartChapter1}
+                                className="w-full sm:w-auto px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group"
+                              >
+                                <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
+                                Start Chapter 1
+                              </button>
+                              <button
+                                onClick={handleCreateNewChapter}
+                                className="w-full sm:w-auto px-6 py-3 bg-accent hover:bg-accent/80 text-foreground rounded-xl font-bold transition-all flex items-center justify-center gap-2 border border-border/50"
+                              >
+                                <Plus size={18} />
+                                Create New Chapter
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         // Editor - key forces remount on chapter switch for clean state

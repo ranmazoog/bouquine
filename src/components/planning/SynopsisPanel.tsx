@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
-import { Save, Loader2, Sparkles, ChevronDown, ChevronRight } from 'lucide-react';
+import { Save, Loader2, Sparkles, ChevronDown, ChevronRight, Info } from 'lucide-react';
 import { debounce } from 'lodash';
 import { SynopsisWorkshop } from '../synopsis/SynopsisWorkshop';
 
@@ -90,7 +90,7 @@ export function SynopsisPanel() {
                     <div>
                         <h1 className="text-2xl font-bold mb-2">Story Synopsis</h1>
                         <p className="text-muted-foreground text-sm">
-                            Write your full internal plot outline here. The AI reads this to understand the story arc and ending.
+                            Write your full internal plot outline here. The AI reads this to understand the story arc.
                         </p>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -108,50 +108,77 @@ export function SynopsisPanel() {
                     </div>
                 </div>
 
-                {isEmpty && (
-                    <div className="mb-4 p-4 bg-accent/30 rounded-lg border border-border/50">
-                        <button
-                            onClick={() => setShowGuidance(!showGuidance)}
-                            className="flex items-center gap-2 text-sm font-medium text-foreground hover:opacity-80 transition-opacity"
-                        >
-                            {showGuidance ? (
-                                <ChevronDown size={14} className="text-muted-foreground" />
-                            ) : (
-                                <ChevronRight size={14} className="text-muted-foreground" />
-                            )}
-                            <span>Writing your synopsis</span>
-                        </button>
-                        {showGuidance && (
-                            <div className="mt-3 pl-6">
-                                <p className="text-sm text-muted-foreground mb-3">
-                                    The Synopsis gives the AI "foresight" — helping with foreshadowing and avoiding plot holes.
-                                </p>
-                                <div className="text-sm text-muted-foreground mb-3">
-                                    <p className="font-medium text-foreground mb-1">Try answering:</p>
-                                    <ul className="list-disc list-inside space-y-1">
-                                        <li>What&apos;s the ending? Who wins, who loses?</li>
-                                        <li>What&apos;s the central conflict?</li>
-                                        <li>What does the protagonist want vs. need?</li>
-                                    </ul>
-                                </div>
-                                <button
-                                    onClick={() => setWorkshopOpen(true)}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                                >
-                                    <Sparkles size={14} />
-                                    Help Me Brainstorm
-                                </button>
+                <div className="flex flex-col gap-4">
+                    {/* Workshop Trigger */}
+                    <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-xl p-4 shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <Sparkles size={20} />
                             </div>
-                        )}
+                            <div>
+                                <h3 className="text-sm font-bold">Stuck on the plot?</h3>
+                                <p className="text-xs text-muted-foreground">Try the guided workshop to weave your ideas together.</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setWorkshopOpen(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:scale-[1.02] transition-all shadow-md shadow-primary/10 group"
+                        >
+                            <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
+                            Start Workshop
+                        </button>
                     </div>
-                )}
 
-                <textarea
-                    value={synopsis}
-                    onChange={handleChange}
-                    className="w-full h-[calc(100vh-250px)] bg-background border border-border rounded-lg p-6 text-lg leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary resize-none font-serif"
-                    placeholder="Once upon a time..."
-                />
+                    {/* Guidance Toggle */}
+                    {isEmpty && (
+                        <div className="p-4 bg-accent/30 rounded-xl border border-border/50">
+                            <button
+                                onClick={() => setShowGuidance(!showGuidance)}
+                                className="flex items-center gap-2 text-sm font-bold text-foreground hover:opacity-80 transition-opacity"
+                            >
+                                {showGuidance ? (
+                                    <ChevronDown size={14} className="text-muted-foreground" />
+                                ) : (
+                                    <ChevronRight size={14} className="text-muted-foreground" />
+                                )}
+                                <Info size={14} className="text-primary" />
+                                <span>Writing Tips</span>
+                            </button>
+                            {showGuidance && (
+                                <div className="mt-3 pl-6 space-y-3">
+                                    <p className="text-sm text-muted-foreground">
+                                        The Synopsis gives the AI "foresight" — helping with foreshadowing and avoiding plot holes.
+                                    </p>
+                                    <div className="text-sm text-muted-foreground">
+                                        <p className="font-bold text-foreground mb-1">Answer these core questions:</p>
+                                        <ul className="list-disc list-inside space-y-1 opacity-80">
+                                            <li>Who is the protagonist and what is their status quo?</li>
+                                            <li>What is the inciting incident?</li>
+                                            <li>What is the final showdown or choice?</li>
+                                            <li>How does the journey change the character?</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Main Area */}
+                    <textarea
+                        value={synopsis}
+                        onChange={handleChange}
+                        className="w-full h-[calc(100vh-350px)] bg-background border border-border rounded-xl p-8 text-lg leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none font-serif shadow-inner"
+                        placeholder={`What's the inciting incident that sets your story in motion?
+
+Who is your protagonist, and what do they want?
+
+What's standing in their way?
+
+How does the story resolve?
+
+(Click the ✨ Start Workshop button for guided help, or start writing here...)`}
+                    />
+                </div>
 
                 <SynopsisWorkshop
                     isOpen={workshopOpen}

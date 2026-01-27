@@ -8,9 +8,10 @@ import { Bold, Italic, Strikethrough, FileText, Loader2, X, ChevronDown, Chevron
 export function NovelEditor() {
     const {
         currentChapter, setSaveStatus, setCurrentChapter, pendingInsertion,
-        clearInsert, lastSelection, setSelection, isFocusMode, triggerAudit
+        clearInsert, lastSelection, setSelection, isFocusMode, triggerAudit,
+        isAuditing
     } = useEditorStore();
-    const { updateChapterInStore } = useProjectStore();
+    const { updateChapterInStore, currentProject } = useProjectStore();
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLoadedRef = useRef(false);
@@ -18,6 +19,28 @@ export function NovelEditor() {
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
     const [showFocusExitToast, setShowFocusExitToast] = useState(false);
+    const [showAuditTooltip, setShowAuditTooltip] = useState(false);
+
+    // Style Drift Warning State
+    const [showPOVWarning, setShowPOVWarning] = useState(false);
+    const [isDismissed, setIsDismissed] = useState(false);
+
+    useEffect(() => {
+        const hasSeen = localStorage.getItem('hasSeenAuditTooltip');
+        if (!hasSeen) {
+            const timer = setTimeout(() => setShowAuditTooltip(true), 2000);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
+    const handleAuditClick = () => {
+        if (showAuditTooltip) {
+            localStorage.setItem('hasSeenAuditTooltip', 'true');
+            setShowAuditTooltip(false);
+        }
+        triggerAudit(true);
+        // We stay on the chapter now as requested
+    };
 
     // Track Focus Mode exit
     const prevFocusModeRef = useRef(isFocusMode);
@@ -31,6 +54,52 @@ export function NovelEditor() {
         }
         prevFocusModeRef.current = isFocusMode;
     }, [isFocusMode]);
+
+    // Style Drift Detection
+    useEffect(() => {
+        const checkStyleDrift = async () => {
+            if (!currentChapter || !currentProject || isDismissed) {
+                setShowPOVWarning(false);
+                return;
+            }
+
+            try {
+                const styleGuide = await window.electronAPI.getStyleGuide(currentProject.id);
+                const pov = styleGuide?.pov?.toLowerCase() || '';
+
+                if (!pov.includes('third')) {
+                    setShowPOVWarning(false);
+                    return;
+                }
+
+                // Filter content to remove dialogue
+                const content = currentChapter.content || '';
+                // Robust dialogue stripping (standard quotes + curly quotes)
+                const narrativeOnly = content.replace(/"[^"]*"/g, "").replace(/[“”][^“”]*[“”]/g, "");
+
+                // Count 1st person pronouns: I (case-sensitive), me, my, mine (case-insensitive)
+                const matchesI = narrativeOnly.match(/\bI\b/g) || [];
+                const matchesOthers = narrativeOnly.match(/\b(me|my|mine)\b/gi) || [];
+                const firstCount = matchesI.length + matchesOthers.length;
+
+                if (firstCount > 2) {
+                    setShowPOVWarning(true);
+                } else {
+                    setShowPOVWarning(false);
+                }
+            } catch (err) {
+                console.error('Failed to check style drift:', err);
+            }
+        };
+
+        const timer = setTimeout(checkStyleDrift, 1000); // 1s delay
+        return () => clearTimeout(timer);
+    }, [currentChapter?.content, currentChapter?.id, currentProject?.id, isDismissed]);
+
+    // Reset dismissal when chapter changes
+    useEffect(() => {
+        setIsDismissed(false);
+    }, [currentChapter?.id]);
 
     // Initialize title when component mounts (with key prop, this runs once per chapter)
     useEffect(() => {
@@ -196,7 +265,23 @@ export function NovelEditor() {
     }
 
     return (
-        <div className="w-full editor-wrapper">
+        <div className="w-full editor-wrapper relative">
+            {/* POV Drift Warning Banner */}
+            {showPOVWarning && !isDismissed && !isFocusMode && (
+                <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between animate-in slide-in-from-top duration-300 shadow-sm">
+                    <div className="flex items-center gap-2 text-amber-800 text-sm">
+                        <span className="text-lg">⚠️</span>
+                        <p><strong>POV Drift Detected:</strong> You're using First Person ("I", "My"), but your Style Guide is set to Third Person.</p>
+                    </div>
+                    <button
+                        onClick={() => setIsDismissed(true)}
+                        className="text-amber-500 hover:text-amber-700 px-2 font-bold"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
+
             {/* Editable Title - styled as header */}
             <div className="mb-8">
                 <div className="flex items-start justify-between gap-4">
@@ -207,19 +292,60 @@ export function NovelEditor() {
                         className="text-4xl font-bold bg-transparent border-none outline-none flex-1 placeholder:text-muted-foreground/50 font-serif text-foreground"
                         placeholder="Chapter Title"
                     />
-                    <button
-                        onClick={handleSummarize}
-                        disabled={isSummarizing}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-accent hover:bg-accent/80 rounded-lg transition-colors disabled:opacity-50 text-muted-foreground hover:text-foreground"
-                        title={currentChapter?.summary ? 'Update summary' : 'Generate summary'}
-                    >
-                        {isSummarizing ? (
-                            <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                            <FileText size={14} />
-                        )}
-                        <span>{isSummarizing ? 'Summarizing...' : 'Summarize'}</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <button
+                                onClick={handleAuditClick}
+                                disabled={isAuditing}
+                                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all border ${isAuditing ? 'bg-primary/10 border-primary animate-pulse' : 'bg-accent/50 hover:bg-accent border-transparent text-muted-foreground hover:text-primary hover:border-primary/30'}`}
+                                title="Run Integrity Check (Your on-call editor)"
+                            >
+                                {isAuditing ? (
+                                    <Loader2 size={16} className="animate-spin text-primary" />
+                                ) : (
+                                    <Shield size={16} />
+                                )}
+                                <span className="text-[10px] uppercase tracking-tighter mt-1 font-extrabold opacity-80">Story Audit</span>
+                            </button>
+
+                            {showAuditTooltip && (
+                                <div className="absolute top-full right-0 mt-3 w-64 p-4 bg-primary text-primary-foreground rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in slide-in-from-top-2 duration-300">
+                                    <div className="absolute -top-1.5 right-6 w-3 h-3 bg-primary rotate-45" />
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="font-bold text-sm flex items-center gap-2">
+                                            <Shield size={14} /> Integrity Check
+                                        </h4>
+                                        <button onClick={() => { setShowAuditTooltip(false); localStorage.setItem('hasSeenAuditTooltip', 'true'); }} className="hover:opacity-70">
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                    <p className="text-xs leading-relaxed opacity-90">
+                                        Click here to check for plot holes, character inconsistencies, and contradictions across your story.
+                                    </p>
+                                    <button
+                                        onClick={() => { setShowAuditTooltip(false); localStorage.setItem('hasSeenAuditTooltip', 'true'); }}
+                                        className="mt-3 w-full py-1.5 bg-white/20 hover:bg-white/30 rounded text-xs font-semibold transition-colors"
+                                    >
+                                        Got it
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={handleSummarize}
+                            disabled={isSummarizing}
+                            className="flex items-center gap-2 px-3 py-3 text-sm bg-accent hover:bg-accent/80 rounded-lg transition-colors disabled:opacity-50 text-muted-foreground hover:text-foreground h-[41px]"
+                            title={currentChapter?.summary ? 'Update summary' : 'Generate summary'}
+                        >
+                            {isSummarizing ? (
+                                <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                                <FileText size={14} />
+                            )}
+                            <span className="font-medium">{isSummarizing ? 'Summarizing...' : 'Summarize'}</span>
+                        </button>
+                    </div>
                 </div>
                 {currentChapter?.summary && (
                     <div className="mt-4 p-3 bg-accent/30 rounded-lg border border-border/50 relative group">

@@ -8,54 +8,47 @@ export interface WorkshopStep {
 
 export const WORKSHOP_STEPS: WorkshopStep[] = [
     {
-        id: 'hook',
-        question: "What's the hook?",
-        description: "Describe your story in one compelling sentence.",
+        id: 'protagonist',
+        question: "Who is the Protagonist?",
+        description: "Describe your main character's background and core identity.",
         examples: [
-            "A janitor discovers he can pause time, but each second frozen costs a day of his life.",
-            "Two rival chefs fall in love while competing for the same Michelin star."
+            "A reluctant hero with a secret past.",
+            "A cunning detective who has lost their faith in the system.",
+            "A young orphan who discovers they have forbidden powers."
         ],
-        placeholder: "A [protagonist] must [action] or else [stakes]..."
+        placeholder: "e.g., A reluctant hero, a cunning detective..."
+    },
+    {
+        id: 'goal',
+        question: "What do they want?",
+        description: "What is their primary objective or driving desire?",
+        examples: [
+            "To save their village from an ancient curse.",
+            "To solve the murder of their former partner.",
+            "To find a place where they truly belong."
+        ],
+        placeholder: "e.g., To save their village, to solve the murder..."
+    },
+    {
+        id: 'conflict',
+        question: "What stands in their way?",
+        description: "What key obstacles or enemies are preventing them from reaching their goal?",
+        examples: [
+            "A powerful enemy who controls the elements.",
+            "Their own fears and the secrets of their past.",
+            "A corrupt organization with infinite resources."
+        ],
+        placeholder: "e.g., A powerful enemy, their own fears..."
     },
     {
         id: 'ending',
         question: "How does it end?",
-        description: "Spoilers welcome — this helps the AI foreshadow. Who wins? Who loses?",
+        description: "Describe the resolution of the story. Who wins? Who loses?",
         examples: [
-            "She catches the killer but loses her partner.",
-            "He saves the kingdom but gives up his magic forever."
+            "They defeat the enemy but at a heavy personal cost.",
+            "They solve the mystery, only to realize the truth is darker than they imagined.",
+            "Victory but with a bittersweet resolution that changes them forever."
         ],
-        placeholder: "In the end..."
-    },
-    {
-        id: 'conflict',
-        question: "What's the central conflict?",
-        description: "What obstacle or opposition drives your story?",
-        examples: [
-            "She must find the cure before the outbreak spreads.",
-            "He's torn between duty to his country and love for his family."
-        ],
-        placeholder: "The main tension is..."
-    },
-    {
-        id: 'want_need',
-        question: "What does your protagonist want vs. need?",
-        description: "External goal vs. internal growth — often in tension.",
-        examples: [
-            "Want: Revenge. Need: Forgiveness.",
-            "Want: To win. Need: To accept that losing isn't failure."
-        ],
-        placeholder: "They want... but they need..."
-    },
-    {
-        id: 'tone',
-        question: "What's the tone?",
-        description: "How should this story feel?",
-        examples: [
-            "Dark, gritty, with gallows humor",
-            "Warm and hopeful, like a Pixar film for adults",
-            "Tense and claustrophobic — psychological thriller"
-        ],
-        placeholder: "The tone is..."
+        placeholder: "e.g., Victory but at a cost, a bittersweet resolution..."
     }
 ];

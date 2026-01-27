@@ -14,6 +14,7 @@ interface EditorState {
     lastSelection: { from: number; to: number; text: string } | null;
     activeBeat: string | null;
     pendingAudit: boolean;
+    isAuditing: boolean;
     setCurrentChapter: (chapter: Chapter | null) => void;
     setSaveStatus: (status: 'saved' | 'saving' | 'unsaved') => void;
     setFocusMode: (isFocus: boolean) => void;
@@ -25,6 +26,7 @@ interface EditorState {
     setSelection: (selection: { from: number; to: number; text: string } | null) => void;
     setActiveBeat: (beat: string | null) => void;
     triggerAudit: (pending: boolean) => void;
+    setIsAuditing: (isAuditing: boolean) => void;
 }
 
 interface VaultState {
@@ -108,6 +110,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     lastSelection: null,
     activeBeat: null,
     pendingAudit: false,
+    isAuditing: false,
     setCurrentChapter: (currentChapter) => set({ currentChapter }),
     setSaveStatus: (saveStatus) => set({ saveStatus }),
     setFocusMode: (isFocusMode) => set({ isFocusMode }),
@@ -118,7 +121,8 @@ export const useEditorStore = create<EditorState>((set) => ({
     clearInsert: () => set({ pendingInsertion: null }),
     setSelection: (lastSelection) => set({ lastSelection }),
     setActiveBeat: (activeBeat) => set({ activeBeat }),
-    triggerAudit: (pendingAudit) => set({ pendingAudit }),
+    triggerAudit: (pendingAudit: boolean) => set({ pendingAudit }),
+    setIsAuditing: (isAuditing: boolean) => set({ isAuditing }),
 }));
 
 export const useVaultStore = create<VaultState>((set) => ({
