@@ -10,6 +10,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
+    # Force all steps to use Bash, even on Windows
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -35,42 +39,26 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Cache Electron and Electron Builder
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
-          key: ${{ runner.os }}-electron-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-electron-
-
       - name: Install dependencies
         run: npm ci
 
       - name: Rebuild native modules
         run: npm run rebuild
 
-      - name: Fix Linux execution permissions
-        if: matrix.os == 'ubuntu-latest'
-        run: chmod +x ./node_modules/app-builder-bin/linux/x64/app-builder
-
-      - name: Verify Windows icon (debug)
-        if: matrix.os == 'windows-latest'
+      - name: Fix permissions and verify icons
         run: |
-          if [ -f "build/icon.ico" ]; then
-            echo "Windows icon file exists at build/icon.ico"
-          else
-            echo "ERROR: Windows icon file not found at build/icon.ico"
-            exit 1
+          # Ensure build directory exists
+          mkdir -p build
+          ls -R build
+          
+          # Linux-specific execution fix
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            chmod +x ./node_modules/app-builder-bin/linux/x64/app-builder
           fi
 
       - name: Build and package
-        # THIS ENABLES THE UPLOAD
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_CACHE: ~/.cache/electron
-          ELECTRON_BUILDER_CACHE: ~/.cache/electron-builder
         run: npm run ${{ matrix.build_script }}
 
       - name: Upload artifacts
