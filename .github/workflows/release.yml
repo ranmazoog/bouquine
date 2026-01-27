@@ -68,7 +68,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ matrix.os }}" == "macos-latest" ] && [ -n "${{ matrix.arch }}" ]; then
+          if [[ "${{ matrix.os }}" == macos* ]] && [ -n "${{ matrix.arch }}" ]; then
             echo "Building for macOS ${{ matrix.arch }}"
             npm run build && npx electron-builder --mac --${{ matrix.arch }}
           else
