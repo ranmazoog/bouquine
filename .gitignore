@@ -27,5 +27,4 @@ dist-ssr
 test-*.html
 
 # Build directories
-build/
 dist-electron/
