@@ -51,14 +51,36 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Linux dependencies (ImageMagick)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
       - name: Rebuild native modules
         run: npm run rebuild
 
-      - name: Fix permissions and verify icons
+      - name: Fix permissions and setup Linux icons
         run: |
           mkdir -p build
+          
+          # Linux-specific setup
           if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            # Fix execution permissions for app-builder
             chmod +x ./node_modules/app-builder-bin/linux/x64/app-builder
+            
+            # Ensure Linux PNG icons exist (create from existing icon.png if needed)
+            if [ -f "build/icon.png" ]; then
+              echo "Linux icon.png exists, creating standard sizes..."
+              # Create standard Linux icon sizes from the existing icon.png
+              convert build/icon.png -resize 16x16 build/16x16.png
+              convert build/icon.png -resize 32x32 build/32x32.png
+              convert build/icon.png -resize 48x48 build/48x48.png
+              convert build/icon.png -resize 64x64 build/64x64.png
+              convert build/icon.png -resize 128x128 build/128x128.png
+              convert build/icon.png -resize 256x256 build/256x256.png
+              convert build/icon.png -resize 512x512 build/512x512.png
+            else
+              echo "WARNING: Linux icon.png not found in build directory"
+            fi
           fi
 
       - name: Build and package
