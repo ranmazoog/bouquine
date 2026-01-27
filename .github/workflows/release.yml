@@ -40,6 +40,16 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: ${{ runner.os }}-electron-v1-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-v1-
+
       - name: Install dependencies
         run: npm ci
 
@@ -61,7 +71,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          # FIX: We use specific file extensions to avoid uploading large unpacked folders
           path: |
             dist/Bouquine*.dmg
             dist/Bouquine*.exe
@@ -86,8 +95,7 @@ jobs:
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          # FIX: Surgical selection of files to keep release size small
           files: |
-            artifacts/*/Bouquine*.dmg
-            artifacts/*/Bouquine*.exe
-            artifacts/*/Bouquine*.AppImage
+            artifacts/**/Bouquine*.dmg
+            artifacts/**/Bouquine*.exe
+            artifacts/**/Bouquine*.AppImage
