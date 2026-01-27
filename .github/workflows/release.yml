@@ -6,29 +6,194 @@ on:
       - 'v*'
 
 jobs:
-  release:
-    runs-on: ${{ matrix.os }}
+  mac-arm64:
+    runs-on: macos-latest
     permissions:
       contents: write
     defaults:
       run:
         shell: bash
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            artifact_name: Bouquine-mac-arm64
-            build_script: build:mac
-          - os: macos-15
-            artifact_name: Bouquine-mac-x64
-            build_script: build:mac
-          - os: windows-latest
-            artifact_name: Bouquine-win
-            build_script: build:win
-          - os: ubuntu-latest
-            artifact_name: Bouquine-linux
-            build_script: build:linux
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: macos-arm64-electron-v1-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            macos-arm64-electron-v1-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild native modules
+        run: npm run rebuild
+
+      - name: Build and package (ARM64)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:mac-arm
+
+      - name: Upload ARM64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bouquine-mac-arm64
+          path: |
+            dist/Bouquine*.dmg
+          if-no-files-found: error
+
+  mac-x64:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: macos-x64-electron-v1-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            macos-x64-electron-v1-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild native modules
+        run: npm run rebuild
+
+      - name: Build and package (x64)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:mac-intel
+
+      - name: Upload x64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bouquine-mac-x64
+          path: |
+            dist/Bouquine*.dmg
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: windows-electron-v1-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            windows-electron-v1-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild native modules
+        run: npm run rebuild
+
+      - name: Build and package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:win
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bouquine-win
+          path: |
+            dist/Bouquine*.exe
+          if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: linux-electron-v1-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            linux-electron-v1-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild native modules
+        run: npm run rebuild
+
+      - name: Fix Linux permissions
+        run: |
+          find ./node_modules/app-builder-bin -type f -name "app-builder" -exec chmod +x {} +
+          mkdir -p build
+
+      - name: Build and package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:linux
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bouquine-linux
+          path: |
+            dist/Bouquine*.AppImage
+          if-no-files-found: error
 
     steps:
       - name: Checkout repository
@@ -78,7 +243,7 @@ jobs:
           if-no-files-found: error
 
   create-release:
-    needs: release
+    needs: [mac-arm64, mac-x64, windows, linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write

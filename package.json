@@ -14,13 +14,14 @@
     "dev": "vite",
     "test": "vitest",
     "build": "tsc -b && vite build",
-    "build:mac": "npm run build && npx electron-builder --mac --arm64",
-    "build:mac-x64": "npm run build && npx electron-builder --mac --x64",
-    "build:win": "npm run build && npx electron-builder --win",
-    "build:linux": "npm run build && npx electron-builder --linux",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:mac-intel": "npm run build && electron-builder --mac --x64",
+    "build:mac-arm": "npm run build && electron-builder --mac --arm64",
+    "build:win": "npm run build && electron-builder --win",
+    "build:linux": "npm run build && electron-builder --linux",
     "lint": "eslint .",
     "preview": "vite preview",
-    "rebuild": "npx @electron/rebuild",
     "electron": "electron .",
     "start": "npm run build && electron ."
   },
@@ -77,41 +78,46 @@
   "build": {
     "appId": "com.bouquine.app",
     "productName": "Bouquine",
-    "directories": {
-      "output": "dist",
-      "buildResources": "build"
-    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
     "mac": {
       "category": "public.app-category.productivity",
-      "target": {
-        "target": "dmg",
-        "arch": ["x64", "arm64"]
-      },
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "target": "dmg",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     },
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "build/icon.ico"
     },
     "linux": {
       "category": "Office",
-      "icon": "build/icon.png", 
-      "target": ["AppImage"]
-    },
-    "files": [
-      {
-        "from": "dist",
-        "to": "."
-      },
-      {
-        "from": "dist-electron",
-        "to": "."
-      },
-      {
-        "from": "node_modules",
-        "to": "node_modules"
-      },
-      "!node_modules/.cache"
-    ]
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage"
+      ]
+    }
   }
 }
