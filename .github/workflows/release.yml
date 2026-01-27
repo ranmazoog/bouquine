@@ -8,7 +8,7 @@ on:
 jobs:
   mac-arm64:
     name: Build macOS (Apple Silicon)
-    runs-on: macos-latest  # This is ARM64 (M1/M2/M3)
+    runs-on: macos-latest
     permissions:
       contents: write
     steps:
@@ -41,7 +41,7 @@ jobs:
 
   mac-x64:
     name: Build macOS (Intel)
-    runs-on: macos-15  # GitHub's newest runner for Intel builds
+    runs-on: macos-15
     permissions:
       contents: write
     steps:
@@ -136,7 +136,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:linux
 
-       - name: Upload Linux artifact
+      - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: Bouquine-linux
@@ -147,7 +147,7 @@ jobs:
     name: Finalize Release
     needs: [mac-arm64, mac-x64, windows, linux]
     runs-on: ubuntu-latest
-    if: always() # Run even if one job fails to salvage others
+    if: always()
     permissions:
       contents: write
     steps:
