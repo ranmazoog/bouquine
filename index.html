@@ -21,7 +21,6 @@
         /* --- Tokens --- */
         :root {
             --bg: #FDFBF7;
-            /* Make surface slightly more transparent to let glow show through */
             --surface: rgba(255, 255, 255, 0.85);
             --surface-highlight: #F3F4F6;
             --ink: #0F172A;
@@ -71,33 +70,26 @@
             z-index: 2;
         }
 
-        /* --- TURBO-CHARGED GLOW EFFECTS --- */
-
-        /* 1. The Mouse Follower (Intensified) */
+        /* --- GLOW EFFECTS --- */
         .cursor-glow {
             position: fixed;
             width: 500px;
-            /* Slightly smaller for more concentration */
             height: 500px;
-            /* Much higher opacity (0.25 vs 0.08) */
             background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, transparent 60%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
             transform: translate(-50%, -50%);
             transition: opacity 0.3s ease;
-            /* Changed blend mode to darken slightly for better visibility on white */
             mix-blend-mode: darken;
             filter: blur(20px);
         }
 
-        /* 2. Floating Orbs (Brighter) */
         .orb {
             position: absolute;
             border-radius: 50%;
             filter: blur(60px);
             opacity: 0.6;
-            /* Increased from 0.4 */
             z-index: 0;
             animation: orbFloat 20s ease-in-out infinite;
         }
@@ -120,22 +112,11 @@
         }
 
         @keyframes orbFloat {
-
-            0%,
-            100% {
-                transform: translate(0, 0) scale(1);
-            }
-
-            33% {
-                transform: translate(30px, -50px) scale(1.1);
-            }
-
-            66% {
-                transform: translate(-20px, 20px) scale(0.9);
-            }
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
         }
 
-        /* --- THE MAGIC HOVER CARD --- */
         .glow-hover {
             position: relative;
             background: var(--surface);
@@ -143,25 +124,20 @@
             transition: transform 0.3s ease, border-color 0.3s ease;
         }
 
-        /* The Glow Generator - Louder & Brighter */
         .glow-hover::before {
             content: '';
             position: absolute;
             inset: -3px;
-            /* Tighter glow */
             border-radius: inherit;
-            /* Stronger Colors */
             background: linear-gradient(135deg, #2563EB, #A855F7, #06B6D4);
             z-index: -1;
             filter: blur(15px);
-            /* Reduced blur to make it more defined */
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
         .glow-hover:hover::before {
             opacity: 0.8;
-            /* Almost fully visible */
         }
 
         .glow-hover:hover {
@@ -182,6 +158,7 @@
             cursor: pointer;
             z-index: 10;
             position: relative;
+            border: none;
         }
 
         .btn-primary {
@@ -246,72 +223,6 @@
             margin-top: 1rem;
             opacity: 0.7;
             font-family: 'Inter', sans-serif;
-        }
-
-        /* --- Why Voice Matters Section --- */
-        .perks-section {
-            padding: 6rem 0;
-            background: rgba(15, 23, 42, 0.02);
-            border-top: 1px solid var(--border);
-        }
-
-        .perks-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .perk-item {
-            background: var(--surface);
-            padding: 2rem;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            text-align: left;
-        }
-
-        .perk-item h4 {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        /* --- Beta Command Center --- */
-        .command-center {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            max-width: 900px;
-            margin: 2rem auto 0;
-        }
-
-        .command-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .command-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-4px);
-        }
-
-        .command-btn i {
-            color: var(--accent-cyan);
         }
 
         /* --- Hero --- */
@@ -389,7 +300,6 @@
             flex-direction: column;
             justify-content: space-between;
             overflow: hidden;
-            /* Applies glow-hover base styles */
             position: relative;
             background: var(--surface);
             transition: transform 0.3s ease, border-color 0.3s ease;
@@ -408,8 +318,6 @@
         .bento-tall:hover {
             transform: translateY(-4px);
         }
-
-        /* No glow for dark card */
 
         .bento-tall h3,
         .bento-tall p {
@@ -444,7 +352,7 @@
             color: var(--ink);
         }
 
-        /* --- Installation (Tickets) --- */
+        /* --- Installation --- */
         .install-section {
             background: rgba(255, 255, 255, 0.4);
             border-top: 1px solid var(--border);
@@ -454,38 +362,129 @@
             z-index: 2;
         }
 
-        .ticket-container {
-            display: flex;
+        /* --- Platform Tabs --- */
+        .platform-tab {
+            padding: 0.75rem 2rem;
+            border: 2px solid var(--border);
+            background: transparent;
+            color: var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .platform-tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .platform-content {
+            display: none;
+        }
+
+        .platform-content.active {
+            display: block;
+        }
+
+        /* --- FAQ --- */
+        .faq-item summary {
+            list-style: none;
+            user-select: none;
+        }
+
+        .faq-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .faq-item summary::before {
+            content: '▶';
+            margin-right: 0.75rem;
+            color: var(--accent);
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+
+        .faq-item[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .faq-item {
+            transition: all 0.2s ease;
+        }
+
+        .faq-item:hover {
+            border-color: var(--accent) !important;
+        }
+
+        /* --- Perks --- */
+        .perks-section {
+            padding: 6rem 0;
+            background: rgba(15, 23, 42, 0.02);
+            border-top: 1px solid var(--border);
+        }
+
+        .perks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
-            flex-wrap: wrap;
-            justify-content: center;
+            margin-top: 3rem;
         }
 
-        .ticket {
-            border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 2rem;
-            flex: 1;
-            min-width: 300px;
-            max-width: 350px;
+        .perk-item {
             background: var(--surface);
-            /* Ensure background is solid for glow */
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            text-align: left;
         }
 
-        .ticket-step {
-            font-family: 'DM Serif Display', serif;
-            font-size: 4rem;
-            color: rgba(15, 23, 42, 0.1);
-            position: absolute;
-            top: 0;
-            right: 1.5rem;
-            line-height: 1;
-        }
-
-        .ticket h4 {
-            font-size: 1.2rem;
+        .perk-item h4 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
             margin-bottom: 0.5rem;
-            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* --- Command Center --- */
+        .command-center {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            max-width: 900px;
+            margin: 2rem auto 0;
+        }
+
+        .command-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .command-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .command-btn i {
+            color: var(--accent-cyan);
         }
 
         /* --- Protocol --- */
@@ -585,42 +584,6 @@
                 display: none;
             }
 
-            .mission-box {
-                padding: 1rem;
-            }
-
-            /* Security section mobile improvements */
-            .ticket-container {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .ticket {
-                min-width: 100%;
-                max-width: 100%;
-            }
-
-            /* Download buttons mobile */
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            /* Security steps grid mobile */
-            .security-steps-grid {
-                grid-template-columns: 1fr !important;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .container {
-                padding: 0 1rem;
-            }
-
             .perks-grid {
                 grid-template-columns: 1fr;
             }
@@ -629,15 +592,9 @@
                 grid-template-columns: 1fr;
             }
 
-            .download-buttons {
-                flex-direction: column;
-                width: 100%;
-                max-width: 300px;
-                margin: 0 auto;
-            }
-
-            .download-buttons .btn {
-                width: 100%;
+            .platform-tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -660,15 +617,20 @@
             <h1>The Intelligence of AI.<br>The <span>Sanctuary</span> of Privacy.</h1>
             <p>A local-first writing studio that remembers every character, plot twist, and rule in your world. No
                 subscriptions. No cloud leaks.</p>
-            <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: center; align-items: center; max-width: 400px; margin: 0 auto;">
-                <a href="https://drive.google.com/file/d/14u5afIyTQYKbQWyjBi1vKiDiAHB0N8bt/view?usp=sharing" class="btn btn-primary" style="width: 100%; justify-content: center;">
-                    <i data-lucide="apple"></i> Download for Mac (ARM64)
+            <div class="download-buttons" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="https://www.dropbox.com/scl/fi/tj2yg5ot8g7lrs2jtpoam/Bouquine-1.0.1-arm64.dmg?rlkey=28q409lsd99oylko07g3mgpeo&st=oc4oifhe&dl=1"
+                    class="btn btn-primary" style="position: relative;">
+                    <i data-lucide="apple"></i> Download for macOS (Apple Silicon)
                 </a>
-                <a href="https://drive.google.com/file/d/1cUDU8X4jPQCmWPNqmaIyOqctSgOywsoG/view?usp=sharing" class="btn btn-secondary" style="width: 100%; justify-content: center;">
-                    <i data-lucide="cpu"></i> Download for Mac (Intel x64)
-                </a>
-                <a href="https://drive.google.com/file/d/1xo5Q-eCPU2dZfobRH4bo38gFuXoZ3Hgi/view?usp=sharing" class="btn btn-primary" style="width: 100%; justify-content: center;">
-                    <i data-lucide="monitor"></i> Download for Windows
+                <a href="https://www.dropbox.com/scl/fi/u2gs97zxft0muqwqutzy4/Bouquine-Setup-1.0.1.exe?rlkey=9lxfvsdcrt5vxp6vkr09ga38k&st=saf86loc&dl=1"
+                    class="btn btn-primary"><i data-lucide="monitor"></i> Download for Windows (.exe)</a>
+            </div>
+            <div style="text-align: center; margin-top: 0.75rem;">
+                <a href="https://www.dropbox.com/scl/fi/idc2p2cumzjvw5u3eq2xo/Bouquine-1.0.1.dmg?rlkey=ohdvbdkeee9a9lm38kvziq7av&st=czx2lp3v&dl=1"
+                    style="font-size: 0.85rem; color: var(--ink-light); text-decoration: none; border-bottom: 1px dashed var(--border); padding-bottom: 1px;">
+                    <i data-lucide="cpu"
+                        style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                    Using an older Intel Mac? Download here
                 </a>
             </div>
             <div class="version-string">Build v1.0.1 • Released Jan 29, 2026</div>
@@ -679,10 +641,61 @@
             </div>
         </header>
 
-        <!-- FEATURES BENTO (Now with Glow!) -->
+        <!-- HOW IT WORKS SECTION -->
+<section class="how-it-works-section" style="padding: 6rem 0; background: rgba(37, 99, 235, 0.02); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="container">
+        <h2 style="text-align: center; margin-bottom: 1rem;">Start Your Engine</h2>
+        <p style="text-align: center; max-width: 600px; margin: 0 auto 3rem; color: var(--ink-light);">
+            Bouquine is a <strong>local-first</strong> writing studio. Your manuscript never leaves your device. 
+            The Muse (AI assistant) uses <strong>Meta Llama 3.3 70B</strong> via OpenRouter.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <!-- Step 1 -->
+            <div class="how-card" style="background: white; padding: 2rem; border-radius: 16px; border: 1px solid var(--border); text-align: center;">
+                <div style="width: 60px; height: 60px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #2563EB;">
+                    <i data-lucide="download" style="width: 28px; height: 28px;"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">1. Download Bouquine</h3>
+                <p style="color: var(--ink-light); font-size: 0.95rem;">Install the app on your Mac or Windows PC. Your work stays 100% local.</p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="how-card" style="background: white; padding: 2rem; border-radius: 16px; border: 1px solid var(--border); text-align: center;">
+                <div style="width: 60px; height: 60px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #2563EB;">
+                    <i data-lucide="mail" style="width: 28px; height: 28px;"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">2. Request Your Key</h3>
+                <p style="color: var(--ink-light); font-size: 0.95rem; margin-bottom: 1rem;">Email me for a pre-funded OpenRouter key. Click below—email is pre-filled.</p>
+                <a href="mailto:beta@bouquine.app?subject=Beta%20API%20Key%20Request&body=Hi%20Francis,%0D%0A%0D%0AI've%20downloaded%20Bouquine%20and%20I'm%20ready%20to%20start%20testing.%0D%0A%0D%0A(Optional)%20I%20write%20mostly:%20[Fantasy/Sci-Fi/Thriller/Romance/Other]%0D%0A%0D%0AThanks!" 
+                   class="btn btn-outline" style="font-size: 0.85rem;">
+                    <i data-lucide="mail"></i> Request Key
+                </a>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="how-card" style="background: white; padding: 2rem; border-radius: 16px; border: 1px solid var(--border); text-align: center;">
+                <div style="width: 60px; height: 60px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #2563EB;">
+                    <i data-lucide="sparkles" style="width: 28px; height: 28px;"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">3. Complete the Missions</h3>
+                <p style="color: var(--ink-light); font-size: 0.95rem;">Paste your key in Settings, then scroll down to test the three core features.</p>
+            </div>
+        </div>
+
+        <!-- Beta Transparency Note -->
+        <div style="margin-top: 3rem; max-width: 700px; margin-left: auto; margin-right: auto; padding: 2rem; background: linear-gradient(135deg, rgba(37, 99, 235, 0.03), rgba(147, 51, 234, 0.03)); border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1);">
+            <h4 style="margin-bottom: 1rem; color: var(--ink); font-size: 1.1rem; text-align: center;">📝 Note on AI Usage</h4>
+            <p style="color: var(--ink-light); line-height: 1.7; text-align: left; font-size: 0.95rem;">
+                During this beta, <strong>I'm providing a pre-funded key for your tests</strong>. After we launch, Bouquine will remain a <strong>one-time purchase</strong> with no monthly fees. You'll simply plug in your own OpenRouter key and pay only for what you write (pennies per chapter). This keeps your data private and your costs as low as possible.
+            </p>
+        </div>
+    </div>
+</section>
+
+        <!-- FEATURES BENTO -->
         <section class="bento-section">
             <div class="bento-grid">
-                <!-- Tall Dark Card (No Glow, keeps visual anchor) -->
                 <div class="bento-card bento-tall">
                     <div>
                         <div class="icon" style="background: rgba(255,255,255,0.1); color: white;"><i
@@ -695,148 +708,177 @@
                             style="font-size: 3rem; font-family: 'DM Serif Display'; opacity: 0.2;">100%</span></div>
                 </div>
 
-                <!-- Glow Cards -->
                 <div class="bento-card bento-large glow-hover">
                     <div class="icon"><i data-lucide="brain-circuit"></i></div>
                     <h3>Infinite Context Memory</h3>
-                    <p>Standard AI forgets Chapter 1 by Chapter 10. Bouquine uses Vector Search to recall every detail.
-                    </p>
+                    <p>Standard AI forgets Chapter 1 by Chapter 10. Bouquine uses Vector Search to recall every detail.</p>
                 </div>
                 <div class="bento-card glow-hover">
                     <div class="icon"><i data-lucide="file-up"></i></div>
                     <h3>Pro Export</h3>
-                    <p>DOCX, PDF, ePub. <strong>Standard Manuscript Format</strong> with automatic indentation and clean
-                        headers.</p>
+                    <p>DOCX, PDF, ePub. <strong>Standard Manuscript Format</strong> with automatic indentation and clean headers.</p>
                 </div>
                 <div class="bento-card glow-hover">
                     <div class="icon"><i data-lucide="sparkles"></i></div>
                     <h3>Synopsis Workshop</h3>
-                    <p>Stop staring at a blank page. Our guided wizard interviews you about your plot and builds a
-                        cohesive roadmap.</p>
+                    <p>Stop staring at a blank page. Our guided wizard interviews you about your plot and builds a cohesive roadmap.</p>
                 </div>
             </div>
         </section>
     </div>
 
-    <!-- INSTALLATION (Tickets with Glow) -->
+    <!-- INSTALLATION -->
     <section id="install" class="install-section">
         <div class="container">
             <div style="text-align: center; margin-bottom: 3rem;">
-                <h2>The Gatekeeper Protocol</h2>
-                <p>MacOS protects you from unverified developers. Here is how to let Bouquine in.</p>
-            </div>
-            <div class="ticket-container">
-                <div class="ticket glow-hover">
-                    <div class="ticket-step">1</div>
-                    <h4>Download</h4>
-                    <p>Download the appropriate version for your system from the buttons above. Choose between Mac ARM64, Mac Intel, or Windows.</p>
-                </div>
-                <div class="ticket glow-hover">
-                    <div class="ticket-step">2</div>
-                    <h4>Install & Open</h4>
-                    <p><strong>Mac:</strong> Open the .DMG file and drag Bouquine to Applications.<br>
-                    <strong>Windows:</strong> Run the installer and follow the setup wizard.</p>
-                </div>
-                <div class="ticket glow-hover">
-                    <div class="ticket-step">3</div>
-                    <h4>Confirm & Launch</h4>
-                    <p><strong>Mac:</strong> Right-click the app and select "Open" to bypass Gatekeeper.<br>
-                    <strong>Windows:</strong> Launch from Start Menu or desktop shortcut.</p>
-                </div>
+                <h2>Installation Guide</h2>
+                <p style="max-width: 600px; margin: 0 auto; color: var(--ink-light);">
+                    Bouquine is in private beta and not yet code-signed by Apple/Microsoft. 
+                    Follow these steps to bypass security warnings.
+                </p>
             </div>
 
-            <!-- Security Bypass Instructions - Premium Style -->
-            <div style="margin-top: 4rem;">
-                <!-- Premium Pill Alert -->
-                <div
-                    style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 2rem;">
-                    <div
-                        style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #fbbf24; border-radius: 100px; padding: 0.5rem 1.25rem; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);">
-                        <i data-lucide="shield-alert" style="color: #d97706; width: 18px; height: 18px;"></i>
-                        <span style="font-weight: 600; color: #92400e; font-size: 0.95rem;">Beta Security Notice</span>
+            <!-- Transparency Note -->
+            <div style="max-width: 700px; margin: 0 auto 3rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(245, 158, 11, 0.05)); border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.2);">
+                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                    <i data-lucide="lightbulb" style="color: #f59e0b; flex-shrink: 0; margin-top: 0.2rem; width: 24px; height: 24px;"></i>
+                    <div>
+                        <strong style="color: #92400e;">Why the security warning?</strong>
+                        <p style="margin: 0.5rem 0 0; color: var(--ink-light); font-size: 0.95rem; line-height: 1.6;">
+                            Code-signing certificates cost $99/year (Apple) + $400/year (Microsoft). 
+                            I chose to spend my budget on <strong>building features</strong> rather than certificates for this beta. 
+                            Once we launch publicly, Bouquine will be fully signed and notarized.
+                        </p>
                     </div>
                 </div>
+            </div>
 
-                <div
-                    style="max-width: 800px; margin: 0 auto; background: white; padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05); position: relative; overflow: hidden;">
-                    <!-- Decorative corner accent -->
-                    <div
-                        style="position: absolute; top: 0; right: 0; width: 80px; height: 80px; background: linear-gradient(135deg, rgba(37, 99, 235, 0.03), transparent); border-bottom-left-radius: 100%;">
-                    </div>
+            <!-- Platform Tabs -->
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 3rem;">
+                <button class="platform-tab active" data-platform="macos">
+                    <i data-lucide="apple" style="width: 18px; height: 18px;"></i> macOS
+                </button>
+                <button class="platform-tab" data-platform="windows">
+                    <i data-lucide="monitor" style="width: 18px; height: 18px;"></i> Windows
+                </button>
+            </div>
 
-                    <h3
-                        style="text-align: center; margin-bottom: 1rem; font-family: 'DM Serif Display', serif; color: var(--ink);">
-                        Gatekeeper Protocol</h3>
-                    <p
-                        style="text-align: center; margin-bottom: 2rem; color: var(--ink-light); font-size: 1rem; max-width: 600px; margin-left: auto; margin-right: auto;">
-                        As a Private Beta app, macOS may show a security warning. This is normal for un-notarized
-                        software. Follow these steps to grant access:
-                    </p>
-
-                    <!-- Sleek Steps Grid -->
-                    <div class="security-steps-grid"
-                        style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
-                        <div
-                            style="background: rgba(37, 99, 235, 0.02); border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 12px; padding: 1.5rem; text-align: center;">
-                            <div
-                                style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
+            <!-- macOS Instructions -->
+            <div class="platform-content active" data-platform="macos" style="max-width: 900px; margin: 0 auto;">
+                <div style="background: white; padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);">
+                    <h3 style="text-align: center; margin-bottom: 2rem; font-family: 'DM Serif Display', serif;">macOS Installation (2 Minutes)</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(37, 99, 235, 0.02); border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1);">
+                            <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
                                 <i data-lucide="download" style="width: 20px; height: 20px;"></i>
                             </div>
-                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--ink);">Download & Install
-                            </h4>
-                            <p style="font-size: 0.9rem; color: var(--ink-light); line-height: 1.5;">Drag Bouquine to
-                                your Applications folder.</p>
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">1. Download & Install</h4>
+                            <p style="font-size: 0.9rem; color: var(--ink-light);">Drag Bouquine to Applications folder</p>
                         </div>
 
-                        <div
-                            style="background: rgba(37, 99, 235, 0.02); border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 12px; padding: 1.5rem; text-align: center;">
-                            <div
-                                style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
-                                <i data-lucide="settings" style="width: 20px; height: 20px;"></i>
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(37, 99, 235, 0.02); border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1);">
+                            <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
+                                <i data-lucide="terminal" style="width: 20px; height: 20px;"></i>
                             </div>
-                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--ink);">Open System Settings
-                            </h4>
-                            <p style="font-size: 0.9rem; color: var(--ink-light); line-height: 1.5;">Go to Privacy &
-                                Security → Security.</p>
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">2. Open Terminal</h4>
+                            <p style="font-size: 0.9rem; color: var(--ink-light);">Press <kbd style="background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: monospace;">Cmd+Space</kbd>, type "Terminal"</p>
                         </div>
 
-                        <div
-                            style="background: rgba(37, 99, 235, 0.02); border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 12px; padding: 1.5rem; text-align: center;">
-                            <div
-                                style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
-                                <i data-lucide="shield" style="width: 20px; height: 20px;"></i>
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(37, 99, 235, 0.02); border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1);">
+                            <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
+                                <i data-lucide="code" style="width: 20px; height: 20px;"></i>
                             </div>
-                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--ink);">Find Bouquine</h4>
-                            <p style="font-size: 0.9rem; color: var(--ink-light); line-height: 1.5;">Look for "Bouquine
-                                was blocked..." message.</p>
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">3. Run Command</h4>
+                            <p style="font-size: 0.9rem; color: var(--ink-light);">Paste command below and press Enter</p>
                         </div>
 
-                        <div
-                            style="background: rgba(37, 99, 235, 0.02); border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 12px; padding: 1.5rem; text-align: center;">
-                            <div
-                                style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(37, 99, 235, 0.02); border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1);">
+                            <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
                                 <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i>
                             </div>
-                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--ink);">Click "Open Anyway"
-                            </h4>
-                            <p style="font-size: 0.9rem; color: var(--ink-light); line-height: 1.5;">Enter password and
-                                confirm to launch.</p>
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">4. Launch</h4>
+                            <p style="font-size: 0.9rem; color: var(--ink-light);">Open Bouquine from Applications</p>
                         </div>
                     </div>
 
-                    <!-- Premium Note -->
-                    <div
-                        style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.03), rgba(147, 51, 234, 0.03)); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(37, 99, 235, 0.1);">
+                    <!-- Command Box -->
+                    <div style="position: relative; background: #0F172A; color: #fff; padding: 1.5rem; border-radius: 12px; font-family: 'Courier New', monospace; margin-bottom: 2rem;">
+                        <code id="macos-command" style="font-size: 0.95rem; word-break: break-all;">xattr -cr /Applications/Bouquine.app</code>
+                        <button onclick="copyCommand('macos-command')" class="copy-btn" style="position: absolute; top: 1rem; right: 1rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                            📋 Copy
+                        </button>
+                    </div>
+
+                    <!-- Why Section -->
+                    <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(245, 158, 11, 0.05)); border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.2);">
                         <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                            <div
-                                style="flex-shrink: 0; width: 24px; height: 24px; background: rgba(37, 99, 235, 0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #2563EB;">
-                                <i data-lucide="info" style="width: 14px; height: 14px;"></i>
-                            </div>
+                            <i data-lucide="info" style="color: #f59e0b; flex-shrink: 0; margin-top: 0.2rem;"></i>
                             <div>
-                                <p style="margin: 0; font-size: 0.9rem; color: var(--ink-light); line-height: 1.6;">
-                                    <strong style="color: var(--ink);">This is standard for beta software.</strong> Apps
-                                    like Discord and Spotify used this same process before Apple notarization. Once we
-                                    exit beta, this step will no longer be needed.
+                                <strong style="color: #92400e;">Why is this needed?</strong>
+                                <p style="margin: 0.5rem 0 0; color: var(--ink-light); font-size: 0.9rem; line-height: 1.6;">
+                                    Bouquine is in private beta and not yet notarized by Apple. This command removes the quarantine flag macOS adds to downloaded apps. 
+                                    Once we launch publicly with Apple Developer certification (~$99/year), this step won't be needed.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Windows Instructions -->
+            <div class="platform-content" data-platform="windows" style="max-width: 900px; margin: 0 auto;">
+                <div style="background: white; padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);">
+                    <h3 style="text-align: center; margin-bottom: 2rem; font-family: 'DM Serif Display', serif;">Windows Installation (1 Minute)</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(37, 99, 235, 0.02); border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1);">
+                            <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
+                                <i data-lucide="download" style="width: 20px; height: 20px;"></i>
+                            </div>
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">1. Download Installer</h4>
+                            <p style="font-size: 0.9rem; color: var(--ink-light);">Download <code>Bouquine-Setup.exe</code></p>
+                        </div>
+
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(37, 99, 235, 0.02); border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1);">
+                            <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
+                                <i data-lucide="shield-alert" style="width: 20px; height: 20px;"></i>
+                            </div>
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">2. Bypass SmartScreen</h4>
+                            <p style="font-size: 0.9rem; color: var(--ink-light);">Click "More info" → "Run anyway"</p>
+                        </div>
+
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(37, 99, 235, 0.02); border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1);">
+                            <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #2563EB;">
+                                <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i>
+                            </div>
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">3. Install & Launch</h4>
+                            <p style="font-size: 0.9rem; color: var(--ink-light);">Follow installer, then open Bouquine</p>
+                        </div>
+                    </div>
+
+                    <!-- Visual Guide -->
+                    <div style="background: rgba(37, 99, 235, 0.02); padding: 2rem; border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1); margin-bottom: 2rem;">
+                        <h4 style="margin-bottom: 1rem; text-align: center;">What You'll See:</h4>
+                        <ol style="list-style-position: inside; color: var(--ink-light); line-height: 2;">
+                            <li>Double-click <code>Bouquine-Setup.exe</code></li>
+                            <li>Windows shows: <strong>"Windows protected your PC"</strong></li>
+                            <li>Click <strong>"More info"</strong> (small text link)</li>
+                            <li>Click <strong>"Run anyway"</strong> button</li>
+                            <li>Follow the installer wizard</li>
+                            <li>Launch Bouquine from Start Menu or Desktop</li>
+                        </ol>
+                    </div>
+
+                    <!-- Why Section -->
+                    <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(245, 158, 11, 0.05)); border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.2);">
+                        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                            <i data-lucide="info" style="color: #f59e0b; flex-shrink: 0; margin-top: 0.2rem;"></i>
+                            <div>
+                                <strong style="color: #92400e;">Why does Windows block it?</strong>
+                                <p style="margin: 0.5rem 0 0; color: var(--ink-light); font-size: 0.9rem; line-height: 1.6;">
+                                    Bouquine isn't yet signed with a Microsoft code-signing certificate (~$400/year). Microsoft SmartScreen blocks unsigned apps by default. 
+                                    Once we exit beta and purchase a certificate, this warning will disappear.
                                 </p>
                             </div>
                         </div>
@@ -846,42 +888,220 @@
         </div>
     </section>
 
-    <!-- MISSIONS (Updated for v1.0 AI Features) -->
+    <!-- FAQ SECTION -->
+    <section class="faq-section" style="padding: 6rem 0; background: rgba(255, 255, 255, 0.4); border-top: 1px solid var(--border);">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 1rem;">Frequently Asked Questions</h2>
+            <p style="text-align: center; max-width: 600px; margin: 0 auto 3rem; color: var(--ink-light);">
+                Everything you need to know to start using Bouquine effectively.
+            </p>
+
+            <div style="max-width: 900px; margin: 0 auto;">
+                <!-- Core Concepts -->
+                <div class="faq-category" style="margin-bottom: 3rem;">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--accent);">📚 Core Concepts</h3>
+                    
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem; cursor: pointer;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is "The Muse"?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            The Muse is your AI writing assistant powered by <strong>Meta Llama 3.3 70B Instruct</strong> via OpenRouter. 
+                            It helps you generate prose, continue scenes, and get unstuck. 
+                            The Muse has access to your entire project: characters, world bible, synopsis, and previous chapters. It remembers everything.
+                            <br><br>
+                            <strong>Model:</strong> meta-llama/llama-3.3-70b-instruct:free<br>
+                            <strong>Provider:</strong> OpenRouter<br>
+                            <strong>Context:</strong> 131,072 tokens (can process ~100,000 words at once)
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Synopsis Workshop?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            The Synopsis Workshop is a guided wizard that interviews you about your story (protagonist, goal, conflict, ending). 
+                            It then generates a cohesive 300-word synopsis to guide your writing. Perfect for beating blank-page paralysis.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Style Guide?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            The Style Guide teaches The Muse your unique writing voice. Click "Analyze My Voice" after writing 300+ words, and Bouquine will extract your tone, pacing, and style. 
+                            The Muse will then write in YOUR voice, not generic AI prose.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the World Bible?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            The World Bible stores your worldbuilding: magic systems, geography, history, factions, and lore. 
+                            The Muse references this to ensure consistency (e.g., if you wrote "magic requires blood sacrifice," it won't generate scenes where magic is free).
+                        </p>
+                    </details>
+                </div>
+
+                <!-- Features -->
+                <div class="faq-category" style="margin-bottom: 3rem;">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--accent);">✨ Features</h3>
+                    
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Plan view (Corkboard)?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            The Corkboard is a visual planning mode. Each chapter appears as a card showing its title, status, and word count. 
+                            Drag cards to reorder chapters. Click a card to jump to that chapter. Perfect for outlining before you write.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What does "Write Prose" do?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            "Write Prose" asks The Muse to generate a full scene (500-1000 words) based on your chapter title, synopsis, and characters. 
+                            Use it to draft quickly. You can then edit, rewrite, or expand the AI's output in your own voice.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What does "Generate Beat" do?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            "Generate Beat" creates a short outline (3-5 bullet points) for what should happen in this chapter. 
+                            Use it when you know the chapter's purpose but not the specific beats. The Muse analyzes your synopsis and suggests plot points.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Research section?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            The Research section stores external facts: historical details, scientific concepts, real-world references. 
+                            Example: "Medieval siege weapons," "How poisons work," "Victorian etiquette." The Muse can reference these to ground your fiction in reality.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Why is Focus Mode important?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            Focus Mode turns OFF all AI features. Use it when you want to write uninterrupted, without suggestions or autocomplete. 
+                            It's your sacred "just me and the blank page" mode. No AI, no distractions, no internet required.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Consistency Checker (Shield Icon)?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            The Consistency Checker (shield icon in The Muse panel) scans your chapter for plot holes, continuity errors, and contradictions. 
+                            Example: "In Chapter 2, Sara had blue eyes. In Chapter 5, you wrote brown eyes." It's your story's fact-checker.
+                        </p>
+                    </details>
+                </div>
+
+                <!-- Technical -->
+                <div class="faq-category">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--accent);">⚙️ Technical</h3>
+                    
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Does Bouquine work offline?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            Yes! Writing, editing, characters, and worldbuilding all work 100% offline. 
+                            You only need internet when using The Muse (AI features). Your manuscript is stored locally in a SQLite database.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">How much does AI usage cost?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            <strong>Beta testers: FREE.</strong> We provide OpenRouter API keys with access to Llama 3.3 70B's free tier. 
+                            Rate limits are generous (sufficient for multiple chapters per day).<br><br>
+                            
+                            <strong>After beta:</strong> If you use your own API key and exceed OpenRouter's free tier, costs are approximately:
+                            <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                                <li><strong>$0.30-0.60 USD per chapter</strong> (R5-10 ZAR)</li>
+                                <li><strong>$6-12 USD for a full 80,000-word novel</strong></li>
+                            </ul>
+                            Most writers stay within the free tier. Bouquine takes no cut—you pay OpenRouter directly.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Where is my manuscript stored?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            Your manuscript is stored in a local SQLite database on your device. Location: <br>
+                            <strong>macOS:</strong> <code>~/Library/Application Support/Bouquine/</code><br>
+                            <strong>Windows:</strong> <code>C:\Users\[YourName]\AppData\Roaming\Bouquine\</code><br>
+                            Nothing is sent to the cloud. Your work never leaves your machine.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Can I export to Word/PDF?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            Yes! Click the "Export" button (top-right) to export your manuscript as:
+                            <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                                <li>DOCX (Microsoft Word)</li>
+                                <li>PDF (formatted)</li>
+                                <li>EPUB (e-book)</li>
+                                <li>Markdown (.md)</li>
+                                <li>Plain text (.txt)</li>
+                            </ul>
+                            Exports use <strong>Standard Manuscript Format</strong> with proper indentation and headers.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">How do I get an OpenRouter API key?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            <strong>For beta testers:</strong><br>
+                            Email <a href="mailto:beta@bouquine.app" style="color: var(--accent); text-decoration: underline;">beta@bouquine.app</a> with your name and email. 
+                            We'll send you a pre-configured OpenRouter API key within 24 hours.<br><br>
+                            
+                            <strong>Want to use your own key?</strong><br>
+                            1. Sign up at <a href="https://openrouter.ai" target="_blank" style="color: var(--accent); text-decoration: underline;">openrouter.ai</a><br>
+                            2. Create an API key<br>
+                            3. Add $5-10 credit (optional—free tier is generous)<br>
+                            4. Paste the key in Bouquine Settings → API Key<br><br>
+                            
+                            Your key, your control, your privacy.
+                        </p>
+                    </details>
+
+                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Can I use Bouquine completely free forever?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            <strong>Yes!</strong> As long as you stay within OpenRouter's free tier limits for Llama 3.3 70B. 
+                            For most writers (1-3 chapters per day), the free tier is sufficient. 
+                            The only cost would be if you exceed rate limits and choose to add paid credits for unlimited access.
+                        </p>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MISSIONS -->
     <section id="missions" class="protocol-section">
         <div class="container">
             <h2 style="text-align: center;">The Architect's Missions</h2>
             <div class="protocol-list">
-
-                <!-- Mission 01: RAG -->
                 <div class="protocol-item">
                     <h3>Mission 01: The Memory Check</h3>
                     <div class="mission-box glow-hover">
-                        <strong>Task:</strong> Create a character in the Vault with a specific secret (e.g., "Allergic
-                        to silver"). Ask The Muse to write a dining scene.<br><br>
+                        <strong>Task:</strong> Create a character in the Vault with a specific secret (e.g., "Allergic to silver"). Ask The Muse to write a dining scene.<br><br>
                         <em>Success: The AI refuses to let them touch the silverware.</em>
                     </div>
                 </div>
 
-                <!-- Mission 02: Style Mimicry (NEW) -->
                 <div class="protocol-item">
                     <h3>Mission 02: The Mirror Test</h3>
                     <div class="mission-box glow-hover">
-                        <strong>Task:</strong> Write 300 words of your unique prose in Chapter 1. Go to Style Guide and
-                        click <strong>"✨ Analyze My Voice"</strong>. Then ask The Muse to continue the story.<br><br>
+                        <strong>Task:</strong> Write 300 words of your unique prose in Chapter 1. Go to Style Guide and click <strong>"✨ Analyze My Voice"</strong>. Then ask The Muse to continue the story.<br><br>
                         <em>Success: The AI writes the next paragraph sounding exactly like you.</em>
                     </div>
                 </div>
 
-                <!-- Mission 03: Story Audit (NEW) -->
                 <div class="protocol-item">
                     <h3>Mission 03: The Story Audit</h3>
                     <div class="mission-box glow-hover">
-                        <strong>Task:</strong> Intentionally write a plot hole (e.g., a character who is dead in the
-                        Synopsis appears in Chapter 3). Click the <strong>Shield Icon 🛡️</strong> in The Muse.<br><br>
+                        <strong>Task:</strong> Intentionally write a plot hole (e.g., a character who is dead in the Synopsis appears in Chapter 3). Click the <strong>Shield Icon 🛡️</strong> in The Muse.<br><br>
                         <em>Success: The AI catches the contradiction and flags it in the report.</em>
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
@@ -894,22 +1114,20 @@
 
             <div class="perks-grid">
                 <div class="perk-item glow-hover">
-                    <h4><i data-lucide="check-circle" class="text-accent" style="color: #2563EB;"></i> Founding Status
-                    </h4>
-                    <p style="font-size: 0.85rem;">Your name will be permanently etched in the "About" credits of
-                        Bouquine v1.0.</p>
+                    <h4><i data-lucide="check-circle" style="color: #2563EB;"></i> Founding Status</h4>
+                    <p style="font-size: 0.85rem;">Your name will be permanently etched in the "About" credits of Bouquine v1.0.</p>
                 </div>
                 <div class="perk-item glow-hover">
-                    <h4><i data-lucide="check-circle" class="text-accent" style="color: #2563EB;"></i> Lifetime
-                        Privilege</h4>
-                    <p style="font-size: 0.85rem;">Early architects receive a 50% discount on the final product license,
-                        forever.</p>
+                    <h4><i data-lucide="check-circle" style="color: #2563EB;"></i> Free AI Access</h4>
+                    <p style="font-size: 0.85rem;">Beta testers receive free OpenRouter API keys with access to The Muse. No cost, no limits during beta.</p>
                 </div>
                 <div class="perk-item glow-hover">
-                    <h4><i data-lucide="check-circle" class="text-accent" style="color: #2563EB;"></i> Direct Access
-                    </h4>
-                    <p style="font-size: 0.85rem;">Skip the support queue. You have a direct line to the founding
-                        developers via Discord/Email.</p>
+                    <h4><i data-lucide="check-circle" style="color: #2563EB;"></i> Lifetime Privilege</h4>
+                    <p style="font-size: 0.85rem;">Early architects receive a 50% discount on future premium features, forever.</p>
+                </div>
+                <div class="perk-item glow-hover">
+                    <h4><i data-lucide="check-circle" style="color: #2563EB;"></i> Direct Access</h4>
+                    <p style="font-size: 0.85rem;">Skip the support queue. You have a direct line to the founding developers via Discord/Email.</p>
                 </div>
             </div>
         </div>
@@ -921,7 +1139,8 @@
             <p style="opacity: 0.6; margin-top: 1rem;">Built for the craft.</p>
 
             <div class="command-center">
-                <a href="mailto:beta@bouquine.app" class="command-btn">
+                <a href="mailto:beta@bouquine.app?subject=Bug%20Report&body=Hi%20Francis,%0D%0A%0D%0AI%20found%20a%20bug:%0D%0A%0D%0A[Describe%20the%20issue]%0D%0A%0D%0ASteps%20to%20reproduce:%0D%0A1.%20%0D%0A2.%20%0D%0A3.%20" 
+                   class="command-btn">
                     <i data-lucide="bug"></i>
                     <span>Report a Bug</span>
                 </a>
@@ -929,42 +1148,71 @@
                     <i data-lucide="message-square"></i>
                     <span>Submit Feature Request</span>
                 </a>
-                <a href="https://github.com/orgs/bouquine/projects/1" target="_blank" class="command-btn">
-                    <i data-lucide="map"></i>
-                    <span>View Live Roadmap</span>
+                <a href="mailto:beta@bouquine.app?subject=Beta%20API%20Key%20Request&body=Hi%20Francis,%0D%0A%0D%0AI've%20downloaded%20Bouquine%20and%20would%20love%20an%20API%20key%20to%20test%20The%20Muse.%0D%0A%0D%0A(Optional)%20I%20write%20mostly:%20[Fantasy/Sci-Fi/Thriller/Romance/Other]%0D%0A%0D%0AThanks!" 
+                   class="command-btn">
+                    <i data-lucide="key"></i>
+                    <span>Request API Key</span>
                 </a>
             </div>
 
-            <div
-                style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; font-size: 0.9rem; color: rgba(255,255,255,0.5); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+            <div style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; font-size: 0.9rem; color: rgba(255,255,255,0.5); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
                 <p>&copy; 2026 Bouquine. All rights reserved.</p>
                 <div style="display: flex; gap: 2rem;">
                     <span style="font-size: 0.8rem;">Local-First Architecture.</span>
-                    <button onclick="openPrivacy()"
-                        style="background: none; border: none; color: inherit; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Privacy
-                        Pledge</button>
+                    <button onclick="openPrivacy()" style="background: none; border: none; color: inherit; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Privacy Pledge</button>
                 </div>
             </div>
         </div>
     </footer>
 
     <script>
-        // 1. Initialize Lucide icons
+        // Initialize Lucide icons
         lucide.createIcons();
 
-        // 2. The Magic Glow Logic (Mouse Follower)
+        // Mouse follower glow
         const cursorGlow = document.getElementById('cursorGlow');
         document.addEventListener('mousemove', (e) => {
             cursorGlow.style.left = e.clientX + 'px';
             cursorGlow.style.top = e.clientY + 'px';
         });
 
-        // 3. Privacy Modal Logic
+        // Platform tab switching
+        document.querySelectorAll('.platform-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const platform = tab.dataset.platform;
+                
+                // Update tabs
+                document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update content
+                document.querySelectorAll('.platform-content').forEach(content => {
+                    if (content.dataset.platform === platform) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        // Copy command function
+        function copyCommand(elementId) {
+            const command = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(command);
+            
+            event.target.textContent = '✅ Copied!';
+            setTimeout(() => {
+                event.target.textContent = '📋 Copy';
+            }, 2000);
+        }
+
+        // Privacy Modal
         function openPrivacy() {
             const modal = document.getElementById('privacyModal');
             modal.style.display = 'flex';
             setTimeout(() => { modal.style.opacity = '1'; }, 10);
-            lucide.createIcons(); // Refresh icons inside modal
+            lucide.createIcons();
         }
 
         function closePrivacy() {
@@ -973,55 +1221,52 @@
             setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
 
-        // 4. Close modal if clicking outside the content card
         window.onclick = function (event) {
             const modal = document.getElementById('privacyModal');
             if (event.target == modal) {
                 closePrivacy();
             }
         }
+
+        // FAQ accordion animations
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.addEventListener('toggle', () => {
+                if (item.open) {
+                    item.style.borderColor = 'var(--accent)';
+                } else {
+                    item.style.borderColor = 'var(--border)';
+                }
+            });
+        });
     </script>
 
     <!-- Privacy Modal -->
-    <div id="privacyModal"
-        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
-        <div
-            style="background: #FDFBF7; padding: 3rem; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; color: #0F172A; border: 1px solid rgba(0,0,0,0.1);">
-            <button onclick="closePrivacy()"
-                style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; cursor: pointer; color: #475569;">
+    <div id="privacyModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: #FDFBF7; padding: 3rem; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; color: #0F172A; border: 1px solid rgba(0,0,0,0.1);">
+            <button onclick="closePrivacy()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; cursor: pointer; color: #475569;">
                 <i data-lucide="x"></i>
             </button>
 
-            <h2 style="font-family: 'DM Serif Display', serif; font-size: 2.2rem; margin-bottom: 1.5rem;">The Privacy
-                Pledge</h2>
+            <h2 style="font-family: 'DM Serif Display', serif; font-size: 2.2rem; margin-bottom: 1.5rem;">The Privacy Pledge</h2>
 
             <div style="font-family: 'Inter', sans-serif; line-height: 1.8; color: #475569; font-size: 0.95rem;">
                 <p style="margin-bottom: 1rem;"><strong>Effective Date:</strong> January 2026</p>
-                <p style="margin-bottom: 1.5rem;">Bouquine is designed to be a sanctuary for intellectual property. We
-                    believe your stories belong to you alone.</p>
+                <p style="margin-bottom: 1.5rem;">Bouquine is designed to be a sanctuary for intellectual property. We believe your stories belong to you alone.</p>
 
-                <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">1. Your Manuscript stays Local
-                </h4>
-                <p>We do not use a cloud database. Your projects, characters, and research notes are stored in a private
-                    SQLite database on your own device. If the internet goes out, your studio keeps working.</p>
+                <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">1. Your Manuscript stays Local</h4>
+                <p>We do not use a cloud database. Your projects, characters, and research notes are stored in a private SQLite database on your own device. If the internet goes out, your studio keeps working.</p>
 
-                <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">2. Transparent AI Transmission
-                </h4>
-                <p>When you consult <strong>The Muse</strong>, only the relevant context is sent to your selected AI
-                    Provider (OpenRouter, OpenAI, or Anthropic). This data is never stored by Bouquine and, per major
-                    provider terms, is not used for model training.</p>
+                <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">2. Transparent AI Transmission</h4>
+                <p>When you consult <strong>The Muse</strong>, only the relevant context is sent to OpenRouter (Meta Llama 3.3 70B). This data is never stored by Bouquine. Per OpenRouter's terms, free-tier requests are not used for model training. You can verify this by reviewing OpenRouter's privacy policy.</p>
 
                 <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">3. Zero Hidden Tracking</h4>
-                <p>Our beta includes no telemetry, no tracking pixels, and no background analytics. We find out about
-                    bugs only when you tell us about them.</p>
+                <p>Our beta includes no telemetry, no tracking pixels, and no background analytics. We find out about bugs only when you tell us about them.</p>
 
                 <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">4. Intellectual Ownership</h4>
-                <p>You retain 100% ownership of everything created within Bouquine. We provide the forge; you provide
-                    the fire.</p>
+                <p>You retain 100% ownership of everything created within Bouquine. We provide the forge; you provide the fire.</p>
             </div>
 
-            <button onclick="closePrivacy()" class="btn btn-primary"
-                style="width: 100%; margin-top: 2.5rem; justify-content: center; font-family: 'Inter', sans-serif;">
+            <button onclick="closePrivacy()" class="btn btn-primary" style="width: 100%; margin-top: 2.5rem; justify-content: center; font-family: 'Inter', sans-serif;">
                 I Understand
             </button>
         </div>
