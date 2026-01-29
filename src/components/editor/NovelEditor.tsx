@@ -3,7 +3,7 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useEditorStore, useProjectStore } from '../../stores/projectStore';
-import { Bold, Italic, Strikethrough, FileText, Loader2, X, ChevronDown, ChevronRight, Heading2, Heading3, Shield } from 'lucide-react';
+import { Bold, Italic, Strikethrough, FileText, Loader2, X, Heading2, Heading3, Shield } from 'lucide-react';
 
 export function NovelEditor() {
     const {
@@ -99,6 +99,11 @@ export function NovelEditor() {
     // Reset dismissal when chapter changes
     useEffect(() => {
         setIsDismissed(false);
+        if (currentChapter?.summary) {
+            setShowSummary(true);
+        } else {
+            setShowSummary(false);
+        }
     }, [currentChapter?.id]);
 
     // Initialize title when component mounts (with key prop, this runs once per chapter)
@@ -151,6 +156,7 @@ export function NovelEditor() {
             const updated = await window.electronAPI.summarizeChapter(currentChapter.id, 'openrouter');
             updateChapterInStore(updated);
             setCurrentChapter(updated);
+            setShowSummary(true);
         } catch (err) {
             console.error('Failed to summarize chapter:', err);
             alert('Failed to summarize chapter. Make sure you have content and a valid API key.');
@@ -343,35 +349,27 @@ export function NovelEditor() {
                             ) : (
                                 <FileText size={14} />
                             )}
-                            <span className="font-medium">{isSummarizing ? 'Summarizing...' : 'Summarize'}</span>
+                            <span className="font-medium">
+                                {isSummarizing ? 'Summarizing...' : (currentChapter?.summary && !showSummary ? 'Show Summary' : 'Summarize')}
+                            </span>
                         </button>
                     </div>
                 </div>
-                {currentChapter?.summary && (
-                    <div className="mt-4 p-3 bg-accent/30 rounded-lg border border-border/50 relative group">
+                {currentChapter?.summary && showSummary && (
+                    <div className="mt-4 p-3 bg-accent/30 rounded-lg border border-border/50 relative group animate-in slide-in-from-top-2 duration-300">
                         <div className="flex items-center justify-between mb-1">
-                            <button
-                                onClick={() => setShowSummary(!showSummary)}
-                                className="flex items-center gap-1 hover:opacity-80 transition-opacity"
-                            >
-                                {showSummary ? (
-                                    <ChevronDown size={12} className="text-muted-foreground" />
-                                ) : (
-                                    <ChevronRight size={12} className="text-muted-foreground" />
-                                )}
+                            <div className="flex items-center gap-1">
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Summary</p>
-                            </button>
+                            </div>
                             <button
                                 onClick={() => setShowSummary(false)}
-                                className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
                                 title="Dismiss summary"
                             >
                                 <X size={12} />
                             </button>
                         </div>
-                        {showSummary && (
-                            <p className="text-sm text-muted-foreground">{currentChapter.summary}</p>
-                        )}
+                        <p className="text-sm text-muted-foreground leading-relaxed">{currentChapter.summary}</p>
                     </div>
                 )}
             </div>

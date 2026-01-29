@@ -1,1 +1,89 @@
-"use strict";const r=require("electron");r.contextBridge.exposeInMainWorld("electronAPI",{createProject:e=>r.ipcRenderer.invoke("create-project",e),getProjects:()=>r.ipcRenderer.invoke("get-projects"),getProject:e=>r.ipcRenderer.invoke("get-project",e),updateProject:(e,t)=>r.ipcRenderer.invoke("update-project",{id:e,data:t}),deleteProject:e=>r.ipcRenderer.invoke("delete-project",e),createChapter:e=>r.ipcRenderer.invoke("create-chapter",e),getChapter:e=>r.ipcRenderer.invoke("get-chapter",e),getChapterTree:e=>r.ipcRenderer.invoke("get-chapter-tree",e),saveChapterContent:(e,t)=>r.ipcRenderer.invoke("save-chapter-content",{id:e,content:t}),updateChapter:(e,t)=>r.ipcRenderer.invoke("update-chapter",{id:e,data:t}),renameChapter:(e,t)=>r.ipcRenderer.invoke("update-chapter",{id:e,data:{title:t}}),deleteChapter:e=>r.ipcRenderer.invoke("delete-chapter",e),createChapterSnapshot:(e,t)=>r.ipcRenderer.invoke("create-chapter-snapshot",{chapterId:e,note:t}),createCharacter:e=>r.ipcRenderer.invoke("create-character",e),getCharacter:e=>r.ipcRenderer.invoke("get-character",e),getCharacters:e=>r.ipcRenderer.invoke("get-characters",e),updateCharacter:(e,t)=>r.ipcRenderer.invoke("update-character",{id:e,data:t}),deleteCharacter:e=>r.ipcRenderer.invoke("delete-character",e),createWorldElement:e=>r.ipcRenderer.invoke("create-world-element",e),getWorldElement:e=>r.ipcRenderer.invoke("get-world-element",e),getWorldElements:e=>r.ipcRenderer.invoke("get-world-elements",e),updateWorldElement:(e,t)=>r.ipcRenderer.invoke("update-world-element",{id:e,data:t}),deleteWorldElement:e=>r.ipcRenderer.invoke("delete-world-element",e),setAPIKey:(e,t)=>r.ipcRenderer.invoke("set-api-key",{provider:e,key:t}),hasAPIKey:e=>r.ipcRenderer.invoke("has-api-key",e),deleteAPIKey:e=>r.ipcRenderer.invoke("delete-api-key",e),getEncryptionMethod:()=>r.ipcRenderer.invoke("get-encryption-method"),getSetting:e=>r.ipcRenderer.invoke("get-setting",e),setSetting:(e,t)=>r.ipcRenderer.invoke("set-setting",{key:e,value:t}),aiGenerate:(e,t,n)=>r.ipcRenderer.invoke("ai-generate",{provider:e,messages:t,options:n}),aiGenerateStream:(e,t,n)=>r.ipcRenderer.invoke("ai-generate-stream",{provider:e,messages:t,options:n}),onAIStreamChunk:e=>{r.ipcRenderer.on("ai-stream-chunk",(t,n)=>e(n))},removeAIStreamListener:()=>{r.ipcRenderer.removeAllListeners("ai-stream-chunk")},aiChatMessage:e=>r.ipcRenderer.invoke("ai-chat-message",e),onAIChatChunk:e=>{r.ipcRenderer.on("ai-chat-chunk",(t,n)=>e(n))},removeAIChatListener:()=>{r.ipcRenderer.removeAllListeners("ai-chat-chunk")},summarizeChapter:(e,t)=>r.ipcRenderer.invoke("summarize-chapter",{chapterId:e,provider:t}),generateBlurb:(e,t)=>r.ipcRenderer.invoke("generate-blurb",{projectId:e,synopsis:t}),generateSynopsisFromInputs:e=>r.ipcRenderer.invoke("generate-synopsis-from-inputs",e),getReferences:e=>r.ipcRenderer.invoke("get-references",e),createReference:e=>r.ipcRenderer.invoke("create-reference",e),updateReference:(e,t)=>r.ipcRenderer.invoke("update-reference",{id:e,data:t}),deleteReference:e=>r.ipcRenderer.invoke("delete-reference",e),suggestResearchGaps:e=>r.ipcRenderer.invoke("suggest-research-gaps",e),getResearchByChapter:e=>r.ipcRenderer.invoke("get-research-by-chapter",e),openLink:e=>r.ipcRenderer.invoke("open-link",e),refreshContextIndex:e=>r.ipcRenderer.invoke("refresh-context-index",e),searchResearch:(e,t,n,i)=>r.ipcRenderer.invoke("search-research",{projectId:e,query:t,limit:n,excludeIds:i}),getStyleGuide:e=>r.ipcRenderer.invoke("get-style-guide",e),updateStyleGuide:(e,t)=>r.ipcRenderer.invoke("update-style-guide",{projectId:e,data:t}),showSaveDialog:e=>r.ipcRenderer.invoke("show-save-dialog",e),exportToDocx:(e,t,n)=>r.ipcRenderer.invoke("export-to-docx",{projectId:e,chapterIds:t,filePath:n}),exportChapterToDocx:(e,t)=>r.ipcRenderer.invoke("export-chapter-to-docx",{chapterId:e,filePath:t}),exportToPdf:(e,t,n)=>r.ipcRenderer.invoke("export-to-pdf",{projectId:e,chapterIds:t,filePath:n}),exportToEpub:(e,t,n)=>r.ipcRenderer.invoke("export-to-epub",{projectId:e,chapterIds:t,filePath:n}),exportToJson:(e,t)=>r.ipcRenderer.invoke("export-to-json",{projectId:e,filePath:t}),exportToMarkdown:(e,t,n)=>r.ipcRenderer.invoke("export-to-markdown",{projectId:e,chapterIds:t,filePath:n}),exportToTxt:(e,t,n)=>r.ipcRenderer.invoke("export-to-txt",{projectId:e,chapterIds:t,filePath:n}),auditChapterConsistency:e=>r.ipcRenderer.invoke("audit-chapter-consistency",e),analyzeAuthorStyle:e=>r.ipcRenderer.invoke("analyze-author-style",e),getAppDataPath:()=>r.ipcRenderer.invoke("get-app-data-path"),openLogsFolder:()=>r.ipcRenderer.invoke("open-logs-folder")});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("electronAPI", {
+  // Projects
+  createProject: (data) => electron.ipcRenderer.invoke("create-project", data),
+  getProjects: () => electron.ipcRenderer.invoke("get-projects"),
+  getProject: (id) => electron.ipcRenderer.invoke("get-project", id),
+  updateProject: (id, data) => electron.ipcRenderer.invoke("update-project", { id, data }),
+  deleteProject: (id) => electron.ipcRenderer.invoke("delete-project", id),
+  // Chapters
+  createChapter: (data) => electron.ipcRenderer.invoke("create-chapter", data),
+  getChapter: (id) => electron.ipcRenderer.invoke("get-chapter", id),
+  getChapterTree: (projectId) => electron.ipcRenderer.invoke("get-chapter-tree", projectId),
+  saveChapterContent: (id, content) => electron.ipcRenderer.invoke("save-chapter-content", { id, content }),
+  updateChapter: (id, data) => electron.ipcRenderer.invoke("update-chapter", { id, data }),
+  renameChapter: (id, title) => electron.ipcRenderer.invoke("update-chapter", { id, data: { title } }),
+  deleteChapter: (id) => electron.ipcRenderer.invoke("delete-chapter", id),
+  createChapterSnapshot: (chapterId, note) => electron.ipcRenderer.invoke("create-chapter-snapshot", { chapterId, note }),
+  // Characters (Vault)
+  createCharacter: (data) => electron.ipcRenderer.invoke("create-character", data),
+  getCharacter: (id) => electron.ipcRenderer.invoke("get-character", id),
+  getCharacters: (projectId) => electron.ipcRenderer.invoke("get-characters", projectId),
+  updateCharacter: (id, data) => electron.ipcRenderer.invoke("update-character", { id, data }),
+  deleteCharacter: (id) => electron.ipcRenderer.invoke("delete-character", id),
+  // World Elements (Vault)
+  createWorldElement: (data) => electron.ipcRenderer.invoke("create-world-element", data),
+  getWorldElement: (id) => electron.ipcRenderer.invoke("get-world-element", id),
+  getWorldElements: (projectId) => electron.ipcRenderer.invoke("get-world-elements", projectId),
+  updateWorldElement: (id, data) => electron.ipcRenderer.invoke("update-world-element", { id, data }),
+  deleteWorldElement: (id) => electron.ipcRenderer.invoke("delete-world-element", id),
+  // Settings & Security
+  setAPIKey: (provider, key) => electron.ipcRenderer.invoke("set-api-key", { provider, key }),
+  hasAPIKey: (provider) => electron.ipcRenderer.invoke("has-api-key", provider),
+  deleteAPIKey: (provider) => electron.ipcRenderer.invoke("delete-api-key", provider),
+  getEncryptionMethod: () => electron.ipcRenderer.invoke("get-encryption-method"),
+  getSetting: (key) => electron.ipcRenderer.invoke("get-setting", key),
+  setSetting: (key, value) => electron.ipcRenderer.invoke("set-setting", { key, value }),
+  // AI
+  aiGenerate: (provider, messages, options) => electron.ipcRenderer.invoke("ai-generate", { provider, messages, options }),
+  aiGenerateStream: (provider, messages, options) => electron.ipcRenderer.invoke("ai-generate-stream", { provider, messages, options }),
+  onAIStreamChunk: (callback) => {
+    electron.ipcRenderer.on("ai-stream-chunk", (_, chunk) => callback(chunk));
+  },
+  removeAIStreamListener: () => {
+    electron.ipcRenderer.removeAllListeners("ai-stream-chunk");
+  },
+  // Context Engine Chat
+  aiChatMessage: (payload) => electron.ipcRenderer.invoke("ai-chat-message", payload),
+  onAIChatChunk: (callback) => {
+    electron.ipcRenderer.on("ai-chat-chunk", (_, chunk) => callback(chunk));
+  },
+  removeAIChatListener: () => {
+    electron.ipcRenderer.removeAllListeners("ai-chat-chunk");
+  },
+  // Chapter Summarization
+  summarizeChapter: (chapterId, provider) => electron.ipcRenderer.invoke("summarize-chapter", { chapterId, provider }),
+  // Project Utilities
+  generateBlurb: (projectId, synopsis) => electron.ipcRenderer.invoke("generate-blurb", { projectId, synopsis }),
+  generateSynopsisFromInputs: (inputs) => electron.ipcRenderer.invoke("generate-synopsis-from-inputs", inputs),
+  // References (Research)
+  getReferences: (projectId) => electron.ipcRenderer.invoke("get-references", projectId),
+  createReference: (data) => electron.ipcRenderer.invoke("create-reference", data),
+  updateReference: (id, data) => electron.ipcRenderer.invoke("update-reference", { id, data }),
+  deleteReference: (id) => electron.ipcRenderer.invoke("delete-reference", id),
+  suggestResearchGaps: (projectId) => electron.ipcRenderer.invoke("suggest-research-gaps", projectId),
+  getResearchByChapter: (chapterId) => electron.ipcRenderer.invoke("get-research-by-chapter", chapterId),
+  openLink: (url) => electron.ipcRenderer.invoke("open-link", url),
+  // Context Engine
+  refreshContextIndex: (projectId) => electron.ipcRenderer.invoke("refresh-context-index", projectId),
+  searchResearch: (projectId, query, limit, excludeIds) => electron.ipcRenderer.invoke("search-research", { projectId, query, limit, excludeIds }),
+  // Style Guide
+  getStyleGuide: (projectId) => electron.ipcRenderer.invoke("get-style-guide", projectId),
+  updateStyleGuide: (projectId, data) => electron.ipcRenderer.invoke("update-style-guide", { projectId, data }),
+  // Export
+  showSaveDialog: (options) => electron.ipcRenderer.invoke("show-save-dialog", options),
+  exportToDocx: (projectId, chapterIds, filePath) => electron.ipcRenderer.invoke("export-to-docx", { projectId, chapterIds, filePath }),
+  exportChapterToDocx: (chapterId, filePath) => electron.ipcRenderer.invoke("export-chapter-to-docx", { chapterId, filePath }),
+  exportToPdf: (projectId, chapterIds, filePath) => electron.ipcRenderer.invoke("export-to-pdf", { projectId, chapterIds, filePath }),
+  exportToEpub: (projectId, chapterIds, filePath) => electron.ipcRenderer.invoke("export-to-epub", { projectId, chapterIds, filePath }),
+  exportToJson: (projectId, filePath) => electron.ipcRenderer.invoke("export-to-json", { projectId, filePath }),
+  exportToMarkdown: (projectId, chapterIds, filePath) => electron.ipcRenderer.invoke("export-to-markdown", { projectId, chapterIds, filePath }),
+  exportToTxt: (projectId, chapterIds, filePath) => electron.ipcRenderer.invoke("export-to-txt", { projectId, chapterIds, filePath }),
+  // Intelligence Features
+  auditChapterConsistency: (payload) => electron.ipcRenderer.invoke("audit-chapter-consistency", payload),
+  analyzeAuthorStyle: (payload) => electron.ipcRenderer.invoke("analyze-author-style", payload),
+  // Utility
+  getAppDataPath: () => electron.ipcRenderer.invoke("get-app-data-path"),
+  openLogsFolder: () => electron.ipcRenderer.invoke("open-logs-folder")
+});

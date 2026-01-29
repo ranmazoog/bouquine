@@ -428,7 +428,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
     return (
         <div className="w-80 glass flex flex-col h-full border-l border-white/5">
             {/* Relevant Research Panel */}
-            <div className={`border-b border-blue-500/20 bg-blue-50/50 overflow-hidden transition-all duration-300 ${isContextExpanded ? 'ring-1 ring-blue-500/30 shadow-inner' : ''}`}>
+            <div className={`border-b border-blue-500/20 bg-blue-50/50 transition-all duration-300 ${isContextExpanded ? 'ring-1 ring-blue-500/30 shadow-inner' : ''}`}>
                 <button
                     onClick={() => setIsContextExpanded(!isContextExpanded)}
                     className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-accent/20 transition-colors"
