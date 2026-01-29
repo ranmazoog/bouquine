@@ -730,7 +730,7 @@
                 <h2 style="text-align: center; margin-bottom: 1rem;">How Bouquine Works</h2>
                 <p style="text-align: center; max-width: 600px; margin: 0 auto 3rem; color: var(--ink-light);">
                     Bouquine is a <strong>local-first</strong> writing studio. Your manuscript never leaves your device.
-                    To use AI features, you'll need an API key from Anthropic (Claude).
+                    The Muse (AI assistant) uses <strong>Meta Llama 3.3 70B</strong> via OpenRouter.
                 </p>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
@@ -753,11 +753,9 @@
                             style="width: 60px; height: 60px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #2563EB;">
                             <i data-lucide="key" style="width: 28px; height: 28px;"></i>
                         </div>
-                        <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">2. Request API Access</h3>
-                        <p style="color: var(--ink-light); font-size: 0.95rem;">Email us at <a
-                                href="mailto:beta@bouquine.app"
-                                style="color: var(--accent); text-decoration: underline;">beta@bouquine.app</a> to get
-                            your Anthropic API key.</p>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">2. Get Your API Key (Optional)</h3>
+                        <p style="color: var(--ink-light); font-size: 0.95rem;">Beta testers: We'll provide a free
+                            OpenRouter key. Or use your own for unlimited access.</p>
                     </div>
 
                     <!-- Step 3 -->
@@ -777,11 +775,13 @@
                 <div
                     style="margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(147, 51, 234, 0.05)); border-radius: 16px; border: 1px solid rgba(37, 99, 235, 0.1); text-align: center;">
                     <h4 style="margin-bottom: 0.75rem; color: var(--ink);">💰 Transparent Pricing</h4>
-                    <p style="color: var(--ink-light); max-width: 700px; margin: 0 auto; line-height: 1.6;">
-                        Bouquine costs <strong>$0 per month</strong>. You pay Anthropic directly for AI usage
-                        (~<strong>$0.30-0.60 per chapter</strong>).
-                        Write an entire 80,000-word novel for approximately <strong>$6-12</strong>. No subscriptions. No
-                        hidden fees.
+                    <p style="color: var(--ink-light); max-width: 800px; margin: 0 auto; line-height: 1.6;">
+                        Bouquine costs <strong>$0 per month</strong>. The Muse uses <strong>Meta Llama 3.3 70B (free
+                            tier)</strong> on OpenRouter with generous rate limits.
+                        For beta testers, we provide free API keys. After beta, you can use your own OpenRouter
+                        key—costs are minimal (~<strong>$0.30-0.60 per chapter</strong> if you exceed free tier).
+                        Write an entire 80,000-word novel for approximately <strong>$6-12</strong> (or free if you stay
+                        within limits). No subscriptions. No hidden fees.
                     </p>
                 </div>
             </div>
@@ -918,7 +918,8 @@
                                 </div>
                                 <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">1. Download Installer</h4>
                                 <p style="font-size: 0.9rem; color: var(--ink-light);">Download
-                                    <code>Bouquine-Setup.exe</code></p>
+                                    <code>Bouquine-Setup.exe</code>
+                                </p>
                             </div>
 
                             <div
@@ -1074,9 +1075,15 @@
                         Bouquine v1.0.</p>
                 </div>
                 <div class="perk-item glow-hover">
+                    <h4><i data-lucide="check-circle" class="text-accent" style="color: #2563EB;"></i> Free AI Access
+                    </h4>
+                    <p style="font-size: 0.85rem;">Beta testers receive free OpenRouter API keys with access to The
+                        Muse. No cost, no limits during beta.</p>
+                </div>
+                <div class="perk-item glow-hover">
                     <h4><i data-lucide="check-circle" class="text-accent" style="color: #2563EB;"></i> Lifetime
                         Privilege</h4>
-                    <p style="font-size: 0.85rem;">Early architects receive a 50% discount on the final product license,
+                    <p style="font-size: 0.85rem;">Early architects receive a 50% discount on future premium features,
                         forever.</p>
                 </div>
                 <div class="perk-item glow-hover">
@@ -1108,10 +1115,15 @@
                         <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is "The Muse"?
                         </summary>
                         <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
-                            The Muse is your AI writing assistant powered by Claude (Anthropic). It helps you generate
-                            prose, continue scenes, and get unstuck.
+                            The Muse is your AI writing assistant powered by <strong>Meta Llama 3.3 70B
+                                Instruct</strong> via OpenRouter.
+                            It helps you generate prose, continue scenes, and get unstuck.
                             The Muse has access to your entire project: characters, world bible, synopsis, and previous
                             chapters. It remembers everything.
+                            <br><br>
+                            <strong>Model:</strong> meta-llama/llama-3.3-70b-instruct:free<br>
+                            <strong>Provider:</strong> OpenRouter<br>
+                            <strong>Context:</strong> 131,072 tokens (can process ~100,000 words at once)
                         </p>
                     </details>
 
@@ -1245,12 +1257,32 @@
 
                     <details class="faq-item"
                         style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Which AI model powers
+                            The Muse?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            The Muse uses <strong>Meta Llama 3.3 70B Instruct</strong> (free tier) via OpenRouter.
+                            This model is multilingual, highly capable, and available at no cost within OpenRouter's
+                            free tier limits.
+                            If you exceed the free tier, you can add your own OpenRouter API key for minimal costs.
+                        </p>
+                    </details>
+
+                    <details class="faq-item"
+                        style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
                         <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">How much does AI usage
                             cost?</summary>
                         <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
-                            Approximately <strong>$0.30-0.60 USD per chapter</strong> (or R5-10 ZAR).
-                            A full 80,000-word novel costs around <strong>$6-12</strong>. You pay Anthropic directly via
-                            your API key—Bouquine takes no cut.
+                            <strong>Beta testers: FREE.</strong> We provide OpenRouter API keys with access to Llama 3.3
+                            70B's free tier.
+                            Rate limits are generous (sufficient for multiple chapters per day).<br><br>
+
+                            <strong>After beta:</strong> If you use your own API key and exceed OpenRouter's free tier,
+                            costs are approximately:
+                        <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                            <li><strong>$0.30-0.60 USD per chapter</strong> (R5-10 ZAR)</li>
+                            <li><strong>$6-12 USD for a full 80,000-word novel</strong></li>
+                        </ul>
+                        Most writers stay within the free tier. Bouquine takes no cut—you pay OpenRouter directly.
                         </p>
                     </details>
 
@@ -1285,17 +1317,65 @@
 
                     <details class="faq-item"
                         style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">How do I request an API
-                            key?</summary>
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">How do I get an
+                            OpenRouter API key?</summary>
                         <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            <strong>For beta testers:</strong><br>
                             Email <a href="mailto:beta@bouquine.app"
-                                style="color: var(--accent); text-decoration: underline;">beta@bouquine.app</a> with:
+                                style="color: var(--accent); text-decoration: underline;">beta@bouquine.app</a> with
+                            your name and email.
+                            We'll send you a pre-configured OpenRouter API key within 24 hours.<br><br>
+
+                            <strong>Want to use your own key?</strong><br>
+                            1. Sign up at <a href="https://openrouter.ai" target="_blank"
+                                style="color: var(--accent); text-decoration: underline;">openrouter.ai</a><br>
+                            2. Create an API key<br>
+                            3. Add $5-10 credit (optional—free tier is generous)<br>
+                            4. Paste the key in Bouquine Settings → API Key<br><br>
+
+                            Your key, your control, your privacy.
+                        </p>
+                    </details>
+
+                    <details class="faq-item"
+                        style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What are OpenRouter's
+                            rate limits?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            With the free tier (Llama 3.3 70B), you can generate approximately:
                         <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
-                            <li>Your name</li>
-                            <li>Email address</li>
-                            <li>Brief description of your writing project</li>
+                            <li><strong>5-10 full chapters per day</strong> (depending on length)</li>
+                            <li><strong>Unlimited planning/outlining</strong> (beats, summaries, consistency checks)
+                            </li>
                         </ul>
-                        We'll respond within 24 hours with your Anthropic API key and setup instructions.
+                        If you hit rate limits, they reset every 24 hours. Or add $5-10 credit to your OpenRouter
+                        account for unlimited access.
+                        </p>
+                    </details>
+
+                    <details class="faq-item"
+                        style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Is my API key safe?
+                        </summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            Yes. Your API key is stored <strong>locally</strong> in Bouquine's encrypted SQLite database
+                            on your device.
+                            It never leaves your machine except when making API calls to OpenRouter (which is necessary
+                            for AI features to work).
+                            Bouquine's code is open for security review.
+                        </p>
+                    </details>
+
+                    <details class="faq-item"
+                        style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Can I use Bouquine
+                            completely free forever?</summary>
+                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                            <strong>Yes!</strong> As long as you stay within OpenRouter's free tier limits for Llama 3.3
+                            70B.
+                            For most writers (1-3 chapters per day), the free tier is sufficient.
+                            The only cost would be if you exceed rate limits and choose to add paid credits for
+                            unlimited access.
                         </p>
                     </details>
                 </div>
@@ -1438,9 +1518,11 @@
 
                 <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">2. Transparent AI Transmission
                 </h4>
-                <p>When you consult <strong>The Muse</strong>, only the relevant context is sent to your selected AI
-                    Provider (OpenRouter, OpenAI, or Anthropic). This data is never stored by Bouquine and, per major
-                    provider terms, is not used for model training.</p>
+                <p>When you consult <strong>The Muse</strong>, only the relevant context is sent to OpenRouter (Meta
+                    Llama 3.3 70B).
+                    This data is never stored by Bouquine. Per OpenRouter's terms, free-tier requests are not used for
+                    model training.
+                    You can verify this by reviewing OpenRouter's privacy policy.</p>
 
                 <h4 style="color: #0F172A; margin-top: 1.5rem; margin-bottom: 0.5rem;">3. Zero Hidden Tracking</h4>
                 <p>Our beta includes no telemetry, no tracking pixels, and no background analytics. We find out about
