@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -147,6 +148,115 @@
         .glow-hover:hover {
             transform: translateY(-6px);
             border-color: transparent;
+        }
+
+        /* --- Scroll Reveal --- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- Typewriter --- */
+        .typewriter-container {
+            font-family: 'Inter', sans-serif;
+            background: rgba(15, 23, 42, 0.05);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: left;
+            margin: 2rem auto;
+            max-width: 600px;
+            position: relative;
+            min-height: 120px;
+        }
+
+        .typewriter-loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--ink-light);
+            font-size: 1.1rem;
+        }
+
+        .typewriter-loading span {
+            animation: dotPulse 1.4s infinite;
+        }
+
+        .typewriter-loading span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typewriter-loading span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dotPulse {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .typewriter-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: var(--accent);
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            from, to {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .muse-completion {
+            color: var(--accent);
+            font-style: italic;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .muse-completion.visible {
+            opacity: 1;
+        }
+
+        .skip-animation {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--ink-light);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .typewriter-container:hover .skip-animation {
+            opacity: 1;
+        }
+
+        .skip-animation:hover {
+            background: var(--surface-highlight);
+            color: var(--ink);
         }
 
         /* --- UI Elements --- */
@@ -308,6 +418,7 @@
             position: relative;
             background: var(--surface);
             transition: transform 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
         }
 
         /* Glow effect for regular bento cards (not the tall dark one) */
@@ -424,8 +535,8 @@
             top: 1rem;
             right: 1rem;
             padding: 0.5rem 1rem;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
             border-radius: 6px;
             cursor: pointer;
@@ -437,7 +548,7 @@
         }
 
         .copy-btn:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .copy-btn svg {
@@ -445,12 +556,33 @@
             height: 16px;
         }
 
-        /* --- FAQ --- */
+        /* --- ELEGANT FAQ STYLING --- */
+        .faq-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .faq-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+        }
+
         .faq-item summary {
             list-style: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
+            padding: 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
             user-select: none;
+            position: relative;
+            transition: all 0.2s ease;
         }
 
         .faq-item summary::-webkit-details-marker {
@@ -458,23 +590,81 @@
         }
 
         .faq-item summary::before {
-            content: '▶';
-            margin-right: 0.75rem;
+            content: '';
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(37, 99, 235, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item summary::after {
+            content: '+';
+            position: absolute;
+            left: 1.5rem;
+            top: 1.5rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 300;
             color: var(--accent);
-            transition: transform 0.2s;
-            display: inline-block;
+            line-height: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item[open] summary::after {
+            transform: rotate(45deg);
+            color: white;
         }
 
         .faq-item[open] summary::before {
-            transform: rotate(90deg);
+            background: var(--accent);
         }
 
-        .faq-item {
-            transition: all 0.2s ease;
+        .faq-item summary:hover {
+            color: var(--accent);
         }
 
-        .faq-item:hover {
-            border-color: var(--accent) !important;
+        .faq-item .faq-answer {
+            padding: 0 1.5rem 1.5rem 4rem;
+            color: var(--ink-light);
+            line-height: 1.7;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .faq-category {
+            margin-bottom: 3rem;
+        }
+
+        .faq-category h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .faq-category-icon {
+            font-size: 1.5rem;
         }
 
         /* --- Perks --- */
@@ -497,6 +687,7 @@
             border-radius: var(--radius);
             border: 1px solid var(--border);
             text-align: left;
+            cursor: pointer;
         }
 
         .perk-item h4 {
@@ -587,6 +778,7 @@
             border-radius: 8px;
             margin-top: 1rem;
             background: var(--surface);
+            cursor: pointer;
         }
 
         footer {
@@ -661,6 +853,10 @@
                 font-size: 0.65rem;
                 padding: 3px 8px;
             }
+
+            .faq-item .faq-answer {
+                padding: 0 1.5rem 1.5rem 1.5rem;
+            }
         }
     </style>
 </head>
@@ -688,7 +884,7 @@
         <header class="hero">
             <h1>The Intelligence of AI.<br>The <span>Sanctuary</span> of Privacy.</h1>
             <p>The first local-first studio for novelists. Bring your own key, own your IP, and write without distraction.</p>
-            
+
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
                 <a href="https://www.dropbox.com/scl/fi/77imh85rldv2wcxaiznro/Bouquine-1.5.0-arm64.dmg?rlkey=psustezvldekqh51lazwyswmo&st=kgwg82pr&dl=1" class="btn btn-primary">
                     <i data-lucide="apple"></i> Mac (Silicon)
@@ -700,7 +896,17 @@
                     <i data-lucide="monitor"></i> Windows
                 </a>
             </div>
-            
+
+            <div class="typewriter-container">
+                <button class="skip-animation" onclick="skipTypewriter()" style="display: none;">Skip</button>
+                <div id="typewriter-loading" class="typewriter-loading">
+                    <span>.</span><span>.</span><span>.</span>
+                </div>
+                <p id="typewriter-text" style="font-size: 1.1rem; line-height: 1.6; color: var(--ink-light); display: none;"></p>
+                <span id="muse-completion" class="muse-completion"></span>
+                <span class="typewriter-cursor" style="display: none;"></span>
+            </div>
+
             <div class="version-string">Build v1.5.0 • Released Feb 01, 2026</div>
 
             <div class="hero-preview">
@@ -711,7 +917,7 @@
         </header>
 
         <!-- HOW IT WORKS SECTION -->
-        <section class="how-it-works-section" style="padding: 6rem 0; background: rgba(37, 99, 235, 0.02); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+        <section class="how-it-works-section reveal" style="padding: 6rem 0; background: rgba(37, 99, 235, 0.02); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
             <div class="container">
                 <h2 style="text-align: center; margin-bottom: 1rem;">Start Your Engine</h2>
                 <p style="text-align: center; max-width: 600px; margin: 0 auto 3rem; color: var(--ink-light);">
@@ -736,7 +942,7 @@
                         </div>
                         <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">2. Request Your Key</h3>
                         <p style="color: var(--ink-light); font-size: 0.95rem; margin-bottom: 1rem;">Email me for a pre-funded OpenRouter key. Click below—email is pre-filled.</p>
-                        <a href="mailto:info@bouquine.com?subject=Beta%20API%20Key%20Request&body=Hi%20Francis,%0D%0A%0D%0AI've%20downloaded%20Bouquine%20and%20I'm%20ready%20to%20start%20testing.%0D%0A%0D%0A(Optional)%20I%20write%20mostly:%20[Fantasy/Sci-Fi/Thriller/Romance/Other]%0D%0A%0D%0AThanks!" class="btn btn-outline" style="font-size: 0.85rem;">
+                        <a href="mailto:info@bouquine.app?subject=Beta%20API%20Key%20Request&body=Hi%20Francis%2C%0A%0AI've%20downloaded%20Bouquine%20and%20I'm%20ready%20to%20start%20testing.%0A%0A(Optional)%20I%20write%20mostly%3A%20%5BFantasy%2FSci-Fi%2FThriller%2FRomance%2FOther%5D%0A%0AThanks!" class="btn btn-outline" style="font-size: 0.85rem;">
                             <i data-lucide="mail"></i> Request Key
                         </a>
                     </div>
@@ -762,7 +968,7 @@
         </section>
 
         <!-- FEATURES BENTO -->
-        <section class="bento-section">
+        <section class="bento-section reveal">
             <div class="bento-grid">
                 <div class="bento-card bento-tall">
                     <div>
@@ -805,7 +1011,7 @@
     </div>
 
     <!-- INSTALLATION -->
-    <section id="install" class="install-section">
+    <section id="install" class="install-section reveal">
         <div class="container">
             <div style="text-align: center; margin-bottom: 3rem;">
                 <h2>Installation Guide</h2>
@@ -976,12 +1182,15 @@
 
             <div style="max-width: 900px; margin: 0 auto;">
                 <!-- Core Concepts -->
-                <div class="faq-category" style="margin-bottom: 3rem;">
-                    <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--accent);">📚 Core Concepts</h3>
+                <div class="faq-category">
+                    <h3>
+                        <span class="faq-category-icon">📚</span>
+                        Core Concepts
+                    </h3>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem; cursor: pointer;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is "The Muse"?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>What is "The Muse"?</summary>
+                        <div class="faq-answer">
                             The Muse is your AI writing assistant powered by <strong>Meta Llama 3.3 70B Instruct</strong> via OpenRouter.
                             It helps you generate prose, continue scenes, and get unstuck.
                             The Muse has access to your entire project: characters, world bible, synopsis, and previous chapters. It remembers everything.
@@ -989,102 +1198,108 @@
                             <strong>Model:</strong> meta-llama/llama-3.3-70b-instruct:free<br>
                             <strong>Provider:</strong> OpenRouter<br>
                             <strong>Context:</strong> 131,072 tokens (can process ~100,000 words at once)
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Synopsis Workshop?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>What is the Synopsis Workshop?</summary>
+                        <div class="faq-answer">
                             The Synopsis Workshop is a guided wizard that interviews you about your story (protagonist, goal, conflict, ending).
                             It then generates a cohesive 300-word synopsis to guide your writing. Perfect for beating blank-page paralysis.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Style Guide?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>What is the Style Guide?</summary>
+                        <div class="faq-answer">
                             The Style Guide teaches The Muse your unique writing voice. Click "Analyze My Voice" after writing 300+ words, and Bouquine will extract your tone, pacing, and style.
                             The Muse will then write in YOUR voice, not generic AI prose.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the World Bible?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>What is the World Bible?</summary>
+                        <div class="faq-answer">
                             The World Bible stores your worldbuilding: magic systems, geography, history, factions, and lore.
                             The Muse references this to ensure consistency (e.g., if you wrote "magic requires blood sacrifice," it won't generate scenes where magic is free).
-                        </p>
+                        </div>
                     </details>
                 </div>
 
                 <!-- Features -->
-                <div class="faq-category" style="margin-bottom: 3rem;">
-                    <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--accent);">✨ Features</h3>
+                <div class="faq-category">
+                    <h3>
+                        <span class="faq-category-icon">✨</span>
+                        Features
+                    </h3>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Plan view (Corkboard)?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>What is the Plan view (Corkboard)?</summary>
+                        <div class="faq-answer">
                             The Corkboard is a visual planning mode. Each chapter appears as a card showing its title, status, and word count.
                             Drag cards to reorder chapters. Click a card to jump to that chapter. Perfect for outlining before you write.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What does "Write Prose" do?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>What does "Write Prose" do?</summary>
+                        <div class="faq-answer">
                             "Write Prose" asks The Muse to generate a full scene (500-1000 words) based on your chapter title, synopsis, and characters.
                             Use it to draft quickly. You can then edit, rewrite, or expand the AI's output in your own voice.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What does "Generate Beat" do?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>What does "Generate Beat" do?</summary>
+                        <div class="faq-answer">
                             "Generate Beat" creates a short outline (3-5 bullet points) for what should happen in this chapter.
                             Use it when you know the chapter's purpose but not the specific beats. The Muse analyzes your synopsis and suggests plot points.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Research section?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>What is the Research section?</summary>
+                        <div class="faq-answer">
                             The Research section stores external facts: historical details, scientific concepts, real-world references.
                             Example: "Medieval siege weapons," "How poisons work," "Victorian etiquette." The Muse can reference these to ground your fiction in reality.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Why is Focus Mode important?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>Why is Focus Mode important?</summary>
+                        <div class="faq-answer">
                             Focus Mode turns OFF all AI features. Use it when you want to write uninterrupted, without suggestions or autocomplete.
                             It's your sacred "just me and the blank page" mode. No AI, no distractions, no internet required.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">What is the Consistency Checker (Shield Icon)?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>What is the Consistency Checker (Shield Icon)?</summary>
+                        <div class="faq-answer">
                             The Consistency Checker (shield icon in The Muse panel) scans your chapter for plot holes, continuity errors, and contradictions.
                             Example: "In Chapter 2, Sara had blue eyes. In Chapter 5, you wrote brown eyes." It's your story's fact-checker.
-                        </p>
+                        </div>
                     </details>
                 </div>
 
                 <!-- Technical -->
                 <div class="faq-category">
-                    <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--accent);">⚙️ Technical</h3>
+                    <h3>
+                        <span class="faq-category-icon">⚙️</span>
+                        Technical
+                    </h3>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Does Bouquine work offline?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>Does Bouquine work offline?</summary>
+                        <div class="faq-answer">
                             Yes! Writing, editing, characters, and worldbuilding all work 100% offline.
                             You only need internet when using The Muse (AI features). Your manuscript is stored locally in a SQLite database.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">How much does AI usage cost?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>How much does AI usage cost?</summary>
+                        <div class="faq-answer">
                             <strong>Beta testers: FREE.</strong> We provide OpenRouter API keys with access to Llama 3.3 70B's free tier.
                             Rate limits are generous (sufficient for multiple chapters per day).<br><br>
 
@@ -1094,22 +1309,22 @@
                                 <li><strong>$6-12 USD for a full 80,000-word novel</strong></li>
                             </ul>
                             Most writers stay within the free tier. Bouquine takes no cut—you pay OpenRouter directly.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Where is my manuscript stored?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>Where is my manuscript stored?</summary>
+                        <div class="faq-answer">
                             Your manuscript is stored in a local SQLite database on your device. Location: <br>
                             <strong>macOS:</strong> <code>~/Library/Application Support/Bouquine/</code><br>
                             <strong>Windows:</strong> <code>C:\Users\[YourName]\AppData\Roaming\Bouquine\</code><br>
                             Nothing is sent to the cloud. Your work never leaves your machine.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Can I export to Word/PDF?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>Can I export to Word/PDF?</summary>
+                        <div class="faq-answer">
                             Yes! Click the "Export" button (top-right) to export your manuscript as:
                             <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
                                 <li>DOCX (Microsoft Word)</li>
@@ -1119,14 +1334,14 @@
                                 <li>Plain text (.txt)</li>
                             </ul>
                             Exports use <strong>Standard Manuscript Format</strong> with proper indentation and headers.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">How do I get an OpenRouter API key?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>How do I get an OpenRouter API key?</summary>
+                        <div class="faq-answer">
                             <strong>For beta testers:</strong><br>
-                            Email <a href="mailto:info@bouquine.com" style="color: var(--accent); text-decoration: underline;">info@bouquine.com</a> with your name and email.
+                            Email <a href="mailto:info@bouquine.app" style="color: var(--accent); text-decoration: underline;">info@bouquine.app</a> with your name and email.
                             We'll send you a pre-configured OpenRouter API key within 24 hours.<br><br>
 
                             <strong>Want to use your own key?</strong><br>
@@ -1136,16 +1351,16 @@
                             4. Paste the key in Bouquine Settings → API Key<br><br>
 
                             Your key, your control, your privacy.
-                        </p>
+                        </div>
                     </details>
 
-                    <details class="faq-item" style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
-                        <summary style="font-weight: 600; font-size: 1.05rem; cursor: pointer;">Can I use Bouquine completely free forever?</summary>
-                        <p style="margin-top: 1rem; color: var(--ink-light); line-height: 1.6;">
+                    <details class="faq-item">
+                        <summary>Can I use Bouquine completely free forever?</summary>
+                        <div class="faq-answer">
                             <strong>Yes!</strong> As long as you stay within OpenRouter's free tier limits for Llama 3.3 70B.
                             For most writers (1-3 chapters per day), the free tier is sufficient.
                             The only cost would be if you exceed rate limits and choose to add paid credits for unlimited access.
-                        </p>
+                        </div>
                     </details>
                 </div>
             </div>
@@ -1153,11 +1368,11 @@
     </section>
 
     <!-- MISSIONS -->
-    <section id="missions" class="protocol-section">
+    <section id="missions" class="protocol-section reveal">
         <div class="container">
             <h2 style="text-align: center;">The Architect's Missions</h2>
             <div class="protocol-list">
-                <div class="protocol-item">
+                <div class="protocol-item reveal">
                     <h3>Mission 01: The Memory Check</h3>
                     <div class="mission-box glow-hover">
                         <strong>Task:</strong> Create a character in the Vault with a specific secret (e.g., "Allergic to silver"). Ask The Muse to write a dining scene.<br><br>
@@ -1165,7 +1380,7 @@
                     </div>
                 </div>
 
-                <div class="protocol-item">
+                <div class="protocol-item reveal">
                     <h3>Mission 02: The Mirror Test</h3>
                     <div class="mission-box glow-hover">
                         <strong>Task:</strong> Write 300 words of your unique prose in Chapter 1. Go to Style Guide and click <strong>"✨ Analyze My Voice"</strong>. Then ask The Muse to continue the story.<br><br>
@@ -1173,11 +1388,19 @@
                     </div>
                 </div>
 
-                <div class="protocol-item">
+                <div class="protocol-item reveal">
                     <h3>Mission 03: The Story Audit</h3>
                     <div class="mission-box glow-hover">
                         <strong>Task:</strong> Intentionally write a plot hole (e.g., a character who is dead in the Synopsis appears in Chapter 3). Click the <strong>Shield Icon 🛡️</strong> in The Muse.<br><br>
                         <em>Success: The AI catches the contradiction and flags it in the report.</em>
+                    </div>
+                </div>
+
+                <div class="protocol-item reveal">
+                    <h3>Mission 04: The Professional Manuscript</h3>
+                    <div class="mission-box glow-hover">
+                        <strong>Task:</strong> Click the <strong>Share</strong> button (top right) and select <strong>Export as PDF</strong>. Review the layout.<br><br>
+                        <em>Success: A perfectly formatted manuscript with cover page, page numbers, and standard headers is generated instantly.</em>
                     </div>
                 </div>
             </div>
@@ -1185,7 +1408,7 @@
     </section>
 
     <!-- BETA TESTER PERKS -->
-    <section class="perks-section">
+    <section class="perks-section reveal">
         <div class="container" style="text-align: center;">
             <h2>Why your voice matters</h2>
             <p style="margin-bottom: 2rem;">You aren't just a user; you are a co-architect of the final sanctuary.</p>
@@ -1228,10 +1451,9 @@
             <h3>Bouquine</h3>
             <p style="opacity: 0.6; margin-top: 1rem;">Built for the craft.</p>
 
-            <div class="command-center">
+            <div class="command-center reveal">
                 <!-- 1. REPORT A BUG -->
-                <a href="mailto:info@bouquine.app?subject=Bug Report - Bouquine Beta&body=App Version: v1.5.0%0D%0AOS: [macOS / Windows]%0D%0A%0D%0ADescription of the issue:%0D%0A[Type here]%0D%0A%0D%0ASteps to reproduce:%0D%0A1.%20%0D%0A2.%20" 
-                   class="command-btn glow-hover" style="text-decoration: none;">
+                <a href="mailto:info@bouquine.app?subject=Bug%20Report%20-%20Bouquine%20Beta&body=App%20Version%3A%20v1.5.0%0AOS%3A%20%5BmacOS%20%2F%20Windows%5D%0A%0ADescription%20of%20the%20issue%3A%0A%5BType%20here%5D%0A%0ASteps%20to%20reproduce%3A%0A1.%20%0A2.%20" class="command-btn glow-hover" style="text-decoration: none;">
                     <i data-lucide="bug" style="color: #ef4444; width: 32px; height: 32px;"></i>
                     <h4 style="margin-bottom: 0.5rem; color: white;">Report a Bug</h4>
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Found a glitch? Help us polish the sanctuary.</p>
@@ -1245,8 +1467,7 @@
                 </a>
 
                 <!-- 3. REQUEST API KEY -->
-                <a href="mailto:info@bouquine.app?subject=Beta Key Request&body=Hi Francis,%0D%0A%0D%0AI've downloaded Bouquine and I'm ready to start my founding mission.%0D%0A%0D%0ACan you provide me with a sponsored API key to wake The Muse?%0D%0A%0D%0AThanks!" 
-                   class="command-btn glow-hover" style="text-decoration: none;">
+                <a href="mailto:info@bouquine.app?subject=Beta%20Key%20Request&body=Hi%20Francis%2C%0A%0AI've%20downloaded%20Bouquine%20and%20I'm%20ready%20to%20start%20my%20founding%20mission.%0A%0ACan%20you%20provide%20me%20with%20a%20sponsored%20API%20key%20to%20wake%20The%20Muse%3F%0A%0AThanks!" class="command-btn glow-hover" style="text-decoration: none;">
                     <i data-lucide="key" style="color: #9333ea; width: 32px; height: 32px;"></i>
                     <h4 style="margin-bottom: 0.5rem; color: white;">Request API Key</h4>
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Get your sponsored key to activate The Muse.</p>
@@ -1339,7 +1560,7 @@
                 const originalHTML = btn.innerHTML;
                 btn.innerHTML = '<i data-lucide="check"></i> Copied!';
                 lucide.createIcons();
-                
+
                 setTimeout(() => {
                     btn.innerHTML = originalHTML;
                     lucide.createIcons();
@@ -1354,8 +1575,8 @@
         function openPrivacy() {
             const modal = document.getElementById('privacyModal');
             modal.style.display = 'flex';
-            setTimeout(() => { 
-                modal.style.opacity = '1'; 
+            setTimeout(() => {
+                modal.style.opacity = '1';
                 lucide.createIcons();
             }, 10);
         }
@@ -1366,23 +1587,101 @@
             setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
 
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('privacyModal');
             if (event.target == modal) {
                 closePrivacy();
             }
         }
 
-        // FAQ accordion animations
-        document.querySelectorAll('.faq-item').forEach(item => {
-            item.addEventListener('toggle', () => {
-                if (item.open) {
-                    item.style.borderColor = 'var(--accent)';
-                } else {
-                    item.style.borderColor = 'var(--border)';
+        // --- TYPEWRITER EFFECT WITH IMPROVEMENTS ---
+        const typewriterEl = document.getElementById('typewriter-text');
+        const museEl = document.getElementById('muse-completion');
+        const cursorEl = document.querySelector('.typewriter-cursor');
+        const loadingEl = document.getElementById('typewriter-loading');
+        const skipBtn = document.querySelector('.skip-animation');
+
+        const phrases = [
+            { 
+                text: "In the shadow of the velvet curtains, he realized...", 
+                completion: "that the secret he had guarded for decades was no longer his alone." 
+            },
+            { 
+                text: "The engine roared to life as Sarah adjusted the dial,", 
+                completion: "igniting the jump-drive that would carry her far beyond the reach of the Empire." 
+            },
+            { 
+                text: "It was a cold morning in 1894 when the detective noticed", 
+                completion: "a single, golden hair caught in the mechanism of the locked safe." 
+            }
+        ];
+
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isTyping = false;
+        let typewriterTimeout;
+        let skipRequested = false;
+
+        function skipTypewriter() {
+            skipRequested = true;
+            clearTimeout(typewriterTimeout);
+            typewriterEl.style.display = 'none';
+            museEl.style.display = 'none';
+            cursorEl.style.display = 'none';
+            loadingEl.style.display = 'none';
+            skipBtn.style.display = 'none';
+        }
+
+        function type() {
+            if (skipRequested) return;
+
+            const current = phrases[phraseIndex];
+            if (charIndex < current.text.length) {
+                typewriterEl.textContent += current.text.charAt(charIndex);
+                charIndex++;
+                typewriterTimeout = setTimeout(type, 30 + Math.random() * 30); // Faster: 30-60ms instead of 50-100ms
+            } else {
+                // Show Muse completion
+                setTimeout(() => {
+                    if (skipRequested) return;
+                    museEl.textContent = " " + current.completion;
+                    museEl.classList.add('visible');
+
+                    // Pause and loop
+                    typewriterTimeout = setTimeout(() => {
+                        if (skipRequested) return;
+                        museEl.classList.remove('visible');
+                        typewriterEl.textContent = "";
+                        museEl.textContent = "";
+                        charIndex = 0;
+                        phraseIndex = (phraseIndex + 1) % phrases.length;
+                        typewriterTimeout = setTimeout(type, 1800); // Faster: 1.8s instead of 2.5s
+                    }, 3500); // Faster: 3.5s instead of 4s
+                }, 400); // Faster: 0.4s instead of 0.5s
+            }
+        }
+
+        // Start typewriter after loading animation
+        setTimeout(() => {
+            if (skipRequested) return;
+            loadingEl.style.display = 'none';
+            typewriterEl.style.display = 'block';
+            cursorEl.style.display = 'inline-block';
+            skipBtn.style.display = 'block';
+            type();
+        }, 1200); // Faster: 1.2s instead of 1.5s
+
+        // Scroll Reveal logic
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
                 }
             });
-        });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
     </script>
 </body>
+
 </html>
