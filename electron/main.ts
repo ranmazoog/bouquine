@@ -78,10 +78,10 @@ function createWindow() {
 
     // Hot Reloading etc.
     if (process.env.VITE_DEV_SERVER_URL) {
-        mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+        mainWindow.loadURL(`${process.env.VITE_DEV_SERVER_URL}app.html`);
         mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+        mainWindow.loadFile(path.join(__dirname, '../dist/app.html'));
     }
 }
 

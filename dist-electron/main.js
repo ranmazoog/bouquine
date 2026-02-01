@@ -46054,10 +46054,10 @@ function createWindow() {
     // Premium look on macOS
   });
   if (process.env.VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    mainWindow.loadURL(`${process.env.VITE_DEV_SERVER_URL}app.html`);
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path$2.join(__dirname, "../dist/index.html"));
+    mainWindow.loadFile(path$2.join(__dirname, "../dist/app.html"));
   }
 }
 require$$1.app.whenReady().then(() => {
