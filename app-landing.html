@@ -857,6 +857,85 @@
             .faq-item .faq-answer {
                 padding: 0 1.5rem 1.5rem 1.5rem;
             }
+
+            .beta-banner {
+                padding: 0.75rem 1rem;
+            }
+
+            .beta-banner-content {
+                flex-direction: column;
+                gap: 0.75rem;
+                text-align: center;
+            }
+
+            .beta-banner-text {
+                font-size: 0.85rem;
+            }
+
+            .beta-banner .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* --- Beta Access Banner --- */
+        .beta-banner {
+            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .beta-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .beta-banner-text {
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .beta-banner .btn {
+            background: white;
+            color: #1e40af;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .beta-banner .btn:hover {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
         }
     </style>
 </head>
@@ -865,6 +944,22 @@
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- BETA ACCESS BANNER -->
+    <div class="beta-banner">
+        <div class="container">
+            <div class="beta-banner-content">
+                <div class="beta-banner-text">
+                    <span class="pulse-dot"></span>
+                    <span>Private Beta Now Open • Limited Spots Available</span>
+                </div>
+                <a href="https://tally.so/r/zxYeDM" target="_blank" class="btn">
+                    <i data-lucide="key" style="width: 18px; height: 18px;"></i>
+                    Request Beta Access
+                </a>
+            </div>
+        </div>
+    </div>
 
     <div class="container">
         <nav>
@@ -877,7 +972,7 @@
                 </span>
             </div>
             <div>
-                <a href="#missions" class="btn btn-outline">Engineer Access</a>
+                <a href="https://tally.so/r/zxYeDM" target="_blank" class="btn btn-primary">Request Access</a>
             </div>
         </nav>
 
@@ -885,15 +980,16 @@
             <h1>The Intelligence of AI.<br>The <span>Sanctuary</span> of Privacy.</h1>
             <p>The first local-first studio for novelists. Bring your own key, own your IP, and write without distraction.</p>
 
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="https://www.dropbox.com/scl/fi/77imh85rldv2wcxaiznro/Bouquine-1.5.0-arm64.dmg?rlkey=psustezvldekqh51lazwyswmo&st=kgwg82pr&dl=1" class="btn btn-primary">
-                    <i data-lucide="apple"></i> Mac (Silicon)
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">
+                <a href="https://tally.so/r/zxYeDM" target="_blank" class="btn btn-primary" style="font-size: 1.05rem; padding: 1rem 2rem;">
+                    <i data-lucide="key"></i> Request Beta Access
                 </a>
-                <a href="https://www.dropbox.com/scl/fi/am9dgwr6nwyestrp2w2vd/Bouquine-1.5.0.dmg?rlkey=1682601rr02kdieikz3owhdxj&st=27l273ip&dl=1" class="btn btn-primary">
-                    <i data-lucide="cpu"></i> Mac (Intel)
-                </a>
-                <a href="https://www.dropbox.com/scl/fi/g7shmtydst3tsm31f6g0z/Bouquine-Setup-1.5.0.exe?rlkey=bvexsxdq4mn7x8sdq4q7itk5o&st=xqbmqaah&dl=1" class="btn btn-primary">
-                    <i data-lucide="monitor"></i> Windows
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; align-items: center;">
+                <span style="color: var(--ink-light); font-size: 0.9rem;">Already have access?</span>
+                <a href="#install" class="btn btn-outline">
+                    <i data-lucide="download"></i> Download App
                 </a>
             </div>
 
@@ -919,20 +1015,23 @@
         <!-- HOW IT WORKS SECTION -->
         <section class="how-it-works-section reveal" style="padding: 6rem 0; background: rgba(37, 99, 235, 0.02); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
             <div class="container">
-                <h2 style="text-align: center; margin-bottom: 1rem;">Start Your Engine</h2>
+                <h2 style="text-align: center; margin-bottom: 1rem;">How to Join the Beta</h2>
                 <p style="text-align: center; max-width: 600px; margin: 0 auto 3rem; color: var(--ink-light);">
                     Bouquine is a <strong>local-first</strong> writing studio. Your manuscript never leaves your device.
                     The Muse (AI assistant) uses <strong>Meta Llama 3.3 70B</strong> via OpenRouter.
                 </p>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
                     <!-- Step 1 -->
                     <div class="how-card" style="background: white; padding: 2rem; border-radius: 16px; border: 1px solid var(--border); text-align: center;">
                         <div style="width: 60px; height: 60px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #2563EB;">
-                            <i data-lucide="download" style="width: 28px; height: 28px;"></i>
+                            <i data-lucide="clipboard-check" style="width: 28px; height: 28px;"></i>
                         </div>
-                        <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">1. Download Bouquine</h3>
-                        <p style="color: var(--ink-light); font-size: 0.95rem;">Install the app on your Mac or Windows PC. Your work stays 100% local.</p>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">1. Request Beta Access</h3>
+                        <p style="color: var(--ink-light); font-size: 0.95rem; margin-bottom: 1rem;">Fill out the quick form with your name, email, and platform. Takes 30 seconds.</p>
+                        <a href="https://tally.so/r/zxYeDM" target="_blank" class="btn btn-primary" style="font-size: 0.85rem;">
+                            <i data-lucide="external-link"></i> Open Form
+                        </a>
                     </div>
 
                     <!-- Step 2 -->
@@ -940,26 +1039,23 @@
                         <div style="width: 60px; height: 60px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #2563EB;">
                             <i data-lucide="mail" style="width: 28px; height: 28px;"></i>
                         </div>
-                        <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">2. Request Your Key</h3>
-                        <p style="color: var(--ink-light); font-size: 0.95rem; margin-bottom: 1rem;">Email me for a pre-funded OpenRouter key. Click below—email is pre-filled.</p>
-                        <a href="mailto:info@bouquine.app?subject=Beta%20API%20Key%20Request&body=Hi%20Francis%2C%0A%0AI've%20downloaded%20Bouquine%20and%20I'm%20ready%20to%20start%20testing.%0A%0A(Optional)%20I%20write%20mostly%3A%20%5BFantasy%2FSci-Fi%2FThriller%2FRomance%2FOther%5D%0A%0AThanks!" class="btn btn-outline" style="font-size: 0.85rem;">
-                            <i data-lucide="mail"></i> Request Key
-                        </a>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">2. Get Your API Key</h3>
+                        <p style="color: var(--ink-light); font-size: 0.95rem;">I'll email you within 24 hours with your pre-funded OpenRouter key and download links.</p>
                     </div>
 
                     <!-- Step 3 -->
                     <div class="how-card" style="background: white; padding: 2rem; border-radius: 16px; border: 1px solid var(--border); text-align: center;">
                         <div style="width: 60px; height: 60px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #2563EB;">
-                            <i data-lucide="sparkles" style="width: 28px; height: 28px;"></i>
+                            <i data-lucide="download" style="width: 28px; height: 28px;"></i>
                         </div>
-                        <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">3. Complete the Missions</h3>
-                        <p style="color: var(--ink-light); font-size: 0.95rem;">Paste your key in Settings, then scroll down to test the three core features.</p>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">3. Install & Write</h3>
+                        <p style="color: var(--ink-light); font-size: 0.95rem;">Download Bouquine, paste your key in Settings, and start writing. Your work stays 100% local.</p>
                     </div>
                 </div>
 
                 <!-- Beta Transparency Note -->
                 <div style="margin-top: 3rem; max-width: 700px; margin-left: auto; margin-right: auto; padding: 2rem; background: linear-gradient(135deg, rgba(37, 99, 235, 0.03), rgba(147, 51, 234, 0.03)); border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.1);">
-                    <h4 style="margin-bottom: 1rem; color: var(--ink); font-size: 1.1rem; text-align: center;">📝 Note on AI Usage</h4>
+                    <h4 style="margin-bottom: 1rem; color: var(--ink); font-size: 1.1rem; text-align: center;">📝 Beta Period Details</h4>
                     <p style="color: var(--ink-light); line-height: 1.7; text-align: left; font-size: 0.95rem;">
                         During this beta, <strong>I'm providing a pre-funded key for your tests</strong>. After we launch, Bouquine will remain a <strong>one-time purchase</strong> with no monthly fees. You'll simply plug in your own OpenRouter key and pay only for what you write (pennies per chapter). This keeps your data private and your costs as low as possible.
                     </p>
@@ -1014,10 +1110,29 @@
     <section id="install" class="install-section reveal">
         <div class="container">
             <div style="text-align: center; margin-bottom: 3rem;">
-                <h2>Installation Guide</h2>
+                <h2>Download Bouquine</h2>
+                <p style="max-width: 600px; margin: 0 auto 1.5rem; color: var(--ink-light);">
+                    Choose your platform below. Bouquine is in private beta and not yet code-signed.
+                </p>
+                
+                <!-- Download Buttons -->
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 3rem;">
+                    <a href="https://www.dropbox.com/scl/fi/77imh85rldv2wcxaiznro/Bouquine-1.5.0-arm64.dmg?rlkey=psustezvldekqh51lazwyswmo&st=kgwg82pr&dl=1" class="btn btn-primary">
+                        <i data-lucide="apple"></i> Mac (Apple Silicon)
+                    </a>
+                    <a href="https://www.dropbox.com/scl/fi/am9dgwr6nwyestrp2w2vd/Bouquine-1.5.0.dmg?rlkey=1682601rr02kdieikz3owhdxj&st=27l273ip&dl=1" class="btn btn-primary">
+                        <i data-lucide="cpu"></i> Mac (Intel)
+                    </a>
+                    <a href="https://www.dropbox.com/scl/fi/g7shmtydst3tsm31f6g0z/Bouquine-Setup-1.5.0.exe?rlkey=bvexsxdq4mn7x8sdq4q7itk5o&st=xqbmqaah&dl=1" class="btn btn-primary">
+                        <i data-lucide="monitor"></i> Windows
+                    </a>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Installation Instructions</h3>
                 <p style="max-width: 600px; margin: 0 auto; color: var(--ink-light);">
-                    Bouquine is in private beta and not yet code-signed by Apple/Microsoft.
-                    Follow these steps to bypass security warnings.
+                    Follow these steps to bypass security warnings during installation.
                 </p>
             </div>
 
@@ -1341,8 +1456,8 @@
                         <summary>How do I get an OpenRouter API key?</summary>
                         <div class="faq-answer">
                             <strong>For beta testers:</strong><br>
-                            Email <a href="mailto:info@bouquine.app" style="color: var(--accent); text-decoration: underline;">info@bouquine.app</a> with your name and email.
-                            We'll send you a pre-configured OpenRouter API key within 24 hours.<br><br>
+                            Fill out our <a href="https://tally.so/r/zxYeDM" target="_blank" style="color: var(--accent); text-decoration: underline;">beta access form</a>.
+                            I'll email you a pre-configured OpenRouter API key within 24 hours.<br><br>
 
                             <strong>Want to use your own key?</strong><br>
                             1. Sign up at <a href="https://openrouter.ai" target="_blank" style="color: var(--accent); text-decoration: underline;">openrouter.ai</a><br>
@@ -1452,25 +1567,25 @@
             <p style="opacity: 0.6; margin-top: 1rem;">Built for the craft.</p>
 
             <div class="command-center reveal">
-                <!-- 1. REPORT A BUG -->
+                <!-- 1. REQUEST BETA ACCESS -->
+                <a href="https://tally.so/r/zxYeDM" target="_blank" class="command-btn glow-hover" style="text-decoration: none;">
+                    <i data-lucide="key" style="color: #9333ea; width: 32px; height: 32px;"></i>
+                    <h4 style="margin-bottom: 0.5rem; color: white;">Request Beta Access</h4>
+                    <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Join the private beta and get your API key.</p>
+                </a>
+
+                <!-- 2. REPORT A BUG -->
                 <a href="mailto:info@bouquine.app?subject=Bug%20Report%20-%20Bouquine%20Beta&body=App%20Version%3A%20v1.5.0%0AOS%3A%20%5BmacOS%20%2F%20Windows%5D%0A%0ADescription%20of%20the%20issue%3A%0A%5BType%20here%5D%0A%0ASteps%20to%20reproduce%3A%0A1.%20%0A2.%20" class="command-btn glow-hover" style="text-decoration: none;">
                     <i data-lucide="bug" style="color: #ef4444; width: 32px; height: 32px;"></i>
                     <h4 style="margin-bottom: 0.5rem; color: white;">Report a Bug</h4>
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Found a glitch? Help us polish the sanctuary.</p>
                 </a>
 
-                <!-- 2. FEATURE REQUEST -->
+                <!-- 3. FEATURE REQUEST -->
                 <a href="https://tally.so/r/J9zRMX" target="_blank" class="command-btn glow-hover" style="text-decoration: none;">
                     <i data-lucide="message-square" style="color: #2563EB; width: 32px; height: 32px;"></i>
                     <h4 style="margin-bottom: 0.5rem; color: white;">Submit Feature Request</h4>
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">What would make your writing flow better?</p>
-                </a>
-
-                <!-- 3. REQUEST API KEY -->
-                <a href="mailto:info@bouquine.app?subject=Beta%20Key%20Request&body=Hi%20Francis%2C%0A%0AI've%20downloaded%20Bouquine%20and%20I'm%20ready%20to%20start%20my%20founding%20mission.%0A%0ACan%20you%20provide%20me%20with%20a%20sponsored%20API%20key%20to%20wake%20The%20Muse%3F%0A%0AThanks!" class="command-btn glow-hover" style="text-decoration: none;">
-                    <i data-lucide="key" style="color: #9333ea; width: 32px; height: 32px;"></i>
-                    <h4 style="margin-bottom: 0.5rem; color: white;">Request API Key</h4>
-                    <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Get your sponsored key to activate The Muse.</p>
                 </a>
             </div>
 
