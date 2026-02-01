@@ -1,19 +1,41 @@
 import { useState, useEffect } from 'react';
-import { Brain, Map, Sparkles, Key, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Brain, Map, Feather, Key, X, ChevronRight, ChevronLeft } from 'lucide-react';
 
 interface OnboardingStep {
     id: number;
     title: string;
     body: string;
     icon: React.ReactNode;
+    content?: React.ReactNode;
 }
 
 const STEPS: OnboardingStep[] = [
     {
         id: 1,
         title: 'Wake The Muse',
-        body: 'To use The Muse (AI assistant), you\'ll need an API key from OpenRouter. Without it, Bouquine remains a powerful local-first writing tool that works 100% offline. Note: The Muse is your creative partner—meant to steer and inspire your journey, not to write the book for you.',
+        body: "To activate the AI, connect a provider like OpenRouter, OpenAI, or Anthropic.\n\nWe recommend OpenRouter using our default model (Gemini 2.0 Flash) for the best balance of speed and reliability. If you prefer a completely free option, you can switch to Llama 3.3 in settings, though it may occasionally be unavailable during peak hours.",
         icon: <Key size={32} className="text-blue-400" />,
+        content: (
+            <div className="flex flex-col items-center gap-3 mt-2">
+                <div className="text-[10px] uppercase tracking-wider font-bold text-blue-400/80 bg-blue-400/5 px-3 py-1 rounded-full border border-blue-400/10">
+                    Current Default: Gemini 2.0 Flash (Fast & Reliable) 🪶
+                </div>
+                <div className="flex items-center gap-4 opacity-40 grayscale">
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 bg-foreground rounded-md flex items-center justify-center text-[8px] text-background font-black">OR</div>
+                        <span className="text-[10px] font-bold tracking-tighter uppercase">OpenRouter</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 bg-foreground rounded-full flex items-center justify-center text-[8px] text-background font-black">●</div>
+                        <span className="text-[10px] font-bold tracking-tighter uppercase">OpenAI</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 bg-foreground rounded-sm flex items-center justify-center text-[8px] text-background font-black">▲</div>
+                        <span className="text-[10px] font-bold tracking-tighter uppercase">Anthropic</span>
+                    </div>
+                </div>
+            </div>
+        )
     },
     {
         id: 2,
@@ -31,7 +53,13 @@ const STEPS: OnboardingStep[] = [
         id: 4,
         title: 'Outline in Seconds',
         body: 'Go to the Corkboard view and click "Generate Beat." Bouquine will suggest the next plot point based on your Synopsis. Click "Write Prose" to draft the scene instantly.',
-        icon: <Sparkles size={32} className="text-emerald-400" />,
+        icon: <Feather size={32} className="text-emerald-400" />,
+    },
+    {
+        id: 5,
+        title: 'Creative Control',
+        body: 'The Muse is here to steer and inspire, not to replace your voice. You always have the final word. Use it to explore possibilities, catch plot holes, or get unstuck—the story remains uniquely yours.',
+        icon: <Feather size={32} className="text-pink-400" />,
     },
 ];
 
@@ -104,7 +132,7 @@ export function OnboardingGuide() {
                 <div className="flex items-center justify-between p-4 border-b border-border/50">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Sparkles size={16} className="text-primary" />
+                            <Feather size={16} className="text-primary" />
                         </div>
                         <span className="text-sm font-medium text-muted-foreground">Bouquine Tour</span>
                     </div>
@@ -143,7 +171,8 @@ export function OnboardingGuide() {
                             {step.icon}
                         </div>
                         <h2 className="text-2xl font-bold mb-3 text-foreground">{step.title}</h2>
-                        <p className="text-muted-foreground leading-relaxed mb-6">{step.body}</p>
+                        <p className="text-muted-foreground leading-relaxed mb-6 whitespace-pre-wrap">{step.body}</p>
+                        {step.content && step.content}
                     </div>
                 </div>
 
@@ -153,8 +182,8 @@ export function OnboardingGuide() {
                         onClick={handlePrev}
                         disabled={currentStep === 0}
                         className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${currentStep === 0
-                                ? 'text-muted-foreground/50 cursor-not-allowed'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                            ? 'text-muted-foreground/50 cursor-not-allowed'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                             }`}
                     >
                         <ChevronLeft size={16} />
@@ -167,14 +196,14 @@ export function OnboardingGuide() {
                             className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                         >
                             Let&apos;s Write!
-                            <Sparkles size={16} />
+                            <Feather size={16} />
                         </button>
                     ) : (
                         <button
                             onClick={handleNext}
                             className="flex items-center gap-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
                         >
-                            Next
+                            {currentStep === 0 ? 'Continue' : 'Next'}
                             <ChevronRight size={16} />
                         </button>
                     )}

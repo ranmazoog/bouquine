@@ -1,4 +1,4 @@
-import { Send, Feather, Sparkles, User, Trash2, FileText, Loader2, ChevronDown, ChevronRight, ArrowLeft, Copy, Check, X, RotateCcw, Wand2, StretchVertical, Scissors, MessageSquare, Settings, Link as LinkIcon, Plus, ExternalLink, Shield, Key } from 'lucide-react';
+import { Send, Feather, User, Trash2, FileText, Loader2, ChevronDown, ChevronRight, Copy, Check, X, RotateCcw, Settings, Link as LinkIcon, Plus, ExternalLink, Key, HelpCircle } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import type { AIProvider } from '../../types/electron';
@@ -39,7 +39,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
     } = useEditorStore();
 
     const [messages, setMessages] = useState<ChatMessage[]>([
-        { role: 'assistant', content: "Hello! I'm your creative partner. I can see your current chapter and help with ideas, feedback, or rewrites. What would you like to work on?" }
+        { role: 'assistant', content: "Hello! I'm The Muse, your creative partner. I'm here to help steer and inspire your journey, not to write the book for you. What would you like to explore today?" }
     ]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -108,7 +108,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
         setIsAuditing(true);
         setMessages(prev => [...prev, {
             role: 'assistant',
-            content: `🛡️ **The Muse is performing a Story Audit...**\n\nChecking chapter "${currentChapter.title || currentChapter.chapter_number}" against character arcs, world elements, and synopsis context. This deep analysis ensures your narrative remains logically consistent.`
+            content: `🪶 **The Muse is performing a Story Audit...**\n\nChecking chapter "${currentChapter.title || currentChapter.chapter_number}" against character arcs, world elements, and synopsis context. This deep analysis ensures your narrative remains logically consistent.`
         }]);
 
         try {
@@ -120,13 +120,13 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
 
             setMessages(prev => [
                 ...prev.slice(0, -1),
-                { role: 'assistant', content: `🛡️ **Integrity Check Results:**\n\n${result}` }
+                { role: 'assistant', content: `🪶 **Integrity Check Results:**\n\n${result}` }
             ]);
         } catch (err) {
             console.error('Audit failed:', err);
             setMessages(prev => [
                 ...prev.slice(0, -1),
-                { role: 'assistant', content: '🛡️ Audit failed. Ensure you have character and synopsis context in your Vault.' }
+                { role: 'assistant', content: '🪶 Audit failed. Ensure you have character and synopsis context in your Vault.' }
             ]);
         } finally {
             setIsAuditing(false);
@@ -164,12 +164,12 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
                     if (Array.isArray(history) && history.length > 0) {
                         setMessages(history);
                     } else {
-                        setMessages([{ role: 'assistant', content: "Hello! I'm your creative partner. I can see your current chapter and help with ideas, feedback, or rewrites. What would you like to work on?" }]);
+                        setMessages([{ role: 'assistant', content: "Hello! I'm The Muse, your creative partner. I'm here to help steer and inspire your journey, not to write the book for you. What would you like to explore today?" }]);
                     }
                 } else {
                     // Only set default welcome message if no history
                     setMessages([
-                        { role: 'assistant', content: "Hello! I'm your creative partner. I can see your current chapter and help with ideas, feedback, or rewrites. What would you like to work on?" }
+                        { role: 'assistant', content: "Hello! I'm The Muse, your creative partner. I'm here to help steer and inspire your journey, not to write the book for you. What would you like to explore today?" }
                     ]);
                 }
             } catch (err) {
@@ -354,7 +354,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
             } else if (errorMessage.includes('insufficient_quota') || errorMessage.includes('quota')) {
                 userMessage = 'Quota Exceeded: Your API key has exceeded its quota. Please check your account.';
             } else if (errorMessage.includes('Provider returned error') || errorMessage.includes('provider')) {
-                userMessage = 'Provider Error: The AI provider returned an error. Check your API key and quota.';
+                userMessage = `Provider Error: The AI provider returned an error. Details: ${errorMessage.substring(0, 100)}`;
             }
 
             setMessages(prev => [
@@ -434,7 +434,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
     if (!currentProject || !currentChapter) {
         return (
             <div className="w-80 glass flex flex-col h-full border-l items-center justify-center p-6 text-center text-muted-foreground">
-                <Sparkles size={24} className="mb-2 opacity-50" />
+                <Feather size={24} className="mb-2 opacity-50 text-primary" />
                 <p className="text-sm">Open a project and chapter to start chatting.</p>
             </div>
         );
@@ -626,6 +626,13 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                 <div className="flex items-center gap-2">
                     <Feather size={18} className="text-primary" />
                     <h3 className="font-serif font-semibold text-sm tracking-wide">The Muse</h3>
+                    <button
+                        onClick={onSettingsClick}
+                        className="text-muted-foreground/30 hover:text-primary transition-colors cursor-pointer"
+                        title="The Muse is your creative partner. Since it requires an API key, clicking this will open Settings. Bouquine remains 100% functional offline without it."
+                    >
+                        <HelpCircle size={13} />
+                    </button>
                 </div>
                 <div className="flex items-center gap-2">
                     {/* API Key Warning Badge */}
@@ -645,7 +652,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                         className={`group flex flex-col items-center gap-0.5 transition-colors ${isAuditing ? 'text-blue-500 animate-pulse' : 'text-muted-foreground hover:text-blue-500 active:scale-95'}`}
                         title="Run Integrity Check (Your on-call editor)"
                     >
-                        {isAuditing ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}
+                        {isAuditing ? <Loader2 size={16} className="animate-spin" /> : <Feather size={16} />}
                         <span className="text-[8px] uppercase font-extrabold tracking-tighter leading-none opacity-80 group-hover:opacity-100 transition-opacity">Story Audit</span>
                     </button>
                     <button
@@ -714,7 +721,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                                             className="flex items-center gap-1.5 text-[10px] bg-primary text-primary-foreground px-2.5 py-1.5 rounded-full shadow-md hover:bg-primary/90 hover:scale-105 transition-all font-medium"
                                             title="Insert at cursor"
                                         >
-                                            <ArrowLeft size={10} />
+                                            <Feather size={10} />
                                             Insert
                                         </button>
 
@@ -805,7 +812,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                                 className="text-[10px] px-2 py-1 bg-emerald-500/10 text-emerald-600 rounded-md hover:bg-emerald-500/20 transition-colors flex items-center gap-1"
                                 title="Improve prose"
                             >
-                                <Wand2 size={10} />
+                                <Feather size={10} />
                                 Improve
                             </button>
                             <button
@@ -813,7 +820,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                                 className="text-[10px] px-2 py-1 bg-blue-500/10 text-blue-600 rounded-md hover:bg-blue-500/20 transition-colors flex items-center gap-1"
                                 title="Expand scene"
                             >
-                                <StretchVertical size={10} />
+                                <Feather size={10} />
                                 Expand
                             </button>
                             <button
@@ -821,7 +828,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                                 className="text-[10px] px-2 py-1 bg-amber-500/10 text-amber-600 rounded-md hover:bg-amber-500/20 transition-colors flex items-center gap-1"
                                 title="Condense"
                             >
-                                <Scissors size={10} />
+                                <Feather size={10} />
                                 Condense
                             </button>
                             <button
@@ -829,7 +836,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                                 className="text-[10px] px-2 py-1 bg-purple-500/10 text-purple-600 rounded-md hover:bg-purple-500/20 transition-colors flex items-center gap-1"
                                 title="Add dialogue"
                             >
-                                <MessageSquare size={10} />
+                                <Feather size={10} />
                                 Dialogue
                             </button>
                         </div>

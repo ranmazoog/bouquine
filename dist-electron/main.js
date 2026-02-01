@@ -22546,6 +22546,92 @@ Anthropic.Completions = Completions3;
 Anthropic.Messages = Messages4;
 Anthropic.Models = Models3;
 Anthropic.Beta = Beta2;
+class Logger {
+  constructor() {
+    this.logPath = null;
+    this.initialized = false;
+  }
+  async ensureInitialized() {
+    if (this.initialized) return;
+    try {
+      let userData;
+      try {
+        userData = require$$1.app.getPath("userData");
+      } catch (error) {
+        userData = os.tmpdir();
+      }
+      this.logPath = path$2.join(userData, "bouquine_debug.log");
+      this.initialized = true;
+      await this.writeLog("INFO", "Logger initialized");
+    } catch (error) {
+      console.error("Failed to initialize logger:", error);
+      this.logPath = null;
+      this.initialized = true;
+    }
+  }
+  async getLogPathOrCreate() {
+    await this.ensureInitialized();
+    if (!this.logPath) {
+      let userData;
+      try {
+        userData = require$$1.app.getPath("userData");
+      } catch (error) {
+        userData = os.tmpdir();
+      }
+      this.logPath = path$2.join(userData, "bouquine_debug.log");
+      try {
+        await fs$1.writeFile(this.logPath, `[${(/* @__PURE__ */ new Date()).toISOString()}] [INFO] Log file created
+`, "utf8");
+      } catch (error) {
+        console.error("Failed to create log file:", error);
+        throw new Error(`Failed to create log file: ${error instanceof Error ? error.message : "Unknown error"}`);
+      }
+    }
+    return this.logPath;
+  }
+  async writeLog(level, message, errorObject) {
+    try {
+      if (!this.logPath) {
+        if (level === "ERROR") {
+          console.error(`[${(/* @__PURE__ */ new Date()).toISOString()}] ${message}`, errorObject);
+        } else {
+          console.log(`[${(/* @__PURE__ */ new Date()).toISOString()}] ${message}`);
+        }
+        return;
+      }
+      const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+      let logLine = `[${timestamp}] [${level}] ${message}`;
+      if (errorObject instanceof Error) {
+        logLine += `
+    Error: ${errorObject.message}`;
+        if (errorObject.stack) {
+          logLine += `
+    Stack: ${errorObject.stack}`;
+        }
+      } else if (errorObject !== void 0) {
+        logLine += `
+    Details: ${JSON.stringify(errorObject)}`;
+      }
+      logLine += "\n";
+      await fs$1.appendFile(this.logPath, logLine, "utf8");
+    } catch (error) {
+      console.error("Failed to write to log file:", error);
+      console.log(`[${(/* @__PURE__ */ new Date()).toISOString()}] [${level}] ${message}`, errorObject);
+    }
+  }
+  async logInfo(message) {
+    await this.ensureInitialized();
+    await this.writeLog("INFO", message);
+  }
+  async logError(message, errorObject) {
+    await this.ensureInitialized();
+    await this.writeLog("ERROR", message, errorObject);
+  }
+  getLogPath() {
+    return this.logPath;
+  }
+}
+const logger = new Logger();
 class OpenAIProvider {
   constructor(apiKey, model = "gpt-4-turbo-preview") {
     this.name = "OpenAI";
@@ -22554,32 +22640,44 @@ class OpenAIProvider {
     this.model = model;
   }
   async generate(messages, options) {
-    const response = await this.client.chat.completions.create({
-      model: this.model,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.maxOutputTokens ?? 4e3,
-      response_format: options?.jsonMode ? { type: "json_object" } : void 0
-    });
-    return response.choices?.[0]?.message?.content || "";
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxOutputTokens ?? 4e3,
+        response_format: options?.jsonMode ? { type: "json_object" } : void 0
+      });
+      return response.choices?.[0]?.message?.content || "";
+    } catch (error) {
+      const errorDetail = error.response?.data || error.message;
+      logger.logError(`[OpenAI] API Error: ${JSON.stringify(errorDetail)}`, error);
+      throw error;
+    }
   }
   async generateStream(messages, options, onChunk) {
-    const stream = await this.client.chat.completions.create({
-      model: this.model,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.maxOutputTokens ?? 4e3,
-      stream: true
-    });
-    let fullResponse = "";
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || "";
-      if (content) {
-        fullResponse += content;
-        onChunk?.(content);
+    try {
+      const stream = await this.client.chat.completions.create({
+        model: this.model,
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxOutputTokens ?? 4e3,
+        stream: true
+      });
+      let fullResponse = "";
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        if (content) {
+          fullResponse += content;
+          onChunk?.(content);
+        }
       }
+      return fullResponse;
+    } catch (error) {
+      const errorDetail = error.response?.data || error.message;
+      logger.logError(`[OpenAI-Stream] API Error: ${JSON.stringify(errorDetail)}`, error);
+      throw error;
     }
-    return fullResponse;
   }
 }
 class AnthropicProvider {
@@ -22590,50 +22688,64 @@ class AnthropicProvider {
     this.model = model;
   }
   async generate(messages, options) {
-    const systemMessage = messages.find((m) => m.role === "system");
-    const conversationMessages = messages.filter((m) => m.role !== "system");
-    const response = await this.client.messages.create({
-      model: this.model,
-      max_tokens: options?.maxOutputTokens ?? 4e3,
-      temperature: options?.temperature ?? 0.7,
-      system: systemMessage?.content,
-      messages: conversationMessages.map((m) => ({
-        role: m.role,
-        content: m.content
-      }))
-    });
-    const textBlock = response.content.find((block) => block.type === "text");
-    return textBlock && "text" in textBlock ? textBlock.text : "";
+    try {
+      const systemMessage = messages.find((m) => m.role === "system");
+      const conversationMessages = messages.filter((m) => m.role !== "system");
+      const response = await this.client.messages.create({
+        model: this.model,
+        max_tokens: options?.maxOutputTokens ?? 4e3,
+        temperature: options?.temperature ?? 0.7,
+        system: systemMessage?.content,
+        messages: conversationMessages.map((m) => ({
+          role: m.role,
+          content: m.content
+        }))
+      });
+      const textBlock = response.content.find((block) => block.type === "text");
+      return textBlock && "text" in textBlock ? textBlock.text : "";
+    } catch (error) {
+      const errorDetail = error.response?.data || error.message;
+      logger.logError(`[Anthropic] API Error: ${JSON.stringify(errorDetail)}`, error);
+      throw error;
+    }
   }
   async generateStream(messages, options, onChunk) {
-    const systemMessage = messages.find((m) => m.role === "system");
-    const conversationMessages = messages.filter((m) => m.role !== "system");
-    const stream = await this.client.messages.create({
-      model: this.model,
-      max_tokens: options?.maxOutputTokens ?? 4e3,
-      temperature: options?.temperature ?? 0.7,
-      system: systemMessage?.content,
-      messages: conversationMessages.map((m) => ({
-        role: m.role,
-        content: m.content
-      })),
-      stream: true
-    });
-    let fullResponse = "";
-    for await (const event of stream) {
-      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-        const content = event.delta.text;
-        fullResponse += content;
-        onChunk?.(content);
+    try {
+      const systemMessage = messages.find((m) => m.role === "system");
+      const conversationMessages = messages.filter((m) => m.role !== "system");
+      const stream = await this.client.messages.create({
+        model: this.model,
+        max_tokens: options?.maxOutputTokens ?? 4e3,
+        temperature: options?.temperature ?? 0.7,
+        system: systemMessage?.content,
+        messages: conversationMessages.map((m) => ({
+          role: m.role,
+          content: m.content
+        })),
+        stream: true
+      });
+      let fullResponse = "";
+      for await (const event of stream) {
+        if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+          const content = event.delta.text;
+          fullResponse += content;
+          onChunk?.(content);
+        }
       }
+      return fullResponse;
+    } catch (error) {
+      const errorDetail = error.response?.data || error.message;
+      logger.logError(`[Anthropic-Stream] API Error: ${JSON.stringify(errorDetail)}`, error);
+      throw error;
     }
-    return fullResponse;
   }
 }
 class OpenRouterProvider {
-  constructor(apiKey, model = "meta-llama/llama-3.3-70b-instruct:free") {
+  constructor(apiKey, model = "google/gemini-2.0-flash-001") {
     this.name = "OpenRouter";
     this.maxTokens = 128e3;
+    console.log("Initializing OpenRouter with Model:", model);
+    logger.logInfo("Initializing OpenRouter with Model: " + model);
     this.client = new OpenAI({
       apiKey,
       baseURL: "https://openrouter.ai/api/v1",
@@ -22654,27 +22766,74 @@ class OpenRouterProvider {
       });
       return response.choices?.[0]?.message?.content || "";
     } catch (error) {
-      console.error("[OpenRouter] API Error:", error.response?.data || error.message);
+      const status = error.response?.status;
+      const errorDetail = error.response?.data || error.message;
+      if (status === 404 && this.model !== "meta-llama/llama-3.3-70b-instruct:free") {
+        logger.logInfo(`[OpenRouter] Primary model ${this.model} failed with 404. Falling back to Llama 3.3 Free...`);
+        try {
+          const fallbackResponse = await this.client.chat.completions.create({
+            model: "meta-llama/llama-3.3-70b-instruct:free",
+            messages: messages.map((m) => ({ role: m.role, content: m.content })),
+            temperature: options?.temperature ?? 0.7,
+            max_tokens: options?.maxOutputTokens ?? 4e3
+          });
+          return fallbackResponse.choices?.[0]?.message?.content || "";
+        } catch (fallbackError) {
+          logger.logError(`[OpenRouter] Fallback also failed: ${fallbackError.message}`, fallbackError);
+        }
+      }
+      logger.logError(`[OpenRouter] API Error (${status || "unknown"}): ${JSON.stringify(errorDetail)}`, error);
+      console.error("[OpenRouter] API Error:", status, errorDetail);
       throw error;
     }
   }
   async generateStream(messages, options, onChunk) {
-    const stream = await this.client.chat.completions.create({
-      model: this.model,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.maxOutputTokens ?? 4e3,
-      stream: true
-    });
-    let fullResponse = "";
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || "";
-      if (content) {
-        fullResponse += content;
-        onChunk?.(content);
+    try {
+      const stream = await this.client.chat.completions.create({
+        model: this.model,
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxOutputTokens ?? 4e3,
+        stream: true
+      });
+      let fullResponse = "";
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        if (content) {
+          fullResponse += content;
+          onChunk?.(content);
+        }
       }
+      return fullResponse;
+    } catch (error) {
+      const status = error.response?.status;
+      const errorDetail = error.response?.data || error.message;
+      if (status === 404 && this.model !== "meta-llama/llama-3.3-70b-instruct:free") {
+        logger.logInfo(`[OpenRouter-Stream] Primary model ${this.model} failed with 404. Falling back to Llama 3.3 Free...`);
+        try {
+          const fallbackStream = await this.client.chat.completions.create({
+            model: "meta-llama/llama-3.3-70b-instruct:free",
+            messages: messages.map((m) => ({ role: m.role, content: m.content })),
+            temperature: options?.temperature ?? 0.7,
+            max_tokens: options?.maxOutputTokens ?? 4e3,
+            stream: true
+          });
+          let fallbackFullResponse = "";
+          for await (const chunk of fallbackStream) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            if (content) {
+              fallbackFullResponse += content;
+              onChunk?.(content);
+            }
+          }
+          return fallbackFullResponse;
+        } catch (fallbackError) {
+          logger.logError(`[OpenRouter-Stream] Fallback also failed: ${fallbackError.message}`, fallbackError);
+        }
+      }
+      logger.logError(`[OpenRouter-Stream] API Error (${status || "unknown"}): ${JSON.stringify(errorDetail)}`, error);
+      throw error;
     }
-    return fullResponse;
   }
 }
 function createAIProvider(type2, apiKey, model) {
@@ -45527,92 +45686,6 @@ const _Packer = class _Packer2 {
 };
 __publicField(_Packer, "compiler", new Compiler());
 let Packer = _Packer;
-class Logger {
-  constructor() {
-    this.logPath = null;
-    this.initialized = false;
-  }
-  async ensureInitialized() {
-    if (this.initialized) return;
-    try {
-      let userData;
-      try {
-        userData = require$$1.app.getPath("userData");
-      } catch (error) {
-        userData = os.tmpdir();
-      }
-      this.logPath = path$2.join(userData, "bouquine_debug.log");
-      this.initialized = true;
-      await this.writeLog("INFO", "Logger initialized");
-    } catch (error) {
-      console.error("Failed to initialize logger:", error);
-      this.logPath = null;
-      this.initialized = true;
-    }
-  }
-  async getLogPathOrCreate() {
-    await this.ensureInitialized();
-    if (!this.logPath) {
-      let userData;
-      try {
-        userData = require$$1.app.getPath("userData");
-      } catch (error) {
-        userData = os.tmpdir();
-      }
-      this.logPath = path$2.join(userData, "bouquine_debug.log");
-      try {
-        await fs$1.writeFile(this.logPath, `[${(/* @__PURE__ */ new Date()).toISOString()}] [INFO] Log file created
-`, "utf8");
-      } catch (error) {
-        console.error("Failed to create log file:", error);
-        throw new Error(`Failed to create log file: ${error instanceof Error ? error.message : "Unknown error"}`);
-      }
-    }
-    return this.logPath;
-  }
-  async writeLog(level, message, errorObject) {
-    try {
-      if (!this.logPath) {
-        if (level === "ERROR") {
-          console.error(`[${(/* @__PURE__ */ new Date()).toISOString()}] ${message}`, errorObject);
-        } else {
-          console.log(`[${(/* @__PURE__ */ new Date()).toISOString()}] ${message}`);
-        }
-        return;
-      }
-      const timestamp = (/* @__PURE__ */ new Date()).toISOString();
-      let logLine = `[${timestamp}] [${level}] ${message}`;
-      if (errorObject instanceof Error) {
-        logLine += `
-    Error: ${errorObject.message}`;
-        if (errorObject.stack) {
-          logLine += `
-    Stack: ${errorObject.stack}`;
-        }
-      } else if (errorObject !== void 0) {
-        logLine += `
-    Details: ${JSON.stringify(errorObject)}`;
-      }
-      logLine += "\n";
-      await fs$1.appendFile(this.logPath, logLine, "utf8");
-    } catch (error) {
-      console.error("Failed to write to log file:", error);
-      console.log(`[${(/* @__PURE__ */ new Date()).toISOString()}] [${level}] ${message}`, errorObject);
-    }
-  }
-  async logInfo(message) {
-    await this.ensureInitialized();
-    await this.writeLog("INFO", message);
-  }
-  async logError(message, errorObject) {
-    await this.ensureInitialized();
-    await this.writeLog("ERROR", message, errorObject);
-  }
-  getLogPath() {
-    return this.logPath;
-  }
-}
-const logger = new Logger();
 function stripHtml(html) {
   if (!html) return "";
   return html.replace(/<\/p>\s*<p[^>]*>/gi, "\n\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#039;/g, "'").trim();
@@ -46103,12 +46176,17 @@ require$$1.ipcMain.handle("set-setting", async (_event, { key, value }) => {
   setSetting(key, value);
   return { success: true };
 });
+function getOpenRouterModel() {
+  const saved = getSetting("openrouterModel");
+  if (saved && saved.trim().length > 0) return saved;
+  return "google/gemini-2.0-flash-001";
+}
 require$$1.ipcMain.handle("ai-generate", async (_event, { provider, messages, options }) => {
   const apiKey = getAPIKey(provider);
   if (!apiKey) {
     throw new Error(`No API key found for provider: ${provider}`);
   }
-  const model = provider === "openrouter" ? getSetting("openrouterModel") || "meta-llama/llama-3.3-70b-instruct:free" : void 0;
+  const model = provider === "openrouter" ? getOpenRouterModel() : void 0;
   const aiProvider = createAIProvider(provider, apiKey, model);
   return await aiProvider.generate(messages, options);
 });
@@ -46118,7 +46196,7 @@ require$$1.ipcMain.handle("generate-blurb", async (_event, { _projectId, synopsi
   if (!apiKey) {
     throw new Error(`No API key found for provider: ${provider}`);
   }
-  const model = getSetting("openrouterModel") || "meta-llama/llama-3.3-70b-instruct:free";
+  const model = getOpenRouterModel();
   const aiProvider = createAIProvider(provider, apiKey, model);
   const messages = [
     {
@@ -46138,7 +46216,7 @@ require$$1.ipcMain.handle("generate-synopsis-from-inputs", async (_event, { prot
   const provider = "openrouter";
   const apiKey = getAPIKey(provider);
   if (!apiKey) throw new Error(`No API key found for provider: ${provider}`);
-  const model = getSetting("openrouterModel") || "meta-llama/llama-3.3-70b-instruct:free";
+  const model = getOpenRouterModel();
   const aiProvider = createAIProvider(provider, apiKey, model);
   const prompt = `You are a professional book editor helping a writer craft a story synopsis. Based on these elements:
 
@@ -46167,7 +46245,7 @@ Premise: ${project.blurb || "Not provided"}
 Latest Plot Developments:
 ${chapters.reverse().map((c2, i) => `Chapter ${i + 1}: ${c2.summary}`).join("\n")}
     `;
-  const model = getSetting("openrouterModel") || "meta-llama/llama-3.3-70b-instruct:free";
+  const model = getOpenRouterModel();
   const aiProvider = createAIProvider(provider, apiKey, model);
   const messages = [
     {
@@ -46188,7 +46266,7 @@ require$$1.ipcMain.handle("ai-generate-stream", async (event, { provider, messag
   if (!apiKey) {
     throw new Error(`No API key found for provider: ${provider}`);
   }
-  const model = provider === "openrouter" ? getSetting("openrouterModel") || "meta-llama/llama-3.3-70b-instruct:free" : void 0;
+  const model = provider === "openrouter" ? getOpenRouterModel() : void 0;
   const aiProvider = createAIProvider(provider, apiKey, model);
   if (!aiProvider.generateStream) {
     return await aiProvider.generate(messages, options);
@@ -46203,7 +46281,7 @@ require$$1.ipcMain.handle("ai-chat-message", async (event, { projectId, chapterI
   if (!apiKey) {
     throw new Error(`No API key found for provider: ${provider}. Please configure your API key in Settings.`);
   }
-  const model = provider === "openrouter" ? getSetting("openrouterModel") || "meta-llama/llama-3.3-70b-instruct:free" : void 0;
+  const model = provider === "openrouter" ? getOpenRouterModel() : void 0;
   logger.logInfo(`[AI] Using model: ${model}`);
   const aiProvider = createAIProvider(provider, apiKey, model);
   const { systemPrompt, userPrompt } = await buildPrompt(message, projectId, chapterId, selectedText);
@@ -46262,7 +46340,8 @@ require$$1.ipcMain.handle("summarize-chapter", async (_event, { chapterId, provi
   if (!apiKey) {
     throw new Error(`No API key found for provider: ${provider}`);
   }
-  const aiProvider = createAIProvider(provider, apiKey);
+  const model = provider === "openrouter" ? getOpenRouterModel() : void 0;
+  const aiProvider = createAIProvider(provider, apiKey, model);
   const messages = [
     {
       role: "system",
@@ -46323,7 +46402,7 @@ require$$1.ipcMain.handle("audit-chapter-consistency", async (_event, { projectI
   const apiKey = getAPIKey(provider);
   if (!apiKey) throw new Error(`No API key found for provider: ${provider}`);
   const promptMessage = await auditChapterConsistency(projectId, chapterId);
-  const model = provider === "openrouter" ? getSetting("openrouterModel") || "meta-llama/llama-3.3-70b-instruct:free" : void 0;
+  const model = provider === "openrouter" ? getOpenRouterModel() : void 0;
   const aiProvider = createAIProvider(provider, apiKey, model);
   const messages = [
     { role: "system", content: "You are a detail-oriented manuscript auditor." },
@@ -46335,7 +46414,7 @@ require$$1.ipcMain.handle("analyze-author-style", async (_event, { projectId, pr
   const apiKey = getAPIKey(provider);
   if (!apiKey) throw new Error(`No API key found for provider: ${provider}`);
   const { prompt: promptMessage, proseSample } = getAuthorStyleAnalysisPrompt(projectId);
-  const model = provider === "openrouter" ? getSetting("openrouterModel") || "meta-llama/llama-3.3-70b-instruct:free" : void 0;
+  const model = provider === "openrouter" ? getOpenRouterModel() : void 0;
   const aiProvider = createAIProvider(provider, apiKey, model);
   const messages = [
     { role: "system", content: "You are an expert literary critic and writing style analyst. Analyze ONLY the actual observed writing style - vocabulary preferences, sentence structure, tone, and voice. Do NOT speculate about author influences or similar authors." },

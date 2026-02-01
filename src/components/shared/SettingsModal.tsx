@@ -1,4 +1,4 @@
-import { X, Key, Shield, Check, Moon, Sun, FolderOpen } from 'lucide-react';
+import { X, Key, Shield, Check, Moon, Sun, FolderOpen, Feather, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { AIProvider } from '../../types/electron';
 
@@ -7,7 +7,7 @@ interface SettingsModalProps {
     onClose: () => void;
 }
 
-const DEFAULT_OPENROUTER_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
+const DEFAULT_OPENROUTER_MODEL = 'google/gemini-2.0-flash-001';
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const [selectedProvider, setSelectedProvider] = useState<AIProvider>('openai');
@@ -236,31 +236,31 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             </div>
                         )}
 
-                         <input
-                             type="password"
-                             value={apiKey}
-                             onChange={(e) => {
-                                 setApiKey(e.target.value);
-                                 setSaveError(null);
-                             }}
-                             className="w-full bg-accent/30 border border-border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
-                             placeholder={hasKey ? "Enter new key to update..." : selectedProvider === 'openrouter' ? "sk-or-..." : "sk-..."}
-                         />
-                         <p className="text-xs text-muted-foreground mt-2">
-                             {selectedProvider === 'openai' ? (
-                                 <>Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenAI Platform</a></>
-                             ) : selectedProvider === 'anthropic' ? (
-                                 <>Get your API key from <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Anthropic Console</a></>
-                             ) : (
-                                 <>Get your free API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenRouter</a></>
-                             )}
-                         </p>
-                         
-                         {saveError && (
-                             <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                                 <p className="text-sm text-destructive">{saveError}</p>
-                             </div>
-                         )}
+                        <input
+                            type="password"
+                            value={apiKey}
+                            onChange={(e) => {
+                                setApiKey(e.target.value);
+                                setSaveError(null);
+                            }}
+                            className="w-full bg-accent/30 border border-border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
+                            placeholder={hasKey ? "Enter new key to update..." : selectedProvider === 'openrouter' ? "sk-or-..." : "sk-..."}
+                        />
+                        <p className="text-xs text-muted-foreground mt-2">
+                            {selectedProvider === 'openai' ? (
+                                <>Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenAI Platform</a></>
+                            ) : selectedProvider === 'anthropic' ? (
+                                <>Get your API key from <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Anthropic Console</a></>
+                            ) : (
+                                <>Get your free API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenRouter</a></>
+                            )}
+                        </p>
+
+                        {saveError && (
+                            <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                                <p className="text-sm text-destructive">{saveError}</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* OpenRouter Model Selection */}
@@ -273,17 +273,42 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                 onChange={(e) => setOpenrouterModel(e.target.value)}
                                 onBlur={handleSaveModel}
                                 className="w-full bg-accent/30 border border-border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
-                                placeholder="meta-llama/llama-3.3-70b-instruct:free"
+                                placeholder="google/gemini-2.0-flash-001"
                             />
                             <p className="text-xs text-muted-foreground mt-2">
-                                Free models: <code className="bg-accent px-1 rounded">meta-llama/llama-3.3-70b-instruct:free</code>
+                                Recommended: <code className="bg-accent px-1 rounded text-primary">google/gemini-2.0-flash-001</code> (Fastest)
                                 <br />
-                                Gemini: <code className="bg-accent px-1 rounded">google/gemini-2.0-flash-001</code>
+                                Free models: <code className="bg-accent px-1 rounded">meta-llama/llama-3.3-70b-instruct:free</code>
                                 <br />
                                 DeepSeek: <code className="bg-accent px-1 rounded">deepseek/deepseek-chat:free</code>
                             </p>
                         </div>
                     )}
+
+                    {/* App Guidance & Onboarding */}
+                    <div className="pt-6 mt-6 border-t font-sans">
+                        <h3 className="text-sm font-medium mb-3">App Guidance</h3>
+                        <div className="grid grid-cols-1 gap-3">
+                            <button
+                                onClick={async () => {
+                                    await window.electronAPI.setSetting('onboarding_complete', false);
+                                    window.location.reload();
+                                }}
+                                className="flex items-center gap-3 px-4 py-3 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-lg transition-colors text-sm text-left group"
+                            >
+                                <div className="p-2 bg-primary/20 rounded-lg group-hover:bg-primary/30 transition-colors">
+                                    <Feather size={18} className="text-primary" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="font-bold text-foreground">Restart Onboarding Tour</div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">
+                                        Replay the 5-step guide to mastering the Muse and the Series Bible.
+                                    </div>
+                                </div>
+                                <ChevronRight size={16} className="text-muted-foreground/50 group-hover:text-primary transition-colors" />
+                            </button>
+                        </div>
+                    </div>
 
                     {/* Troubleshooting Section */}
                     <div className="pt-6 mt-6 border-t">

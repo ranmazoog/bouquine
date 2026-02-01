@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
+import { logger } from './logger';
 
 // ============================================================================
 // AI Provider Interface
@@ -39,15 +40,21 @@ export class OpenAIProvider implements AIProvider {
     }
 
     async generate(messages: Message[], options?: GenerateOptions): Promise<string> {
-        const response = await this.client.chat.completions.create({
-            model: this.model,
-            messages: messages.map(m => ({ role: m.role, content: m.content })),
-            temperature: options?.temperature ?? 0.7,
-            max_tokens: options?.maxOutputTokens ?? 4000,
-            response_format: options?.jsonMode ? { type: 'json_object' } : undefined,
-        });
+        try {
+            const response = await this.client.chat.completions.create({
+                model: this.model,
+                messages: messages.map(m => ({ role: m.role, content: m.content })),
+                temperature: options?.temperature ?? 0.7,
+                max_tokens: options?.maxOutputTokens ?? 4000,
+                response_format: options?.jsonMode ? { type: 'json_object' } : undefined,
+            });
 
-        return response.choices?.[0]?.message?.content || '';
+            return response.choices?.[0]?.message?.content || '';
+        } catch (error: any) {
+            const errorDetail = error.response?.data || error.message;
+            logger.logError(`[OpenAI] API Error: ${JSON.stringify(errorDetail)}`, error);
+            throw error;
+        }
     }
 
     async generateStream(
@@ -55,24 +62,30 @@ export class OpenAIProvider implements AIProvider {
         options?: GenerateOptions,
         onChunk?: (chunk: string) => void
     ): Promise<string> {
-        const stream = await this.client.chat.completions.create({
-            model: this.model,
-            messages: messages.map(m => ({ role: m.role, content: m.content })),
-            temperature: options?.temperature ?? 0.7,
-            max_tokens: options?.maxOutputTokens ?? 4000,
-            stream: true,
-        });
+        try {
+            const stream = await this.client.chat.completions.create({
+                model: this.model,
+                messages: messages.map(m => ({ role: m.role, content: m.content })),
+                temperature: options?.temperature ?? 0.7,
+                max_tokens: options?.maxOutputTokens ?? 4000,
+                stream: true,
+            });
 
-        let fullResponse = '';
-        for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || '';
-            if (content) {
-                fullResponse += content;
-                onChunk?.(content);
+            let fullResponse = '';
+            for await (const chunk of stream) {
+                const content = chunk.choices[0]?.delta?.content || '';
+                if (content) {
+                    fullResponse += content;
+                    onChunk?.(content);
+                }
             }
-        }
 
-        return fullResponse;
+            return fullResponse;
+        } catch (error: any) {
+            const errorDetail = error.response?.data || error.message;
+            logger.logError(`[OpenAI-Stream] API Error: ${JSON.stringify(errorDetail)}`, error);
+            throw error;
+        }
     }
 }
 
@@ -92,23 +105,29 @@ export class AnthropicProvider implements AIProvider {
     }
 
     async generate(messages: Message[], options?: GenerateOptions): Promise<string> {
-        // Extract system message if present
-        const systemMessage = messages.find(m => m.role === 'system');
-        const conversationMessages = messages.filter(m => m.role !== 'system');
+        try {
+            // Extract system message if present
+            const systemMessage = messages.find(m => m.role === 'system');
+            const conversationMessages = messages.filter(m => m.role !== 'system');
 
-        const response = await this.client.messages.create({
-            model: this.model,
-            max_tokens: options?.maxOutputTokens ?? 4000,
-            temperature: options?.temperature ?? 0.7,
-            system: systemMessage?.content,
-            messages: conversationMessages.map(m => ({
-                role: m.role as 'user' | 'assistant',
-                content: m.content,
-            })),
-        });
+            const response = await this.client.messages.create({
+                model: this.model,
+                max_tokens: options?.maxOutputTokens ?? 4000,
+                temperature: options?.temperature ?? 0.7,
+                system: systemMessage?.content,
+                messages: conversationMessages.map(m => ({
+                    role: m.role as 'user' | 'assistant',
+                    content: m.content,
+                })),
+            });
 
-        const textBlock = response.content.find(block => block.type === 'text');
-        return textBlock && 'text' in textBlock ? textBlock.text : '';
+            const textBlock = response.content.find(block => block.type === 'text');
+            return textBlock && 'text' in textBlock ? textBlock.text : '';
+        } catch (error: any) {
+            const errorDetail = error.response?.data || error.message;
+            logger.logError(`[Anthropic] API Error: ${JSON.stringify(errorDetail)}`, error);
+            throw error;
+        }
     }
 
     async generateStream(
@@ -116,31 +135,37 @@ export class AnthropicProvider implements AIProvider {
         options?: GenerateOptions,
         onChunk?: (chunk: string) => void
     ): Promise<string> {
-        const systemMessage = messages.find(m => m.role === 'system');
-        const conversationMessages = messages.filter(m => m.role !== 'system');
+        try {
+            const systemMessage = messages.find(m => m.role === 'system');
+            const conversationMessages = messages.filter(m => m.role !== 'system');
 
-        const stream = await this.client.messages.create({
-            model: this.model,
-            max_tokens: options?.maxOutputTokens ?? 4000,
-            temperature: options?.temperature ?? 0.7,
-            system: systemMessage?.content,
-            messages: conversationMessages.map(m => ({
-                role: m.role as 'user' | 'assistant',
-                content: m.content,
-            })),
-            stream: true,
-        });
+            const stream = await this.client.messages.create({
+                model: this.model,
+                max_tokens: options?.maxOutputTokens ?? 4000,
+                temperature: options?.temperature ?? 0.7,
+                system: systemMessage?.content,
+                messages: conversationMessages.map(m => ({
+                    role: m.role as 'user' | 'assistant',
+                    content: m.content,
+                })),
+                stream: true,
+            });
 
-        let fullResponse = '';
-        for await (const event of stream) {
-            if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-                const content = event.delta.text;
-                fullResponse += content;
-                onChunk?.(content);
+            let fullResponse = '';
+            for await (const event of stream) {
+                if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+                    const content = event.delta.text;
+                    fullResponse += content;
+                    onChunk?.(content);
+                }
             }
-        }
 
-        return fullResponse;
+            return fullResponse;
+        } catch (error: any) {
+            const errorDetail = error.response?.data || error.message;
+            logger.logError(`[Anthropic-Stream] API Error: ${JSON.stringify(errorDetail)}`, error);
+            throw error;
+        }
     }
 }
 
@@ -154,7 +179,9 @@ export class OpenRouterProvider implements AIProvider {
     private client: OpenAI;
     private model: string;
 
-    constructor(apiKey: string, model: string = 'meta-llama/llama-3.3-70b-instruct:free') {
+    constructor(apiKey: string, model: string = 'google/gemini-2.0-flash-001') {
+        console.log("Initializing OpenRouter with Model:", model);
+        logger.logInfo("Initializing OpenRouter with Model: " + model);
         this.client = new OpenAI({
             apiKey,
             baseURL: 'https://openrouter.ai/api/v1',
@@ -177,7 +204,27 @@ export class OpenRouterProvider implements AIProvider {
 
             return response.choices?.[0]?.message?.content || '';
         } catch (error: any) {
-            console.error('[OpenRouter] API Error:', error.response?.data || error.message);
+            const status = error.response?.status;
+            const errorDetail = error.response?.data || error.message;
+
+            // AUTOMATED FALLBACK: If primary model 404s or fails, try the free Llama model
+            if (status === 404 && this.model !== 'meta-llama/llama-3.3-70b-instruct:free') {
+                logger.logInfo(`[OpenRouter] Primary model ${this.model} failed with 404. Falling back to Llama 3.3 Free...`);
+                try {
+                    const fallbackResponse = await this.client.chat.completions.create({
+                        model: 'meta-llama/llama-3.3-70b-instruct:free',
+                        messages: messages.map(m => ({ role: m.role, content: m.content })),
+                        temperature: options?.temperature ?? 0.7,
+                        max_tokens: options?.maxOutputTokens ?? 4000,
+                    });
+                    return fallbackResponse.choices?.[0]?.message?.content || '';
+                } catch (fallbackError: any) {
+                    logger.logError(`[OpenRouter] Fallback also failed: ${fallbackError.message}`, fallbackError);
+                }
+            }
+
+            logger.logError(`[OpenRouter] API Error (${status || 'unknown'}): ${JSON.stringify(errorDetail)}`, error);
+            console.error('[OpenRouter] API Error:', status, errorDetail);
             throw error;
         }
     }
@@ -187,24 +234,58 @@ export class OpenRouterProvider implements AIProvider {
         options?: GenerateOptions,
         onChunk?: (chunk: string) => void
     ): Promise<string> {
-        const stream = await this.client.chat.completions.create({
-            model: this.model,
-            messages: messages.map(m => ({ role: m.role, content: m.content })),
-            temperature: options?.temperature ?? 0.7,
-            max_tokens: options?.maxOutputTokens ?? 4000,
-            stream: true,
-        });
+        try {
+            const stream = await this.client.chat.completions.create({
+                model: this.model,
+                messages: messages.map(m => ({ role: m.role, content: m.content })),
+                temperature: options?.temperature ?? 0.7,
+                max_tokens: options?.maxOutputTokens ?? 4000,
+                stream: true,
+            });
 
-        let fullResponse = '';
-        for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || '';
-            if (content) {
-                fullResponse += content;
-                onChunk?.(content);
+            let fullResponse = '';
+            for await (const chunk of stream) {
+                const content = chunk.choices[0]?.delta?.content || '';
+                if (content) {
+                    fullResponse += content;
+                    onChunk?.(content);
+                }
             }
-        }
 
-        return fullResponse;
+            return fullResponse;
+        } catch (error: any) {
+            const status = error.response?.status;
+            const errorDetail = error.response?.data || error.message;
+
+            // AUTOMATED FALLBACK for Stream: If primary model 404s, try free Llama
+            if (status === 404 && this.model !== 'meta-llama/llama-3.3-70b-instruct:free') {
+                logger.logInfo(`[OpenRouter-Stream] Primary model ${this.model} failed with 404. Falling back to Llama 3.3 Free...`);
+                try {
+                    const fallbackStream = await this.client.chat.completions.create({
+                        model: 'meta-llama/llama-3.3-70b-instruct:free',
+                        messages: messages.map(m => ({ role: m.role, content: m.content })),
+                        temperature: options?.temperature ?? 0.7,
+                        max_tokens: options?.maxOutputTokens ?? 4000,
+                        stream: true,
+                    });
+
+                    let fallbackFullResponse = '';
+                    for await (const chunk of fallbackStream) {
+                        const content = chunk.choices[0]?.delta?.content || '';
+                        if (content) {
+                            fallbackFullResponse += content;
+                            onChunk?.(content);
+                        }
+                    }
+                    return fallbackFullResponse;
+                } catch (fallbackError: any) {
+                    logger.logError(`[OpenRouter-Stream] Fallback also failed: ${fallbackError.message}`, fallbackError);
+                }
+            }
+
+            logger.logError(`[OpenRouter-Stream] API Error (${status || 'unknown'}): ${JSON.stringify(errorDetail)}`, error);
+            throw error;
+        }
     }
 }
 

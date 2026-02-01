@@ -3,7 +3,7 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useEditorStore, useProjectStore } from '../../stores/projectStore';
-import { Bold, Italic, Strikethrough, FileText, Loader2, X, Heading2, Heading3, Shield } from 'lucide-react';
+import { Bold, Italic, Strikethrough, FileText, Loader2, X, Heading2, Heading3, Feather } from 'lucide-react';
 
 export function NovelEditor() {
     const {
@@ -309,7 +309,7 @@ export function NovelEditor() {
                                 {isAuditing ? (
                                     <Loader2 size={16} className="animate-spin text-primary" />
                                 ) : (
-                                    <Shield size={16} />
+                                    <Feather size={16} />
                                 )}
                                 <span className="text-[10px] uppercase tracking-tighter mt-1 font-extrabold opacity-80">Story Audit</span>
                             </button>
@@ -319,7 +319,7 @@ export function NovelEditor() {
                                     <div className="absolute -top-1.5 right-6 w-3 h-3 bg-primary rotate-45" />
                                     <div className="flex justify-between items-start mb-2">
                                         <h4 className="font-bold text-sm flex items-center gap-2">
-                                            <Shield size={14} /> Integrity Check
+                                            <Feather size={14} /> Integrity Check
                                         </h4>
                                         <button onClick={() => { setShowAuditTooltip(false); localStorage.setItem('hasSeenAuditTooltip', 'true'); }} className="hover:opacity-70">
                                             <X size={14} />
@@ -431,7 +431,7 @@ export function NovelEditor() {
                 <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-4 duration-300">
                     <div className="bg-card border border-border shadow-2xl rounded-2xl p-4 flex items-center gap-4 max-w-md">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                            <Shield size={20} />
+                            <Feather size={20} />
                         </div>
                         <div className="flex-1">
                             <h4 className="text-sm font-bold">Session finished</h4>

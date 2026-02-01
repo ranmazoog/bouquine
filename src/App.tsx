@@ -15,7 +15,7 @@ import { OnboardingGuide } from './components/onboarding/OnboardingGuide';
 import { useProjectStore, useEditorStore } from './stores/projectStore';
 import { useProject } from './hooks/useProject';
 import { useEffect, useState } from 'react';
-import { CheckCircle2, RotateCw, AlertCircle, FileText, Sparkles, Plus } from 'lucide-react';
+import { CheckCircle2, RotateCw, AlertCircle, FileText, Feather, Plus } from 'lucide-react';
 
 function App() {
   const { setProjects, setCurrentProject, setChapters, addProject, updateProjectInStore, currentProject } = useProjectStore();
@@ -238,7 +238,7 @@ function App() {
                         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
                           <div className="relative">
                             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-2 ring-1 ring-primary/20">
-                              <Sparkles size={40} className="text-primary animate-pulse" />
+                              <Feather size={40} className="text-primary animate-pulse" />
                             </div>
                             <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent rounded-full flex items-center justify-center shadow-sm">
                               <FileText size={12} className="text-muted-foreground" />
@@ -269,7 +269,7 @@ function App() {
                                 onClick={handleStartChapter1}
                                 className="w-full sm:w-auto px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group"
                               >
-                                <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
+                                <Feather size={18} className="group-hover:rotate-12 transition-transform" />
                                 Start Chapter 1
                               </button>
                               <button

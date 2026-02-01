@@ -267,16 +267,21 @@ ipcMain.handle('set-setting', async (_event, { key, value }) => {
 // IPC Handlers - AI
 // ============================================================================
 
+function getOpenRouterModel(): string {
+    const saved = getSetting('openrouterModel');
+    if (saved && saved.trim().length > 0) return saved;
+    // Primary stable model
+    return 'google/gemini-2.0-flash-001';
+}
+
 ipcMain.handle('ai-generate', async (_event, { provider, messages, options }) => {
     const apiKey = getAPIKey(provider);
     if (!apiKey) {
         throw new Error(`No API key found for provider: ${provider}`);
     }
 
-    // Get model for OpenRouter (with fallback to free Llama model)
-    const model = provider === 'openrouter'
-        ? (getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free')
-        : undefined;
+    // Get model for OpenRouter
+    const model = provider === 'openrouter' ? getOpenRouterModel() : undefined;
     const aiProvider = createAIProvider(provider, apiKey, model);
     return await aiProvider.generate(messages, options);
 });
@@ -288,7 +293,7 @@ ipcMain.handle('generate-blurb', async (_event, { _projectId, synopsis }) => {
         throw new Error(`No API key found for provider: ${provider}`);
     }
 
-    const model = getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free';
+    const model = getOpenRouterModel();
     const aiProvider = createAIProvider(provider, apiKey, model);
 
     const messages = [
@@ -310,7 +315,7 @@ ipcMain.handle('generate-synopsis-from-inputs', async (_event, { protagonist, go
     const apiKey = getAPIKey(provider);
     if (!apiKey) throw new Error(`No API key found for provider: ${provider}`);
 
-    const model = getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free';
+    const model = getOpenRouterModel();
     const aiProvider = createAIProvider(provider, apiKey, model);
 
     const prompt = `You are a professional book editor helping a writer craft a story synopsis. Based on these elements:
@@ -346,7 +351,7 @@ Latest Plot Developments:
 ${chapters.reverse().map((c, i) => `Chapter ${i + 1}: ${c.summary}`).join('\n')}
     `;
 
-    const model = getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free';
+    const model = getOpenRouterModel();
     const aiProvider = createAIProvider(provider, apiKey, model);
 
     const messages = [
@@ -370,10 +375,8 @@ ipcMain.handle('ai-generate-stream', async (event, { provider, messages, options
         throw new Error(`No API key found for provider: ${provider}`);
     }
 
-    // Get model for OpenRouter (with fallback to free Llama model)
-    const model = provider === 'openrouter'
-        ? (getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free')
-        : undefined;
+    // Get model for OpenRouter
+    const model = provider === 'openrouter' ? getOpenRouterModel() : undefined;
     const aiProvider = createAIProvider(provider, apiKey, model);
 
     if (!aiProvider.generateStream) {
@@ -395,10 +398,8 @@ ipcMain.handle('ai-chat-message', async (event, { projectId, chapterId, message,
         throw new Error(`No API key found for provider: ${provider}. Please configure your API key in Settings.`);
     }
 
-    // Get model for OpenRouter (with fallback to free Llama model)
-    const model = provider === 'openrouter'
-        ? (getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free')
-        : undefined;
+    // Get model for OpenRouter
+    const model = provider === 'openrouter' ? getOpenRouterModel() : undefined;
     logger.logInfo(`[AI] Using model: ${model}`);
 
     const aiProvider = createAIProvider(provider, apiKey, model);
@@ -489,7 +490,8 @@ ipcMain.handle('summarize-chapter', async (_event, { chapterId, provider }) => {
         throw new Error(`No API key found for provider: ${provider}`);
     }
 
-    const aiProvider = createAIProvider(provider, apiKey);
+    const model = provider === 'openrouter' ? getOpenRouterModel() : undefined;
+    const aiProvider = createAIProvider(provider, apiKey, model);
 
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
         {
@@ -600,9 +602,7 @@ ipcMain.handle('audit-chapter-consistency', async (_event, { projectId, chapterI
     const promptMessage = await auditChapterConsistency(projectId, chapterId);
 
     // Get model for OpenRouter
-    const model = provider === 'openrouter'
-        ? (getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free')
-        : undefined;
+    const model = provider === 'openrouter' ? getOpenRouterModel() : undefined;
 
     const aiProvider = createAIProvider(provider, apiKey, model);
 
@@ -621,9 +621,7 @@ ipcMain.handle('analyze-author-style', async (_event, { projectId, provider }) =
     const { prompt: promptMessage, proseSample } = getAuthorStyleAnalysisPrompt(projectId);
 
     // Get model for OpenRouter
-    const model = provider === 'openrouter'
-        ? (getSetting('openrouterModel') || 'meta-llama/llama-3.3-70b-instruct:free')
-        : undefined;
+    const model = provider === 'openrouter' ? getOpenRouterModel() : undefined;
 
     const aiProvider = createAIProvider(provider, apiKey, model);
 

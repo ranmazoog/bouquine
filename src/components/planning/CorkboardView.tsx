@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Sparkles, Loader2, FileText, Trash2, Plus } from 'lucide-react';
+import { Feather, Loader2, FileText, Trash2, Plus } from 'lucide-react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import type { Chapter } from '../../types/electron';
 import { debounce } from 'lodash';
@@ -221,7 +221,7 @@ Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapte
                 {isGenerating && (
                     <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center">
                         <div className="bg-card border rounded-full px-4 py-2 flex items-center gap-2 shadow-sm">
-                            <Sparkles size={14} className="text-primary animate-pulse" />
+                            <Feather size={14} className="text-primary animate-pulse" />
                             <span className="text-xs font-medium">Generating...</span>
                         </div>
                     </div>
@@ -249,8 +249,8 @@ Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapte
                             disabled={isGenerating}
                             className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary/20 transition-all active:scale-95 disabled:opacity-50"
                         >
-                            {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                            <span>✨ Generate Beat</span>
+                            {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Feather size={12} />}
+                            <span>Generate Beat</span>
                         </button>
 
                         <button

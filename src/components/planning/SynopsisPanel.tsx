@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
-import { Save, Loader2, Sparkles, ChevronDown, ChevronRight, Info } from 'lucide-react';
+import { Save, Loader2, Feather, ChevronDown, ChevronRight, Info } from 'lucide-react';
 import { debounce } from 'lodash';
 import { SynopsisWorkshop } from '../synopsis/SynopsisWorkshop';
 
@@ -113,7 +113,7 @@ export function SynopsisPanel() {
                     <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-xl p-4 shadow-sm">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                <Sparkles size={20} />
+                                <Feather size={20} />
                             </div>
                             <div>
                                 <h3 className="text-sm font-bold">Stuck on the plot?</h3>
@@ -124,7 +124,7 @@ export function SynopsisPanel() {
                             onClick={() => setWorkshopOpen(true)}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:scale-[1.02] transition-all shadow-md shadow-primary/10 group"
                         >
-                            <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
+                            <Feather size={14} className="group-hover:rotate-12 transition-transform" />
                             Start Workshop
                         </button>
                     </div>
@@ -176,7 +176,7 @@ What's standing in their way?
 
 How does the story resolve?
 
-(Click the ✨ Start Workshop button for guided help, or start writing here...)`}
+(Click the Start Workshop button for guided help, or start writing here...)`}
                     />
                 </div>
 
