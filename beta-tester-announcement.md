@@ -69,7 +69,7 @@ Please focus on testing:
 ## Bug Reporting
 
 Please report issues via:
-- **Email**: beta@bouquine.app
+- **Email**: info@bouquine.com
 - **GitHub Issues**: https://github.com/ranmazoog/bouquine/issues
 - **Discord**: #beta-feedback channel
 

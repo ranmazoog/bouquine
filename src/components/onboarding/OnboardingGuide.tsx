@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Brain, Map, Sparkles, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Brain, Map, Sparkles, Key, X, ChevronRight, ChevronLeft } from 'lucide-react';
 
 interface OnboardingStep {
     id: number;
@@ -11,18 +11,24 @@ interface OnboardingStep {
 const STEPS: OnboardingStep[] = [
     {
         id: 1,
+        title: 'Wake The Muse',
+        body: 'To use The Muse (AI assistant), you\'ll need an API key from OpenRouter. Without it, Bouquine remains a powerful local-first writing tool that works 100% offline. Note: The Muse is your creative partner—meant to steer and inspire your journey, not to write the book for you.',
+        icon: <Key size={32} className="text-blue-400" />,
+    },
+    {
+        id: 2,
         title: 'Bouquine\'s Memory',
         body: 'Our AI needs a Series Bible. Add your Characters, World Elements, and Style Rules now. Anything here is automatically indexed for perfect recall in any chapter.',
         icon: <Brain size={32} className="text-purple-400" />,
     },
     {
-        id: 2,
+        id: 3,
         title: 'Set the North Star',
         body: 'Use the Synopsis tab to write your full plot summary (spoilers included). This gives the AI "Foresight" to properly foreshadow events and avoid plot holes.',
         icon: <Map size={32} className="text-amber-400" />,
     },
     {
-        id: 3,
+        id: 4,
         title: 'Outline in Seconds',
         body: 'Go to the Corkboard view and click "Generate Beat." Bouquine will suggest the next plot point based on your Synopsis. Click "Write Prose" to draft the scene instantly.',
         icon: <Sparkles size={32} className="text-emerald-400" />,
@@ -107,9 +113,8 @@ export function OnboardingGuide() {
                             {STEPS.map((_, index) => (
                                 <div
                                     key={index}
-                                    className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                                        index === currentStep ? 'bg-primary' : 'bg-muted'
-                                    }`}
+                                    className={`w-2 h-2 rounded-full transition-colors duration-300 ${index === currentStep ? 'bg-primary' : 'bg-muted'
+                                        }`}
                                 />
                             ))}
                         </div>
@@ -147,11 +152,10 @@ export function OnboardingGuide() {
                     <button
                         onClick={handlePrev}
                         disabled={currentStep === 0}
-                        className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            currentStep === 0
+                        className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${currentStep === 0
                                 ? 'text-muted-foreground/50 cursor-not-allowed'
                                 : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                        }`}
+                            }`}
                     >
                         <ChevronLeft size={16} />
                         Back

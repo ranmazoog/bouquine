@@ -220,7 +220,7 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                         const confirmed = window.confirm(
                             'This will open your email client to send feedback to the Bouquine team.\n\n' +
                             'Subject: Bouquine Beta Feedback (v1.0)\n' +
-                            'To: beta@bouquine.app\n\n' +
+                            'To: info@bouquine.app\n\n' +
                             'Click OK to continue, or Cancel to go back.'
                         );
 
@@ -229,7 +229,7 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                         setIsOpeningEmail(true);
                         const subject = encodeURIComponent('Bouquine Beta Feedback (v1.0)');
                         const body = encodeURIComponent('Describe your issue here... (Please attach your debug log if this is a crash).');
-                        const mailtoUrl = `mailto:beta@bouquine.app?subject=${subject}&body=${body}`;
+                        const mailtoUrl = `mailto:info@bouquine.app?subject=${subject}&body=${body}`;
                         console.log('Opening email client:', mailtoUrl);
 
                         try {
@@ -263,7 +263,7 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                                 alert(
                                     'Unable to open email client automatically.\n\n' +
                                     'Please manually email:\n' +
-                                    'To: beta@bouquine.app\n' +
+                                    'To: info@bouquine.app\n' +
                                     'Subject: Bouquine Beta Feedback (v1.0)\n\n' +
                                     'Include details about your issue and attach debug logs if available.'
                                 );

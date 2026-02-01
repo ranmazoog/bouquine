@@ -1,4 +1,4 @@
-import { Send, Feather, Sparkles, User, Trash2, FileText, Loader2, ChevronDown, ChevronRight, ArrowLeft, Copy, Check, X, RotateCcw, Wand2, StretchVertical, Scissors, MessageSquare, Settings, Link as LinkIcon, Plus, ExternalLink, Shield } from 'lucide-react';
+import { Send, Feather, Sparkles, User, Trash2, FileText, Loader2, ChevronDown, ChevronRight, ArrowLeft, Copy, Check, X, RotateCcw, Wand2, StretchVertical, Scissors, MessageSquare, Settings, Link as LinkIcon, Plus, ExternalLink, Shield, Key } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import type { AIProvider } from '../../types/electron';
@@ -56,8 +56,23 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
     const [quickAddContent, setQuickAddContent] = useState('');
     const [quickAddUrl, setQuickAddUrl] = useState('');
     const [activeResearchPreview, setActiveResearchPreview] = useState<string | null>(null);
+    const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Check if API key is configured
+    useEffect(() => {
+        const checkApiKey = async () => {
+            try {
+                const keyExists = await window.electronAPI.hasAPIKey(selectedProvider);
+                setHasApiKey(keyExists);
+            } catch (error) {
+                console.error('Failed to check API key:', error);
+                setHasApiKey(false);
+            }
+        };
+        checkApiKey();
+    }, [selectedProvider]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -613,6 +628,17 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                     <h3 className="font-serif font-semibold text-sm tracking-wide">The Muse</h3>
                 </div>
                 <div className="flex items-center gap-2">
+                    {/* API Key Warning Badge */}
+                    {hasApiKey === false && (
+                        <button
+                            onClick={onSettingsClick}
+                            className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-600 rounded-md text-[10px] font-medium hover:bg-amber-500/20 transition-colors animate-pulse"
+                            title="The Muse (AI) requires an API key to function. Without it, you can still use Bouquine as a standard offline writing tool. The Muse is a creative partner designed to steer and inspire you, not write for you."
+                        >
+                            <Key size={12} />
+                            <span>Add API Key</span>
+                        </button>
+                    )}
                     <button
                         onClick={handleAudit}
                         disabled={isLoading || isAuditing}
