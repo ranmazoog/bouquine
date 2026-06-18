@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
 import { Save, Loader2, Feather, ChevronDown, ChevronRight, Info } from 'lucide-react';
 import { debounce } from 'lodash';
 import { SynopsisWorkshop } from '../synopsis/SynopsisWorkshop';
@@ -42,6 +43,7 @@ export function SynopsisPanel() {
                     setCurrentProject(updated);
                 } catch (err) {
                     console.error('Failed to save synopsis:', err);
+                    toast.error('Unable to save synopsis changes.');
                 } finally {
                     setIsSaving(false);
                 }
@@ -71,8 +73,10 @@ export function SynopsisPanel() {
                 const updated = await window.electronAPI.updateProject(project.id, { synopsis: generatedSynopsis });
                 updateProjectInStore(updated);
                 setCurrentProject(updated);
+                toast.success('Synopsis saved.');
             } catch (err) {
                 console.error('Failed to save synopsis:', err);
+                toast.error('Unable to save the generated synopsis.');
             }
         }
     }, [debouncedSave, updateProjectInStore, setCurrentProject]);
@@ -90,7 +94,7 @@ export function SynopsisPanel() {
                     <div>
                         <h1 className="text-2xl font-bold mb-2">Story Synopsis</h1>
                         <p className="text-muted-foreground text-sm">
-                            Write your full internal plot outline here. The AI reads this to understand the story arc.
+                            Write your full plot outline here. The Muse reads this to understand where your story is heading.
                         </p>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">

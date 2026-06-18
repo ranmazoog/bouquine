@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Globe } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useVaultStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
 import type { WorldElement } from '../../types/electron';
 
 const CATEGORIES = [
@@ -46,6 +47,7 @@ export function WorldPanel() {
                 setWorldElements(elements);
             } catch (err) {
                 console.error('Failed to load world elements:', err);
+                toast.error('Unable to load world elements.');
             }
         };
         loadWorldElements();
@@ -77,8 +79,10 @@ export function WorldPanel() {
             });
             addWorldElement(newElement);
             setSelectedWorldElement(newElement);
+            toast.success('World element created.');
         } catch (err) {
             console.error('Failed to create world element:', err);
+            toast.error('Unable to create world element. Please try again.');
         }
     };
 
@@ -90,6 +94,7 @@ export function WorldPanel() {
             updateWorldElementInStore(updated);
         } catch (err) {
             console.error('Failed to save world element:', err);
+            toast.error('Unable to save world element changes.');
         }
     };
 
@@ -101,8 +106,10 @@ export function WorldPanel() {
         try {
             await window.electronAPI.deleteWorldElement(element.id);
             removeWorldElement(element.id);
+            toast.success(`Deleted "${element.name}".`);
         } catch (err) {
             console.error('Failed to delete world element:', err);
+            toast.error('Unable to delete world element. Please try again.');
         }
     };
 
@@ -169,7 +176,7 @@ export function WorldPanel() {
                         ))
                     ) : (
                         <p className="text-xs text-muted-foreground text-center py-4 italic">
-                            No world elements yet. Click + to add one.
+                            No world elements yet — add places, items, and lore so the Muse keeps your world consistent.
                         </p>
                     )}
                 </div>

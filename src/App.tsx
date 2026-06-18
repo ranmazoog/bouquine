@@ -12,8 +12,10 @@ import { CorkboardView } from './components/planning/CorkboardView';
 import { SynopsisPanel } from './components/planning/SynopsisPanel';
 import { ResearchPanel } from './components/planning/ResearchPanel';
 import { OnboardingGuide } from './components/onboarding/OnboardingGuide';
+import { Toaster } from './components/shared/Toaster';
 import { useProjectStore, useEditorStore } from './stores/projectStore';
 import { useProject } from './hooks/useProject';
+import { toast } from './lib/toast';
 import { useEffect, useState } from 'react';
 import { CheckCircle2, RotateCw, AlertCircle, FileText, Feather, Plus } from 'lucide-react';
 
@@ -52,6 +54,7 @@ function App() {
         }
       } catch (err) {
         console.error('Failed to load projects:', err);
+        toast.error('Unable to load your projects. Please restart the app.');
       } finally {
         setIsLoading(false);
       }
@@ -69,6 +72,7 @@ function App() {
           setChapters(chapters);
         } catch (err) {
           console.error('Failed to load chapters:', err);
+          toast.error('Unable to load chapters for this project.');
         }
       } else {
         setChapters([]);
@@ -90,8 +94,10 @@ function App() {
       setCurrentChapter(newChapter);
       setViewMode('write');
       setActiveSidebarTab('chapters');
+      toast.success('Chapter 1 created.');
     } catch (err) {
       console.error('Failed to create Chapter 1:', err);
+      toast.error('Unable to create Chapter 1. Please try again.');
     }
   };
 
@@ -107,8 +113,10 @@ function App() {
       setCurrentChapter(newChapter);
       setViewMode('write');
       setActiveSidebarTab('chapters');
+      toast.success('New chapter created.');
     } catch (err) {
       console.error('Failed to create chapter:', err);
+      toast.error('Unable to create chapter. Please try again.');
     }
   };
 
@@ -149,8 +157,12 @@ function App() {
       addProject(newProject);
       setCurrentProject(newProject);
       setIsNewProjectModalOpen(false);
+      toast.success('Project created successfully.');
     } catch (err) {
       console.error('Failed to create project:', err);
+      toast.error('Unable to create project. Please try again.');
+      // Re-throw so the modal keeps itself open and resets its submitting state.
+      throw err;
     }
   };
 
@@ -375,6 +387,8 @@ function App() {
       />
 
       {currentProject && <OnboardingGuide />}
+
+      <Toaster />
     </div>
   );
 }

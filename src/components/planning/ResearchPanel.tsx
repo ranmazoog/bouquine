@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
+import { friendlyAIError } from '../../lib/aiError';
 import { Plus, Trash2, ExternalLink, FileText, Link as LinkIcon, Loader2, Tag, Layers, Search, X, Check, Save, Edit3, Feather, Sparkles } from 'lucide-react';
 import type { Reference, Character, WorldElement, Chapter } from '../../types/electron';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,6 +55,7 @@ export function ResearchPanel() {
             setChapters(chaps);
         } catch (err) {
             console.error('Failed to load vault data:', err);
+            toast.error('Unable to load linkable project elements.');
         }
     };
 
@@ -64,6 +67,7 @@ export function ResearchPanel() {
             setReferences(data);
         } catch (err) {
             console.error('Failed to load references:', err);
+            toast.error('Unable to load your research.');
         } finally {
             setIsLoading(false);
         }
@@ -82,8 +86,10 @@ export function ResearchPanel() {
             });
             resetForm();
             loadReferences();
+            toast.success('Research link added.');
         } catch (err) {
             console.error('Failed to add link:', err);
+            toast.error('Unable to add link. Please try again.');
         }
     };
 
@@ -100,8 +106,10 @@ export function ResearchPanel() {
             });
             resetForm();
             loadReferences();
+            toast.success('Research note added.');
         } catch (err) {
             console.error('Failed to add note:', err);
+            toast.error('Unable to add note. Please try again.');
         }
     };
 
@@ -127,6 +135,7 @@ export function ResearchPanel() {
             setBrainstormSuggestions(suggestions);
         } catch (err) {
             console.error('Failed to suggest gaps:', err);
+            toast.error(friendlyAIError(err));
         } finally {
             setIsBrainstorming(false);
         }
@@ -145,8 +154,10 @@ export function ResearchPanel() {
             resetForm();
             loadReferences();
             setBrainstormSuggestions(null);
+            toast.success('Suggestions saved as a note.');
         } catch (err) {
             console.error('Failed to save suggestions as note:', err);
+            toast.error('Unable to save suggestions. Please try again.');
         }
     };
 
@@ -163,8 +174,10 @@ export function ResearchPanel() {
         try {
             await window.electronAPI.deleteReference(id);
             loadReferences();
+            toast.success('Reference deleted.');
         } catch (err) {
             console.error('Failed to delete reference:', err);
+            toast.error('Unable to delete reference. Please try again.');
         }
     };
 
@@ -189,13 +202,20 @@ export function ResearchPanel() {
             setEditingNote(null);
             setEditContent('');
             loadReferences();
+            toast.success('Note updated.');
         } catch (err) {
             console.error('Failed to update note:', err);
+            toast.error('Unable to save note changes. Please try again.');
         }
     };
 
-    const openLink = (url: string) => {
-        window.electronAPI.openLink(url);
+    const openLink = async (url: string) => {
+        try {
+            await window.electronAPI.openLink(url);
+        } catch (err) {
+            console.error('Failed to open link:', err);
+            toast.error('Unable to open this link.');
+        }
     };
 
     const formatDate = (dateString: string) => {
@@ -243,7 +263,7 @@ export function ResearchPanel() {
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold mb-2">Research & References</h1>
                     <p className="text-muted-foreground text-sm">
-                        Collect links and notes for your world building.
+                        Collect links and notes for your story. The Muse can draw on them while you write.
                     </p>
                 </div>
 

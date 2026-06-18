@@ -1,6 +1,7 @@
 import { Book, Users, Globe, Palette, Settings, ChevronRight, Plus, Trash2, LayoutDashboard, FileText, Link, Moon, Sun, Bug } from 'lucide-react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
 import type { SidebarTab } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
 import { useEffect, useState } from 'react';
 
 interface SidebarProps {
@@ -40,8 +41,10 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                     setCurrentChapter(null);
                 }
             }
+            toast.success(`Deleted "${chapterToDelete.title || 'Untitled Chapter'}".`);
         } catch (err) {
             console.error('Failed to delete chapter:', err);
+            toast.error('Unable to delete chapter. Please try again.');
         }
     };
 
@@ -55,8 +58,10 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                 title: `Chapter ${chapters.length + 1}`
             });
             addChapter(newChapter);
+            toast.success('New chapter created.');
         } catch (err) {
             console.error('Failed to create chapter:', err);
+            toast.error('Unable to create chapter. Please try again.');
         }
     };
 
@@ -208,7 +213,12 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                         const newValue = !isDarkMode;
                         setIsDarkMode(newValue);
                         document.documentElement.classList.toggle('dark', newValue);
-                        await window.electronAPI.setSetting('darkMode', newValue);
+                        try {
+                            await window.electronAPI.setSetting('darkMode', newValue);
+                        } catch (err) {
+                            console.error('Failed to save theme preference:', err);
+                            toast.error('Theme changed, but the preference could not be saved.');
+                        }
                     }}
                     className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
                 >

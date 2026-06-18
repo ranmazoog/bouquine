@@ -1,6 +1,8 @@
-import { BookOpen, User, Target, Calendar, Edit3, FileText, Users, Globe, TrendingUp, Feather, Loader2, Check, X } from 'lucide-react';
+import { BookOpen, User, Target, Calendar, Edit3, FileText, Users, Globe, TrendingUp, Feather, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useProjectStore, useEditorStore, useVaultStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
+import { friendlyAIError } from '../../lib/aiError';
 
 export function ProjectOverview() {
     const { currentProject, chapters, updateProjectInStore, setCurrentProject } = useProjectStore();
@@ -12,7 +14,6 @@ export function ProjectOverview() {
     const [authorValue, setAuthorValue] = useState(currentProject?.author || '');
     const [blurbValue, setBlurbValue] = useState(currentProject?.blurb || '');
     const [isGeneratingBlurb, setIsGeneratingBlurb] = useState(false);
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     // Load vault data when project changes
     useEffect(() => {
@@ -27,6 +28,7 @@ export function ProjectOverview() {
                 setWorldElements(elements);
             } catch (err) {
                 console.error('Failed to load vault data:', err);
+                toast.error('Unable to load project details.');
             }
         };
         loadVaultData();
@@ -57,8 +59,10 @@ export function ProjectOverview() {
             updateProjectInStore(updated);
             setCurrentProject(updated);
             setIsEditingAuthor(false);
+            toast.success('Author saved.');
         } catch (err) {
             console.error('Failed to update author:', err);
+            toast.error('Unable to save author. Please try again.');
         }
     };
 
@@ -68,8 +72,10 @@ export function ProjectOverview() {
             updateProjectInStore(updated);
             setCurrentProject(updated);
             setIsEditingBlurb(false);
+            toast.success('Blurb saved.');
         } catch (err) {
             console.error('Failed to update blurb:', err);
+            toast.error('Unable to save blurb. Please try again.');
         }
     };
 
@@ -77,7 +83,7 @@ export function ProjectOverview() {
         if (!currentProject) return;
 
         if (!currentProject.synopsis || currentProject.synopsis.trim().length === 0) {
-            showToast('Please write a synopsis first to generate a blurb.', 'error');
+            toast.info('Please write a synopsis first to generate a blurb.');
             return;
         }
 
@@ -89,18 +95,13 @@ export function ProjectOverview() {
             const updated = await window.electronAPI.updateProject(currentProject.id, { blurb: generatedBlurb });
             updateProjectInStore(updated);
             setCurrentProject(updated);
-            showToast('Blurb generated and saved!', 'success');
+            toast.success('Blurb generated and saved.');
         } catch (err) {
             console.error('Failed to generate blurb:', err);
-            showToast('Failed to generate blurb. Check your API key.', 'error');
+            toast.error(friendlyAIError(err));
         } finally {
             setIsGeneratingBlurb(false);
         }
-    };
-
-    const showToast = (message: string, type: 'success' | 'error') => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 3000);
     };
 
     const handleNavigateToChapters = () => {
@@ -193,17 +194,6 @@ export function ProjectOverview() {
 
                 {/* Blurb Section */}
                 <div className="mb-10 p-6 bg-accent/30 rounded-xl border border-border/50 relative">
-                    {/* Toast Notification */}
-                    {toast && (
-                        <div className={`absolute -top-10 right-4 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm animate-in slide-in-from-top-2 ${toast.type === 'success'
-                            ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-                            : 'bg-destructive/10 text-destructive border border-destructive/20'
-                            }`}>
-                            {toast.type === 'success' ? <Check size={14} /> : <X size={14} />}
-                            {toast.message}
-                        </div>
-                    )}
-
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Book Blurb / Premise</h2>
                         <div className="flex items-center gap-2">

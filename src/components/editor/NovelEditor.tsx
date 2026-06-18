@@ -3,6 +3,8 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useEditorStore, useProjectStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
+import { friendlyAIError } from '../../lib/aiError';
 import { Bold, Italic, Strikethrough, FileText, Loader2, X, Heading2, Heading3, Feather } from 'lucide-react';
 
 export function NovelEditor() {
@@ -21,7 +23,7 @@ export function NovelEditor() {
     const [showFocusExitToast, setShowFocusExitToast] = useState(false);
     const [showAuditTooltip, setShowAuditTooltip] = useState(false);
 
-    // Style Drift Warning State
+    // Point-of-View Mismatch State
     const [showPOVWarning, setShowPOVWarning] = useState(false);
     const [isDismissed, setIsDismissed] = useState(false);
 
@@ -55,7 +57,7 @@ export function NovelEditor() {
         prevFocusModeRef.current = isFocusMode;
     }, [isFocusMode]);
 
-    // Style Drift Detection
+    // Point-of-View Mismatch Detection
     useEffect(() => {
         const checkStyleDrift = async () => {
             if (!currentChapter || !currentProject || isDismissed) {
@@ -125,6 +127,7 @@ export function NovelEditor() {
         } catch (err) {
             console.error('Failed to save chapter:', err);
             setSaveStatus('unsaved');
+            toast.error('Unable to save your changes. Your latest edits are not saved yet.');
         }
     }, [currentChapter?.id, setSaveStatus, updateChapterInStore, setCurrentChapter]);
 
@@ -144,6 +147,7 @@ export function NovelEditor() {
                 setCurrentChapter(updated);
             } catch (err) {
                 console.error('Failed to rename chapter:', err);
+                toast.error('Unable to save the chapter title.');
             }
         }, 500);
     };
@@ -157,9 +161,10 @@ export function NovelEditor() {
             updateChapterInStore(updated);
             setCurrentChapter(updated);
             setShowSummary(true);
+            toast.success('Chapter summary updated.');
         } catch (err) {
             console.error('Failed to summarize chapter:', err);
-            alert('Failed to summarize chapter. Make sure you have content and a valid API key.');
+            toast.error(friendlyAIError(err));
         } finally {
             setIsSummarizing(false);
         }
@@ -221,6 +226,7 @@ export function NovelEditor() {
                 }
             } catch (err) {
                 console.error('Failed to load chapter content:', err);
+                toast.error('Unable to load this chapter. Try selecting it again.');
             }
         };
 
@@ -272,12 +278,12 @@ export function NovelEditor() {
 
     return (
         <div className="w-full editor-wrapper relative">
-            {/* POV Drift Warning Banner */}
+            {/* Point-of-View Mismatch Banner (Style Guide enforcement) */}
             {showPOVWarning && !isDismissed && !isFocusMode && (
                 <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between animate-in slide-in-from-top duration-300 shadow-sm">
                     <div className="flex items-center gap-2 text-amber-800 text-sm">
                         <span className="text-lg">⚠️</span>
-                        <p><strong>POV Drift Detected:</strong> You're using First Person ("I", "My"), but your Style Guide is set to Third Person.</p>
+                        <p><strong>Point-of-View Mismatch:</strong> This chapter uses first person ("I", "my"), but your Style Guide sets the point of view to Third Person. If that's intentional, dismiss this — otherwise revise to match, or change the POV in your Style Guide.</p>
                     </div>
                     <button
                         onClick={() => setIsDismissed(true)}
@@ -303,15 +309,15 @@ export function NovelEditor() {
                             <button
                                 onClick={handleAuditClick}
                                 disabled={isAuditing}
-                                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all border ${isAuditing ? 'bg-primary/10 border-primary animate-pulse' : 'bg-accent/50 hover:bg-accent border-transparent text-muted-foreground hover:text-primary hover:border-primary/30'}`}
-                                title="Run Integrity Check (Your on-call editor)"
+                                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all border max-w-[90px] ${isAuditing ? 'bg-primary/10 border-primary animate-pulse' : 'bg-accent/50 hover:bg-accent border-transparent text-muted-foreground hover:text-primary hover:border-primary/30'}`}
+                                title="Run a Story Consistency Check — checks story facts and continuity against your Characters, World, and Synopsis. Does not check writing style."
                             >
                                 {isAuditing ? (
                                     <Loader2 size={16} className="animate-spin text-primary" />
                                 ) : (
                                     <Feather size={16} />
                                 )}
-                                <span className="text-[10px] uppercase tracking-tighter mt-1 font-extrabold opacity-80">Story Audit</span>
+                                <span className="text-[10px] uppercase tracking-tighter mt-1 font-extrabold opacity-80 text-center leading-tight">Story Consistency Check</span>
                             </button>
 
                             {showAuditTooltip && (
@@ -319,14 +325,14 @@ export function NovelEditor() {
                                     <div className="absolute -top-1.5 right-6 w-3 h-3 bg-primary rotate-45" />
                                     <div className="flex justify-between items-start mb-2">
                                         <h4 className="font-bold text-sm flex items-center gap-2">
-                                            <Feather size={14} /> Integrity Check
+                                            <Feather size={14} /> Story Consistency Check
                                         </h4>
                                         <button onClick={() => { setShowAuditTooltip(false); localStorage.setItem('hasSeenAuditTooltip', 'true'); }} className="hover:opacity-70">
                                             <X size={14} />
                                         </button>
                                     </div>
                                     <p className="text-xs leading-relaxed opacity-90">
-                                        Click here to check for plot holes, character inconsistencies, and contradictions across your story.
+                                        Checks story facts and continuity against your Characters, World, and Synopsis. Does not check writing style.
                                     </p>
                                     <button
                                         onClick={() => { setShowAuditTooltip(false); localStorage.setItem('hasSeenAuditTooltip', 'true'); }}
@@ -435,7 +441,7 @@ export function NovelEditor() {
                         </div>
                         <div className="flex-1">
                             <h4 className="text-sm font-bold">Session finished</h4>
-                            <p className="text-xs text-muted-foreground">Would you like to check this chapter for logical contradictions?</p>
+                            <p className="text-xs text-muted-foreground">Run a Story Consistency Check on this chapter for plot, character, and world contradictions?</p>
                         </div>
                         <div className="flex gap-2">
                             <button
@@ -445,7 +451,7 @@ export function NovelEditor() {
                                 }}
                                 className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:bg-primary/90 transition-colors"
                             >
-                                Audit
+                                Run Check
                             </button>
                             <button
                                 onClick={() => setShowFocusExitToast(false)}

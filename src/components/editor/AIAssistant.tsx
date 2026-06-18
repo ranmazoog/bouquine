@@ -1,6 +1,8 @@
 import { Send, Feather, User, Trash2, FileText, Loader2, ChevronDown, ChevronRight, Copy, Check, X, RotateCcw, Settings, Link as LinkIcon, Plus, ExternalLink, Key, HelpCircle } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
+import { friendlyAIError } from '../../lib/aiError';
 import type { AIProvider } from '../../types/electron';
 import { debounce } from 'lodash';
 
@@ -108,7 +110,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
         setIsAuditing(true);
         setMessages(prev => [...prev, {
             role: 'assistant',
-            content: `🪶 **The Muse is performing a Story Audit...**\n\nChecking chapter "${currentChapter.title || currentChapter.chapter_number}" against character arcs, world elements, and synopsis context. This deep analysis ensures your narrative remains logically consistent.`
+            content: `🪶 **Running a Story Consistency Check...**\n\nChecking "${currentChapter.title || currentChapter.chapter_number}" against your Characters, World, and Synopsis for plot, character, and world contradictions. This checks story facts, not writing style.`
         }]);
 
         try {
@@ -120,13 +122,13 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
 
             setMessages(prev => [
                 ...prev.slice(0, -1),
-                { role: 'assistant', content: `🪶 **Integrity Check Results:**\n\n${result}` }
+                { role: 'assistant', content: `🪶 **Story Consistency Check — Results:**\n\n${result}` }
             ]);
         } catch (err) {
             console.error('Audit failed:', err);
             setMessages(prev => [
                 ...prev.slice(0, -1),
-                { role: 'assistant', content: '🪶 Audit failed. Ensure you have character and synopsis context in your Vault.' }
+                { role: 'assistant', content: '🪶 Story Consistency Check failed. Make sure you have Characters and a Synopsis set up, then try again.' }
             ]);
         } finally {
             setIsAuditing(false);
@@ -299,8 +301,10 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
             }));
 
             setRelevantResearch([...mappedLinked, ...mappedSemantic].slice(0, 5));
+            toast.success('Added to your research.');
         } catch (err) {
             console.error('Quick Add failed:', err);
+            toast.error('Unable to save this research item. Please try again.');
         }
     };
 
@@ -314,7 +318,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
             setMessages(prev => [
                 ...prev,
                 { role: 'user', content: userMsg },
-                { role: 'assistant', content: 'No API key configured. Please click the ⚙️ Settings button to configure your OpenRouter API key (free at https://openrouter.ai/keys).' }
+                { role: 'assistant', content: "🪶 The Muse isn't connected yet.\n\nTo wake it, I need a free key — think of it like a library card for AI. It takes about a minute, and you only do it once:\n\n1. Click the ⚙️ Settings button (just below this chat).\n2. Press **Get a free key** and follow the steps.\n3. Paste the key and press **Connect the Muse**.\n\nNo rush — you can keep writing without me, and connect whenever you're ready." }
             ]);
             setIsLoading(false);
             return;
@@ -344,18 +348,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
 
         } catch (err: any) {
             console.error('AI Chat Error:', err);
-            const errorMessage = err?.message || err?.toString() || 'Unknown error';
-            let userMessage = 'Error: Could not connect to AI. Please check your API settings.';
-
-            if (errorMessage.includes('401') || errorMessage.includes('No cookie auth') || errorMessage.includes('API key')) {
-                userMessage = 'Authentication Error: Your API key is missing or invalid. Please open Settings (⚙️) and configure your API key.';
-            } else if (errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('free-models-per-day')) {
-                userMessage = 'Rate Limit: Free daily limit reached. Add credits to OpenRouter or wait until tomorrow.';
-            } else if (errorMessage.includes('insufficient_quota') || errorMessage.includes('quota')) {
-                userMessage = 'Quota Exceeded: Your API key has exceeded its quota. Please check your account.';
-            } else if (errorMessage.includes('Provider returned error') || errorMessage.includes('provider')) {
-                userMessage = `Provider Error: The AI provider returned an error. Details: ${errorMessage.substring(0, 100)}`;
-            }
+            const userMessage = friendlyAIError(err);
 
             setMessages(prev => [
                 ...prev.slice(0, -1),
@@ -417,7 +410,7 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
             console.error('Failed to summarize chapter:', err);
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: 'Failed to summarize chapter. Make sure you have content and a valid API key.'
+                content: "Couldn't summarize this chapter. Make sure it has some text and that the Muse is connected (⚙️ Settings)."
             }]);
         } finally {
             setIsSummarizing(false);
@@ -564,7 +557,14 @@ export function AIAssistant({ onSettingsClick }: AIAssistantProps) {
                                                 <div className="flex flex-col gap-2 mt-4">
                                                     {res.url && (
                                                         <button
-                                                            onClick={() => window.electronAPI.openLink(res.url!)}
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await window.electronAPI.openLink(res.url!);
+                                                                } catch (err) {
+                                                                    console.error('Failed to open link:', err);
+                                                                    toast.error('Unable to open this link.');
+                                                                }
+                                                            }}
                                                             className="w-full py-1.5 bg-blue-500/10 text-blue-400 rounded text-[10px] font-bold hover:bg-blue-500/20 flex items-center justify-center gap-1.5 transition-colors"
                                                         >
                                                             <ExternalLink size={12} />
@@ -629,7 +629,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                     <button
                         onClick={onSettingsClick}
                         className="text-muted-foreground/30 hover:text-primary transition-colors cursor-pointer"
-                        title="The Muse is your creative partner. Since it requires an API key, clicking this will open Settings. Bouquine remains 100% functional offline without it."
+                        title="The Muse is your AI writing partner. Click to connect it in Settings. Bouquine works fully offline without it."
                     >
                         <HelpCircle size={13} />
                     </button>
@@ -640,7 +640,7 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                         <button
                             onClick={onSettingsClick}
                             className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-600 rounded-md text-[10px] font-medium hover:bg-amber-500/20 transition-colors animate-pulse"
-                            title="The Muse (AI) requires an API key to function. Without it, you can still use Bouquine as a standard offline writing tool. The Muse is a creative partner designed to steer and inspire you, not write for you."
+                            title="The Muse needs to be connected before it can help. Without it, you can still use Bouquine as a normal offline writing tool. The Muse steers and inspires you — it doesn't write the book for you."
                         >
                             <Key size={12} />
                             <span>Add API Key</span>
@@ -650,10 +650,10 @@ The Muse's role is to act as a contextual suggestion engine. Please generate ide
                         onClick={handleAudit}
                         disabled={isLoading || isAuditing}
                         className={`group flex flex-col items-center gap-0.5 transition-colors ${isAuditing ? 'text-blue-500 animate-pulse' : 'text-muted-foreground hover:text-blue-500 active:scale-95'}`}
-                        title="Run Integrity Check (Your on-call editor)"
+                        title="Run a Story Consistency Check — checks story facts and continuity against your Characters, World, and Synopsis. Does not check writing style."
                     >
                         {isAuditing ? <Loader2 size={16} className="animate-spin" /> : <Feather size={16} />}
-                        <span className="text-[8px] uppercase font-extrabold tracking-tighter leading-none opacity-80 group-hover:opacity-100 transition-opacity">Story Audit</span>
+                        <span className="text-[8px] uppercase font-extrabold tracking-tighter leading-tight text-center opacity-80 group-hover:opacity-100 transition-opacity">Story Consistency Check</span>
                     </button>
                     <button
                         onClick={onSettingsClick}

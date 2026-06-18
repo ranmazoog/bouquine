@@ -28,3 +28,4 @@ test-*.html
 
 # Build directories
 dist-electron/
+.gstack/

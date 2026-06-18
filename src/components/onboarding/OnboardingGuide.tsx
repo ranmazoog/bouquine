@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Brain, Map, Feather, Key, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { toast } from '../../lib/toast';
 
 interface OnboardingStep {
     id: number;
@@ -12,53 +13,32 @@ interface OnboardingStep {
 const STEPS: OnboardingStep[] = [
     {
         id: 1,
-        title: 'Wake The Muse',
-        body: "To activate the AI, connect a provider like OpenRouter, OpenAI, or Anthropic.\n\nWe recommend OpenRouter using our default model (Gemini 2.0 Flash) for the best balance of speed and reliability. If you prefer a completely free option, you can switch to Llama 3.3 in settings, though it may occasionally be unavailable during peak hours.",
+        title: 'Meet The Muse',
+        body: "The Muse is your writing partner.\n\nIt can help brainstorm ideas, continue scenes, answer questions about your story, and spot inconsistencies as you write.\n\nYou can connect it in under a minute whenever you're ready.",
         icon: <Key size={32} className="text-blue-400" />,
-        content: (
-            <div className="flex flex-col items-center gap-3 mt-2">
-                <div className="text-[10px] uppercase tracking-wider font-bold text-blue-400/80 bg-blue-400/5 px-3 py-1 rounded-full border border-blue-400/10">
-                    Current Default: Gemini 2.0 Flash (Fast & Reliable) 🪶
-                </div>
-                <div className="flex items-center gap-4 opacity-40 grayscale">
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 bg-foreground rounded-md flex items-center justify-center text-[8px] text-background font-black">OR</div>
-                        <span className="text-[10px] font-bold tracking-tighter uppercase">OpenRouter</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 bg-foreground rounded-full flex items-center justify-center text-[8px] text-background font-black">●</div>
-                        <span className="text-[10px] font-bold tracking-tighter uppercase">OpenAI</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 bg-foreground rounded-sm flex items-center justify-center text-[8px] text-background font-black">▲</div>
-                        <span className="text-[10px] font-bold tracking-tighter uppercase">Anthropic</span>
-                    </div>
-                </div>
-            </div>
-        )
     },
     {
         id: 2,
-        title: 'Bouquine\'s Memory',
-        body: 'Our AI needs a Series Bible. Add your Characters, World Elements, and Style Rules now. Anything here is automatically indexed for perfect recall in any chapter.',
+        title: 'Bouquine Remembers',
+        body: "Characters, places, research, and writing rules become part of your story's memory.\n\nThe more Bouquine knows about your world, the better The Muse can help you stay consistent.",
         icon: <Brain size={32} className="text-purple-400" />,
     },
     {
         id: 3,
-        title: 'Set the North Star',
-        body: 'Use the Synopsis tab to write your full plot summary (spoilers included). This gives the AI "Foresight" to properly foreshadow events and avoid plot holes.',
+        title: "Know Where You're Going",
+        body: "The Synopsis is your story's destination.\n\nWhen Bouquine knows where the story ends, The Muse can help foreshadow events, maintain continuity, and avoid plot holes.",
         icon: <Map size={32} className="text-amber-400" />,
     },
     {
         id: 4,
-        title: 'Outline in Seconds',
-        body: 'Go to the Corkboard view and click "Generate Beat." Bouquine will suggest the next plot point based on your Synopsis. Click "Write Prose" to draft the scene instantly.',
+        title: 'Plan Faster',
+        body: 'Need help deciding what happens next?\n\nBouquine can suggest the next scene based on your synopsis and story information, helping you move from idea to draft faster.',
         icon: <Feather size={32} className="text-emerald-400" />,
     },
     {
         id: 5,
         title: 'Creative Control',
-        body: 'The Muse is here to steer and inspire, not to replace your voice. You always have the final word. Use it to explore possibilities, catch plot holes, or get unstuck—the story remains uniquely yours.',
+        body: "The Muse is here to support your writing, not replace it.\n\nUse it to explore ideas, overcome writer's block, and strengthen your story while staying firmly in control of every creative decision.",
         icon: <Feather size={32} className="text-pink-400" />,
     },
 ];
@@ -96,29 +76,24 @@ export function OnboardingGuide() {
         }
     };
 
-    const handleComplete = async () => {
+    const dismissOnboarding = async () => {
         setIsAnimating(true);
         try {
             await window.electronAPI.setSetting('onboarding_complete', true);
+        } catch (error) {
+            console.error('Failed to save onboarding status:', error);
+            toast.error('The tour was closed, but we could not save that it is complete. It may reappear next time.');
+        } finally {
+            // Always dismiss the overlay, even if persisting the flag failed,
+            // so a failed save can never leave an invisible blocking overlay.
             setTimeout(() => {
                 setIsVisible(false);
             }, 300);
-        } catch (error) {
-            console.error('Failed to save onboarding status:', error);
         }
     };
 
-    const handleSkip = async () => {
-        setIsAnimating(true);
-        try {
-            await window.electronAPI.setSetting('onboarding_complete', true);
-            setTimeout(() => {
-                setIsVisible(false);
-            }, 300);
-        } catch (error) {
-            console.error('Failed to save onboarding status:', error);
-        }
-    };
+    const handleComplete = dismissOnboarding;
+    const handleSkip = dismissOnboarding;
 
     if (!isVisible) return null;
 
