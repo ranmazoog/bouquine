@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, User } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useVaultStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
 import type { Character } from '../../types/electron';
 
 export function CharacterPanel() {
@@ -36,6 +37,7 @@ export function CharacterPanel() {
                 setCharacters(chars);
             } catch (err) {
                 console.error('Failed to load characters:', err);
+                toast.error('Unable to load characters.');
             }
         };
         loadCharacters();
@@ -68,8 +70,10 @@ export function CharacterPanel() {
             });
             addCharacter(newChar);
             setSelectedCharacter(newChar);
+            toast.success('Character created.');
         } catch (err) {
             console.error('Failed to create character:', err);
+            toast.error('Unable to create character. Please try again.');
         }
     };
 
@@ -81,6 +85,7 @@ export function CharacterPanel() {
             updateCharacterInStore(updated);
         } catch (err) {
             console.error('Failed to save character:', err);
+            toast.error('Unable to save character changes.');
         }
     };
 
@@ -92,8 +97,10 @@ export function CharacterPanel() {
         try {
             await window.electronAPI.deleteCharacter(char.id);
             removeCharacter(char.id);
+            toast.success(`Deleted "${char.name}".`);
         } catch (err) {
             console.error('Failed to delete character:', err);
+            toast.error('Unable to delete character. Please try again.');
         }
     };
 
@@ -147,7 +154,7 @@ export function CharacterPanel() {
                         ))
                     ) : (
                         <p className="text-xs text-muted-foreground text-center py-4 italic">
-                            No characters yet. Click + to add one.
+                            No characters yet — add them so the Muse can use them in scenes and suggestions.
                         </p>
                     )}
                 </div>

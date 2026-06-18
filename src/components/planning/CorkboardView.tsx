@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Feather, Loader2, FileText, Trash2, Plus } from 'lucide-react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
+import { friendlyAIError } from '../../lib/aiError';
 import type { Chapter } from '../../types/electron';
 import { debounce } from 'lodash';
 
@@ -17,8 +19,10 @@ export function CorkboardView() {
                 title: `Chapter ${chapters.length + 1}`
             });
             addChapter(newChapter);
+            toast.success('New chapter created.');
         } catch (err) {
             console.error('Failed to create chapter:', err);
+            toast.error('Unable to create chapter. Please try again.');
         }
     };
 
@@ -100,6 +104,7 @@ function ChapterCard({ chapter, onUpdate, onDelete, setCurrentChapter, setActive
                 onUpdate(updated);
             } catch (err) {
                 console.error('Failed to auto-save card:', err);
+                toast.error('Unable to save card changes.');
             } finally {
                 setIsSaving(false);
             }
@@ -160,17 +165,7 @@ Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapte
             }
         } catch (err: any) {
             console.error('Failed to generate beat:', err);
-            const errorMsg = err?.message || err?.toString() || 'Unknown error';
-
-            if (errorMsg.includes('429') || errorMsg.includes('rate limit') || errorMsg.includes('free-models-per-day')) {
-                setErrorMessage('Rate Limit: Free daily limit reached. Add credits to OpenRouter or wait until tomorrow.');
-            } else if (errorMsg.includes('401') || errorMsg.includes('API key')) {
-                setErrorMessage('API Key Error: Check Settings (⚙️) to configure your API key.');
-            } else if (errorMsg.includes('insufficient_quota')) {
-                setErrorMessage('Quota Exceeded: Your API quota has been reached.');
-            } else {
-                setErrorMessage(`Error: ${errorMsg}`);
-            }
+            setErrorMessage(friendlyAIError(err));
         } finally {
             setIsGenerating(false);
         }
@@ -179,8 +174,14 @@ Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapte
     const handleDelete = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (window.confirm(`Delete Chapter ${chapter.chapter_number}?`)) {
-            await window.electronAPI.deleteChapter(chapter.id);
-            onDelete(chapter.id);
+            try {
+                await window.electronAPI.deleteChapter(chapter.id);
+                onDelete(chapter.id);
+                toast.success(`Chapter ${chapter.chapter_number} deleted.`);
+            } catch (err) {
+                console.error('Failed to delete chapter:', err);
+                toast.error('Unable to delete chapter. Please try again.');
+            }
         }
     };
 
@@ -280,7 +281,7 @@ Please suggest 3-4 sentences for the next chapter beat (Chapter ${chapter.chapte
                                     }
                                 } catch (err) {
                                     console.error('[Corkboard] Failed to handle Write Prose click:', err);
-                                    alert('Failed to open editor. Check console for details.');
+                                    toast.error('Unable to open the editor for this chapter. Please try again.');
                                 }
                             }}
                             className="p-1 px-3 text-[11px] font-bold bg-accent text-muted-foreground hover:text-foreground rounded-full transition-colors"

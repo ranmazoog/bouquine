@@ -3,6 +3,38 @@ import Anthropic from '@anthropic-ai/sdk';
 import { logger } from './logger';
 
 // ============================================================================
+// OpenRouter model configuration
+// ============================================================================
+// Verified against the live OpenRouter catalog on 2026-06-18.
+// The previous default (google/gemini-2.0-flash-001) was de-listed and returns
+// 404 "no endpoints", and several previously-recommended :free models are gone
+// or heavily rate-limited (429). The chain below is ordered for reliability:
+// a cheap, dependable paid model first, then alternatives, with a free model
+// last as a best-effort option for users without OpenRouter credit.
+export const OPENROUTER_DEFAULT_MODEL = 'meta-llama/llama-3.3-70b-instruct';
+const OPENROUTER_FALLBACK_MODELS = [
+    'meta-llama/llama-3.3-70b-instruct', // cheap (~$0.10/$0.32 per M), reliable, strong prose
+    'google/gemini-2.5-flash',           // fast, capable alternative
+    'meta-llama/llama-3.3-70b-instruct:free', // free, but frequently rate-limited (429)
+];
+
+// Read the HTTP status from however the OpenAI SDK surfaces it. The SDK (v6)
+// exposes it as error.status; older shapes used error.response.status.
+function getErrorStatus(error: any): number | undefined {
+    return error?.status ?? error?.response?.status ?? error?.statusCode;
+}
+
+// A request is worth retrying on a *different* model when the current model is
+// unavailable (404 / "no endpoints") or rate-limited (429). Auth/quota/validation
+// errors (401/402/403/400) are not — a different model won't fix the key.
+function shouldFallBackToAnotherModel(error: any): boolean {
+    const status = getErrorStatus(error);
+    if (status === 404 || status === 429) return true;
+    const msg = String(error?.message || '').toLowerCase();
+    return msg.includes('no endpoints') || msg.includes('not available') || msg.includes('unavailable');
+}
+
+// ============================================================================
 // AI Provider Interface
 // ============================================================================
 
@@ -34,7 +66,9 @@ export class OpenAIProvider implements AIProvider {
     private client: OpenAI;
     private model: string;
 
-    constructor(apiKey: string, model: string = 'gpt-4-turbo-preview') {
+    // gpt-4-turbo-preview is a legacy alias; gpt-4o-mini is current, reliable,
+    // and inexpensive for a first generation.
+    constructor(apiKey: string, model: string = 'gpt-4o-mini') {
         this.client = new OpenAI({ apiKey });
         this.model = model;
     }
@@ -99,7 +133,9 @@ export class AnthropicProvider implements AIProvider {
     private client: Anthropic;
     private model: string;
 
-    constructor(apiKey: string, model: string = 'claude-3-5-sonnet-20241022') {
+    // claude-3-5-sonnet-20241022 was retired (2025-10-28). claude-sonnet-4-6 is
+    // the current drop-in replacement.
+    constructor(apiKey: string, model: string = 'claude-sonnet-4-6') {
         this.client = new Anthropic({ apiKey });
         this.model = model;
     }
@@ -179,8 +215,7 @@ export class OpenRouterProvider implements AIProvider {
     private client: OpenAI;
     private model: string;
 
-    constructor(apiKey: string, model: string = 'google/gemini-2.0-flash-001') {
-        console.log("Initializing OpenRouter with Model:", model);
+    constructor(apiKey: string, model: string = OPENROUTER_DEFAULT_MODEL) {
         logger.logInfo("Initializing OpenRouter with Model: " + model);
         this.client = new OpenAI({
             apiKey,
@@ -193,40 +228,40 @@ export class OpenRouterProvider implements AIProvider {
         this.model = model;
     }
 
+    // Ordered, de-duplicated list of models to attempt: the user's selected
+    // model first, then the reliability fallbacks.
+    private modelChain(): string[] {
+        return [this.model, ...OPENROUTER_FALLBACK_MODELS].filter((m, i, a) => a.indexOf(m) === i);
+    }
+
     async generate(messages: Message[], options?: GenerateOptions): Promise<string> {
-        try {
-            const response = await this.client.chat.completions.create({
-                model: this.model,
-                messages: messages.map(m => ({ role: m.role, content: m.content })),
-                temperature: options?.temperature ?? 0.7,
-                max_tokens: options?.maxOutputTokens ?? 4000,
-            });
+        const chain = this.modelChain();
+        let lastError: any;
 
-            return response.choices?.[0]?.message?.content || '';
-        } catch (error: any) {
-            const status = error.response?.status;
-            const errorDetail = error.response?.data || error.message;
+        for (let i = 0; i < chain.length; i++) {
+            const model = chain[i];
+            try {
+                const response = await this.client.chat.completions.create({
+                    model,
+                    messages: messages.map(m => ({ role: m.role, content: m.content })),
+                    temperature: options?.temperature ?? 0.7,
+                    max_tokens: options?.maxOutputTokens ?? 4000,
+                });
+                if (i > 0) logger.logInfo(`[OpenRouter] Recovered using fallback model "${model}".`);
+                return response.choices?.[0]?.message?.content || '';
+            } catch (error: any) {
+                lastError = error;
+                const status = getErrorStatus(error);
+                logger.logError(`[OpenRouter] Model "${model}" failed (${status || 'unknown'}): ${error.message}`, error);
 
-            // AUTOMATED FALLBACK: If primary model 404s or fails, try the free Llama model
-            if (status === 404 && this.model !== 'meta-llama/llama-3.3-70b-instruct:free') {
-                logger.logInfo(`[OpenRouter] Primary model ${this.model} failed with 404. Falling back to Llama 3.3 Free...`);
-                try {
-                    const fallbackResponse = await this.client.chat.completions.create({
-                        model: 'meta-llama/llama-3.3-70b-instruct:free',
-                        messages: messages.map(m => ({ role: m.role, content: m.content })),
-                        temperature: options?.temperature ?? 0.7,
-                        max_tokens: options?.maxOutputTokens ?? 4000,
-                    });
-                    return fallbackResponse.choices?.[0]?.message?.content || '';
-                } catch (fallbackError: any) {
-                    logger.logError(`[OpenRouter] Fallback also failed: ${fallbackError.message}`, fallbackError);
+                if (i < chain.length - 1 && shouldFallBackToAnotherModel(error)) {
+                    logger.logInfo(`[OpenRouter] Falling back from "${model}" to "${chain[i + 1]}"...`);
+                    continue;
                 }
+                throw error;
             }
-
-            logger.logError(`[OpenRouter] API Error (${status || 'unknown'}): ${JSON.stringify(errorDetail)}`, error);
-            console.error('[OpenRouter] API Error:', status, errorDetail);
-            throw error;
         }
+        throw lastError;
     }
 
     async generateStream(
@@ -234,58 +269,47 @@ export class OpenRouterProvider implements AIProvider {
         options?: GenerateOptions,
         onChunk?: (chunk: string) => void
     ): Promise<string> {
-        try {
-            const stream = await this.client.chat.completions.create({
-                model: this.model,
-                messages: messages.map(m => ({ role: m.role, content: m.content })),
-                temperature: options?.temperature ?? 0.7,
-                max_tokens: options?.maxOutputTokens ?? 4000,
-                stream: true,
-            });
+        const chain = this.modelChain();
+        let lastError: any;
 
-            let fullResponse = '';
-            for await (const chunk of stream) {
-                const content = chunk.choices[0]?.delta?.content || '';
-                if (content) {
-                    fullResponse += content;
-                    onChunk?.(content);
-                }
-            }
+        for (let i = 0; i < chain.length; i++) {
+            const model = chain[i];
+            let emittedAny = false;
+            try {
+                const stream = await this.client.chat.completions.create({
+                    model,
+                    messages: messages.map(m => ({ role: m.role, content: m.content })),
+                    temperature: options?.temperature ?? 0.7,
+                    max_tokens: options?.maxOutputTokens ?? 4000,
+                    stream: true,
+                });
 
-            return fullResponse;
-        } catch (error: any) {
-            const status = error.response?.status;
-            const errorDetail = error.response?.data || error.message;
-
-            // AUTOMATED FALLBACK for Stream: If primary model 404s, try free Llama
-            if (status === 404 && this.model !== 'meta-llama/llama-3.3-70b-instruct:free') {
-                logger.logInfo(`[OpenRouter-Stream] Primary model ${this.model} failed with 404. Falling back to Llama 3.3 Free...`);
-                try {
-                    const fallbackStream = await this.client.chat.completions.create({
-                        model: 'meta-llama/llama-3.3-70b-instruct:free',
-                        messages: messages.map(m => ({ role: m.role, content: m.content })),
-                        temperature: options?.temperature ?? 0.7,
-                        max_tokens: options?.maxOutputTokens ?? 4000,
-                        stream: true,
-                    });
-
-                    let fallbackFullResponse = '';
-                    for await (const chunk of fallbackStream) {
-                        const content = chunk.choices[0]?.delta?.content || '';
-                        if (content) {
-                            fallbackFullResponse += content;
-                            onChunk?.(content);
-                        }
+                let fullResponse = '';
+                for await (const chunk of stream) {
+                    const content = chunk.choices[0]?.delta?.content || '';
+                    if (content) {
+                        emittedAny = true;
+                        fullResponse += content;
+                        onChunk?.(content);
                     }
-                    return fallbackFullResponse;
-                } catch (fallbackError: any) {
-                    logger.logError(`[OpenRouter-Stream] Fallback also failed: ${fallbackError.message}`, fallbackError);
                 }
-            }
+                if (i > 0) logger.logInfo(`[OpenRouter-Stream] Recovered using fallback model "${model}".`);
+                return fullResponse;
+            } catch (error: any) {
+                lastError = error;
+                const status = getErrorStatus(error);
+                logger.logError(`[OpenRouter-Stream] Model "${model}" failed (${status || 'unknown'}): ${error.message}`, error);
 
-            logger.logError(`[OpenRouter-Stream] API Error (${status || 'unknown'}): ${JSON.stringify(errorDetail)}`, error);
-            throw error;
+                // Only fall back if nothing was streamed yet — otherwise the user
+                // would see partial text from two different models concatenated.
+                if (!emittedAny && i < chain.length - 1 && shouldFallBackToAnotherModel(error)) {
+                    logger.logInfo(`[OpenRouter-Stream] Falling back from "${model}" to "${chain[i + 1]}"...`);
+                    continue;
+                }
+                throw error;
+            }
         }
+        throw lastError;
     }
 }
 

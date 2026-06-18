@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Palette, Save, Loader2, Feather } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
+import { friendlyAIError } from '../../lib/aiError';
 import type { StyleGuide } from '../../types/electron';
 
 const POV_OPTIONS = [
@@ -40,6 +42,7 @@ export function StyleGuidePanel() {
                 setStyleGuide(guide);
             } catch (err) {
                 console.error('Failed to load style guide:', err);
+                toast.error('Unable to load the style guide.');
             } finally {
                 setIsLoading(false);
             }
@@ -71,10 +74,11 @@ export function StyleGuidePanel() {
                 const refreshedGuide = await window.electronAPI.getStyleGuide(currentProject.id);
                 setStyleGuide(refreshedGuide);
                 setLastSaved(new Date());
+                toast.success('Voice analyzed and applied to your style guide.');
             }
         } catch (err: any) {
             console.error('Failed to analyze voice:', err);
-            alert(err?.message || 'Failed to analyze writing voice. Make sure Chapter 1 has content.');
+            toast.error(friendlyAIError(err));
         } finally {
             setIsAnalyzing(false);
         }
@@ -94,6 +98,7 @@ export function StyleGuidePanel() {
                 setLastSaved(new Date());
             } catch (err) {
                 console.error('Failed to save style guide:', err);
+                toast.error('Unable to save style guide changes.');
             } finally {
                 setIsSaving(false);
             }
@@ -140,7 +145,7 @@ export function StyleGuidePanel() {
                         </div>
                         <div>
                             <h2 className="text-xl font-semibold">Style Guide</h2>
-                            <p className="text-sm text-muted-foreground">Define writing rules for AI assistance</p>
+                            <p className="text-sm text-muted-foreground">Writing rules the Muse follows — your point of view, tense, and voice.</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -187,6 +192,10 @@ export function StyleGuidePanel() {
                         </select>
                     </div>
                 </div>
+
+                <p className="text-xs text-muted-foreground -mt-3">
+                    Bouquine monitors point-of-view consistency while you write and will alert you if your chapter drifts from the POV selected here.
+                </p>
 
                 {/* Vocabulary Preferences (Voice/Tone) */}
                 <div className="space-y-4">

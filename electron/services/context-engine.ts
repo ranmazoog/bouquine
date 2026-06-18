@@ -8,6 +8,10 @@ export interface ContextPrompt {
 }
 
 const MAX_CONTEXT_CHARS = 20000;
+// Cap the Synopsis injected into the Muse prompt so it gives "foresight" without
+// unbounded prompt growth. Most synopses fit whole; longer ones keep the opening
+// (setup) and the ending (the foresight payload), dropping the middle.
+const MAX_SYNOPSIS_CHARS = 2000;
 
 /**
  * Audit a chapter for logical contradictions and consistency issues.
@@ -52,7 +56,7 @@ ${chapter.content}
 """
 
 INSTRUCTIONS: 
-Return a Markdown list of potential consistency issues. Start with a brief header like "🛡️ Integrity Audit: ${chapter.title || `Chapter ${chapter.chapter_number}`}". If no issues are found, state "No consistency issues detected."`;
+Return a Markdown list of potential consistency issues. Start with a brief header like "🛡️ Story Consistency Check: ${chapter.title || `Chapter ${chapter.chapter_number}`}". If no issues are found, state "No consistency issues detected."`;
 
     return prompt;
 }
@@ -344,6 +348,21 @@ INSTRUCTIONS: The user has highlighted the text above. Focus your response speci
 - Author: ${project.author || 'Unknown'}
 - Genre: ${project.genre || 'Unspecified'}
 - Book Blurb (Premise): ${project.blurb || 'Not specified'}`;
+
+    // Story Arc (Synopsis) — the planned full plot, including the ending. The Blurb
+    // is a spoiler-free marketing hook; the Synopsis is what gives the Muse "foresight"
+    // to foreshadow planned developments. Budgeted to MAX_SYNOPSIS_CHARS; only added
+    // when a synopsis exists (avoids an empty line that duplicates the Blurb).
+    const synopsisRaw = (project.synopsis || '').trim();
+    if (synopsisRaw) {
+        let storyArc = synopsisRaw;
+        if (storyArc.length > MAX_SYNOPSIS_CHARS) {
+            const head = Math.floor(MAX_SYNOPSIS_CHARS * 0.6);
+            const tail = MAX_SYNOPSIS_CHARS - head;
+            storyArc = `${storyArc.slice(0, head)}\n…[middle of synopsis truncated]…\n${storyArc.slice(-tail)}`;
+        }
+        metadataSection += `\n\nStory Arc (Synopsis) — the planned plot through to the ending. Use this for foresight and foreshadowing; do NOT copy it verbatim into prose:\n${storyArc}`;
+    }
 
     // 9. Construct System Prompt
     const styleMimicrySection = styleGuide.prose_samples && styleGuide.prose_samples.trim()

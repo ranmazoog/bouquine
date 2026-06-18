@@ -1,9 +1,18 @@
-import { Share, ChevronDown, Plus, Trash2, FolderOpen, Maximize2, Minimize2, FileType, Loader2, CheckCircle, XCircle, FileText, Download, FileJson, FileDown, FileCode } from 'lucide-react';
+import { Share, ChevronDown, Plus, Trash2, FolderOpen, Maximize2, Minimize2, FileType, Loader2, FileText, Download, FileJson, FileDown, FileCode } from 'lucide-react';
 import { useProjectStore, useEditorStore } from '../../stores/projectStore';
+import { toast } from '../../lib/toast';
 import { useState, useRef, useEffect } from 'react';
 
-type ExportStatus = 'idle' | 'exporting' | 'success' | 'error';
-type ExportError = { message: string } | null;
+type ExportStatus = 'idle' | 'exporting';
+
+const FORMAT_LABELS: Record<string, string> = {
+    pdf: 'PDF',
+    epub: 'ePub',
+    json: 'JSON backup',
+    markdown: 'Markdown',
+    txt: 'plain text',
+    docx: 'Word document',
+};
 
 interface HeaderProps {
     onNewProject: () => void;
@@ -17,7 +26,6 @@ export function Header({ onNewProject }: HeaderProps) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [exportStatus, setExportStatus] = useState<ExportStatus>('idle');
-    const [exportError, setExportError] = useState<ExportError>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const exportRef = useRef<HTMLDivElement>(null);
 
@@ -64,8 +72,10 @@ export function Header({ onNewProject }: HeaderProps) {
             }
 
             setShowDeleteConfirm(false);
+            toast.success('Project deleted.');
         } catch (err) {
             console.error('Failed to delete project:', err);
+            toast.error('Unable to delete project. Please try again.');
         } finally {
             setIsDeleting(false);
         }
@@ -109,26 +119,19 @@ export function Header({ onNewProject }: HeaderProps) {
                 case 'json': exportResult = await window.electronAPI.exportToJson(currentProject.id, result.filePath); break;
             }
 
+            const label = FORMAT_LABELS[format] || 'file';
             if (exportResult?.success) {
-                setExportStatus('success');
-                setExportError(null);
-                setTimeout(() => setExportStatus('idle'), 3000);
+                setExportStatus('idle');
+                toast.success(`Exported your ${label} successfully.`);
             } else {
-                setExportStatus('error');
-                setExportError({ message: exportResult?.error || 'Export failed. Please try again.' });
-                setTimeout(() => {
-                    setExportStatus('idle');
-                    setExportError(null);
-                }, 5000);
+                setExportStatus('idle');
+                console.error(`Export ${format} failed:`, exportResult?.error);
+                toast.error(`Unable to export as ${label}. Please try again.`);
             }
         } catch (err) {
             console.error(`Export ${format} error:`, err);
-            setExportStatus('error');
-            setExportError({ message: err instanceof Error ? err.message : 'Export failed. Please try again.' });
-            setTimeout(() => {
-                setExportStatus('idle');
-                setExportError(null);
-            }, 5000);
+            setExportStatus('idle');
+            toast.error(`Unable to export as ${FORMAT_LABELS[format] || 'file'}. Please try again.`);
         }
     };
 
@@ -382,27 +385,6 @@ export function Header({ onNewProject }: HeaderProps) {
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Export Toast Notification */}
-            {(exportStatus === 'success' || exportStatus === 'error') && (
-                <div
-                    className={`fixed top-20 right-6 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border transition-all duration-300 animate-in slide-in-from-top-2 fade-in ${exportStatus === 'success'
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600'
-                        : 'bg-red-500/10 border-red-500/30 text-red-600'
-                        }`}
-                >
-                    {exportStatus === 'success' ? (
-                        <CheckCircle size={20} className="animate-in zoom-in duration-300" />
-                    ) : (
-                        <XCircle size={20} className="animate-in zoom-in duration-300" />
-                    )}
-                    <span className="font-medium text-sm">
-                        {exportStatus === 'success'
-                            ? 'Export completed successfully!'
-                            : (exportError?.message || 'Export failed. Please try again.')}
-                    </span>
                 </div>
             )}
         </>
